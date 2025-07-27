@@ -35,6 +35,7 @@ class GameState:
 
     # 规则
     active_rules: List[str] = field(default_factory=list)
+    events_history: List[Dict[str, Any]] = field(default_factory=list)
     turn: int = 0  # 当前回合（与current_turn同步）
 
     # 兼容旧字段
@@ -46,6 +47,15 @@ class GameState:
     @current_time.setter
     def current_time(self, value: str):
         self.time_of_day = value
+
+    @property
+    def event_log(self) -> List[Dict[str, Any]]:
+        """向后兼容的事件日志字段"""
+        return self.events_history
+
+    @event_log.setter
+    def event_log(self, value: List[Dict[str, Any]]):
+        self.events_history = value
     
     # 角色
     npcs: Dict[str, Dict[str, Any]] = field(default_factory=dict)
@@ -67,6 +77,7 @@ class GameState:
             "time_of_day": self.time_of_day,
             "current_time": self.current_time,
             "active_rules": self.active_rules,
+            "events_history": self.events_history,
             "total_fear_gained": self.total_fear_gained,
             "npcs_died": self.npcs_died,
             "rules_triggered": self.rules_triggered,
