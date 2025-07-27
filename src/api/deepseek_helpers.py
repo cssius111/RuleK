@@ -1,3 +1,9 @@
+from .deepseek_client import DeepSeekClient, APIConfig
+from src.utils.config import get_deepseek_config, is_test_mode
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 # 便捷函数：从config目录或环境变量创建客户端
 async def create_default_client() -> DeepSeekClient:
     """创建默认配置的客户端"""
