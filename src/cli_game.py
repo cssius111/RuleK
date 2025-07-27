@@ -139,7 +139,7 @@ class CLIGame:
             return
             
         # 创建游戏
-        self.game_manager.new_game(config)
+        self.game_manager.new_game(config=config)
         self.rule_executor = RuleExecutor(self.game_manager)
         self.npc_behavior = NPCBehavior(self.game_manager)
         

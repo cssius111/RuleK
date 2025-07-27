@@ -20,7 +20,7 @@ from src.models.rule import Rule, TriggerCondition, RuleEffect, EffectType, RULE
 async def test_game_state_manager():
     """测试游戏状态管理"""
     game_manager = GameStateManager()
-    state = game_manager.new_game("test_game_001")
+    state = game_manager.new_game()
     
     assert state is not None
     assert state.game_id is not None
@@ -48,7 +48,7 @@ async def test_rule_creation():
 async def test_npc_behavior():
     """测试NPC行为系统"""
     game_manager = GameStateManager()
-    game_manager.new_game("test_game_001")
+    game_manager.new_game()
     npc_behavior = NPCBehavior(game_manager)
     
     # 随机选一个NPC测试
@@ -66,7 +66,7 @@ async def test_npc_behavior():
 async def test_rule_executor():
     """测试规则执行引擎"""
     game_manager = GameStateManager()
-    game_manager.new_game("test_game_001")
+    game_manager.new_game()
     rule_executor = RuleExecutor(game_manager)
     
     # 添加测试规则
@@ -99,7 +99,7 @@ async def test_rule_executor():
 async def test_game_save_load():
     """测试游戏保存/加载"""
     game_manager = GameStateManager()
-    game_manager.new_game("test_game_001")
+    game_manager.new_game()
     
     # 保存游戏
     save_path = game_manager.save_game("test_save")

@@ -70,8 +70,15 @@ class GameStateManager:
             "fear_gained": []
         }
         
-    def new_game(self, game_id: str, config: Dict[str, Any] = None) -> GameState:
-        """开始新游戏"""
+    def new_game(self, game_id: Optional[str] = None, config: Dict[str, Any] = None) -> GameState:
+        """开始新游戏
+
+        Args:
+            game_id: 游戏ID，如未提供则使用当前时间生成
+            config: 游戏配置
+        """
+        if game_id is None:
+            game_id = f"game_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         config = config or {}
         
         self.state = GameState(
