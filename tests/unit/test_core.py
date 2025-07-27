@@ -103,7 +103,7 @@ async def test_game_save_load():
     
     # 保存游戏
     save_path = game_manager.save_game("test_save")
-    assert save_path is not None
+    assert isinstance(save_path, str)
     
     # 创建新的管理器并加载
     new_manager = GameStateManager()

@@ -690,8 +690,9 @@ class RuleKGame:
         self.game_state.extra_data["npcs_full"] = npc_data
         self.game_state.extra_data["last_dialogue_turn"] = self.last_dialogue_turn
         
-        if self.game_state.save_game():
-            self.cli.print_success("游戏已保存！")
+        path = self.game_state.save_game()
+        if path:
+            self.cli.print_success(f"游戏已保存到: {path}")
         else:
             self.cli.print_error("保存失败！")
         self.cli.get_input("\n按回车继续...")
