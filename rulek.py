@@ -18,14 +18,16 @@ from src.utils.config import config, load_config
 
 def run_cli_game():
     """运行CLI版本的游戏"""
+    import asyncio
     from src.cli_game import main as cli_main
-    cli_main()
+    asyncio.run(cli_main())
 
 
 def run_demo_game():
     """运行演示版本"""
-    from scripts.demo_sprint2 import main as demo_main
-    demo_main()
+    import asyncio
+    from scripts.demo_sprint2 import demo
+    asyncio.run(demo())
 
 
 def run_web_server():
