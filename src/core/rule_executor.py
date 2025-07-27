@@ -10,6 +10,7 @@ from collections import defaultdict
 from ..models.rule import Rule, EffectType
 from ..core.game_state import GameStateManager
 from ..utils.logger import get_logger, log_game_event
+from .side_effects import SideEffectManager
 
 logger = get_logger(__name__)
 
@@ -49,6 +50,7 @@ class RuleExecutor:
         self.game_manager = game_manager
         self.execution_history = defaultdict(list)  # 规则执行历史
         self.cooldowns = {}  # 规则冷却时间
+        self.side_effect_manager = SideEffectManager()  # 副作用管理器
         
     def check_all_rules(self, context: RuleContext) -> List[Tuple[Rule, float]]:
         """检查所有可能触发的规则"""
@@ -126,19 +128,45 @@ class RuleExecutor:
         return True
         
     def _check_time_range(self, current_time: str, time_range: Dict[str, str]) -> bool:
-        """检查时间是否在范围内"""
+        """检查时间是否在范围内
+        
+        Args:
+            current_time: 当前时间字符串，格式为 "HH:MM"
+            time_range: 时间范围字典，包含 "from" 和 "to" 键
+            
+        Returns:
+            bool: 时间是否在范围内
+        """
         try:
-            # 简单的时间比较（假设格式为 HH:MM）
-            current = int(current_time.replace(":", ""))
-            start = int(time_range["from"].replace(":", ""))
-            end = int(time_range["to"].replace(":", ""))
+            # 使用 datetime 解析时间以确保格式正确
+            current = datetime.strptime(current_time, "%H:%M")
+            start = datetime.strptime(time_range["from"], "%H:%M")
+            end = datetime.strptime(time_range["to"], "%H:%M")
+            
+            # 将所有时间转换为当天的时间
+            today = datetime.now().date()
+            current = current.replace(year=today.year, month=today.month, day=today.day)
+            start = start.replace(year=today.year, month=today.month, day=today.day)
+            end = end.replace(year=today.year, month=today.month, day=today.day)
             
             # 处理跨午夜的情况
-            if start <= end:
-                return start <= current <= end
+            if start > end:
+                # 如果开始时间大于结束时间，说明跨越了午夜
+                # 例如: 23:00 到 02:00
+                if current >= start:  # 当前时间在今天的范围内
+                    return True
+                # 将结束时间调整到第二天
+                end = end.replace(day=today.day + 1) if today.day < 31 else end.replace(month=today.month + 1, day=1)
+                # 也需要检查当前时间是否在第二天的范围内
+                current_tomorrow = current.replace(day=today.day + 1) if today.day < 31 else current.replace(month=today.month + 1, day=1)
+                return current_tomorrow <= end
             else:
-                return current >= start or current <= end
+                # 正常情况：开始时间小于等于结束时间
+                return start <= current <= end
                 
+        except ValueError as e:
+            logger.error(f"时间格式错误: {e}. 期望格式: HH:MM")
+            return False
         except Exception as e:
             logger.error(f"时间范围检查失败: {e}")
             return False
@@ -265,17 +293,41 @@ class RuleExecutor:
             
     def _apply_side_effect(self, side_effect: str, context: RuleContext):
         """应用副作用"""
-        side_effect_handlers = {
-            "blood_on_mirror": lambda: self._add_scene_effect("bathroom", "blood_stains"),
-            "scream_heard": lambda: self._alert_nearby_npcs(context.actor_location),
-            "temperature_drop": lambda: self._change_room_temp(context.actor_location, -10),
-            "lights_flicker": lambda: self._trigger_light_event(context.actor_location),
+        # 构建副作用上下文
+        effect_context = {
+            "location": context.actor_location,
+            "actor": context.actor,
+            "trigger_action": context.action,
+            "game_turn": context.game_state.get("turn", 0)
         }
         
-        if side_effect in side_effect_handlers:
-            side_effect_handlers[side_effect]()
+        # 特殊副作用的额外参数
+        if side_effect == "blood_on_mirror":
+            effect_context.update({
+                "surface": "mirror",
+                "message": "你看到了什么？"
+            })
+            side_effect = "blood_message"
+        elif side_effect == "lights_flicker":
+            side_effect = "light_flicker"
+        
+        # 使用副作用管理器应用副作用
+        result = self.side_effect_manager.apply_effect(
+            side_effect,
+            self.game_manager,
+            effect_context
+        )
+        
+        if result and result.get("success"):
+            logger.info(f"副作用 {side_effect} 应用成功")
+            # 如果副作用产生了额外恐惧值，添加到游戏中
+            if result.get("fear_bonus"):
+                self.game_manager.gain_fear_points(
+                    result["fear_bonus"],
+                    f"副作用: {side_effect}"
+                )
         else:
-            logger.warning(f"未知的副作用: {side_effect}")
+            logger.warning(f"副作用 {side_effect} 应用失败或未找到")
             
     def _add_scene_effect(self, location: str, effect: str) -> bool:
         """添加场景效果"""

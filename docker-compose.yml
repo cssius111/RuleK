@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # 后端服务
+  backend:
+    build: .
+    container_name: rulek-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - rulek-network
+
+  # 前端开发服务器（开发环境）
+  frontend-dev:
+    image: node:18-alpine
+    container_name: rulek-frontend-dev
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./web/frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    networks:
+      - rulek-network
+    profiles:
+      - dev
+
+  # Nginx（生产环境）
+  nginx:
+    image: nginx:alpine
+    container_name: rulek-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./web/frontend/dist:/usr/share/nginx/html:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - backend
+    networks:
+      - rulek-network
+    profiles:
+      - prod
+
+  # Redis（可选，用于缓存）
+  redis:
+    image: redis:7-alpine
+    container_name: rulek-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - rulek-network
+    profiles:
+      - full
+
+networks:
+  rulek-network:
+    driver: bridge
+
+volumes:
+  redis-data:

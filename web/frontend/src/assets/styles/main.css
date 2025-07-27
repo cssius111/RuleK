@@ -1,0 +1,176 @@
+/* 全局样式 */
+:root {
+  /* 主题颜色 */
+  --primary-color: #dc143c;
+  --primary-dark: #8b0000;
+  --secondary-color: #2d1b69;
+  
+  /* 背景颜色 */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #1a0f1f;
+  --bg-card: rgba(26, 15, 31, 0.8);
+  
+  /* 文字颜色 */
+  --text-primary: #e0e0e0;
+  --text-secondary: #888;
+  --text-danger: #dc143c;
+  
+  /* 边框颜色 */
+  --border-color: rgba(139, 0, 0, 0.3);
+  --border-hover: rgba(139, 0, 0, 0.6);
+  
+  /* 阴影 */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(139, 0, 0, 0.3);
+  
+  /* 动画 */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+/* 全局重置 */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 
+               'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', 
+               Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-hover);
+}
+
+/* 文字选中样式 */
+::selection {
+  background: var(--primary-color);
+  color: white;
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes flicker {
+  0%, 100% {
+    opacity: 1;
+  }
+  10%, 30%, 50%, 70%, 90% {
+    opacity: 0.8;
+  }
+  20%, 40%, 60%, 80% {
+    opacity: 0.6;
+  }
+}
+
+/* 工具类 */
+.fade-in {
+  animation: fadeIn var(--transition-normal);
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.flicker {
+  animation: flicker 3s ease-in-out infinite;
+}
+
+.text-danger {
+  color: var(--text-danger);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mt-4 { margin-top: 2rem; }
+
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 1.5rem; }
+.mb-4 { margin-bottom: 2rem; }
+
+.p-1 { padding: 0.5rem; }
+.p-2 { padding: 1rem; }
+.p-3 { padding: 1.5rem; }
+.p-4 { padding: 2rem; }
+
+/* 恐怖氛围效果 */
+.horror-text {
+  text-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-dark);
+}
+
+.horror-glow {
+  box-shadow: 0 0 20px var(--primary-color), inset 0 0 20px rgba(139, 0, 0, 0.2);
+}
+
+.blood-drip {
+  background: linear-gradient(to bottom, var(--primary-color) 0%, transparent 100%);
+  filter: drop-shadow(0 2px 4px var(--primary-dark));
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 12px;
+  }
+}

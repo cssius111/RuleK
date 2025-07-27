@@ -1,0 +1,65 @@
+// 颜色变量
+$color-primary: #8B0000;        // 血红色
+$color-secondary: #2D1B69;      // 深紫色
+$color-success: #4A5D23;        // 暗绿色
+$color-warning: #8B4513;        // 暗棕色
+$color-error: #DC143C;          // 深红色
+$color-info: #1890ff;           // 蓝色
+
+// 背景色
+$bg-primary: #0A0A0A;           // 主背景
+$bg-secondary: #1A1A1A;         // 次级背景
+$bg-tertiary: #2A2A2A;          // 第三级背景
+$bg-hover: rgba(255, 255, 255, 0.05);
+
+// 文本颜色
+$text-primary: #E0E0E0;         // 主文本
+$text-secondary: #CCCCCC;       // 次级文本
+$text-tertiary: #999999;        // 第三级文本
+$text-disabled: #666666;        // 禁用文本
+
+// 边框颜色
+$border-color: #333333;
+$border-color-light: #444444;
+
+// 字体
+$font-family-main: 'Courier New', monospace, '楷体', '宋体', sans-serif;
+$font-family-horror: 'Creepster', 'Chiller', cursive;
+
+// 尺寸
+$header-height: 60px;
+$sidebar-width: 300px;
+$spacing-xs: 0.25rem;
+$spacing-sm: 0.5rem;
+$spacing-md: 1rem;
+$spacing-lg: 1.5rem;
+$spacing-xl: 2rem;
+
+// 圆角
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 12px;
+
+// 阴影
+$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
+$shadow-md: 0 4px 8px rgba(0, 0, 0, 0.6);
+$shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.7);
+$shadow-horror: 0 0 20px rgba($color-primary, 0.5);
+
+// 过渡
+$transition-fast: 0.2s ease;
+$transition-normal: 0.3s ease;
+$transition-slow: 0.5s ease;
+
+// 断点
+$breakpoint-xs: 480px;
+$breakpoint-sm: 768px;
+$breakpoint-md: 1024px;
+$breakpoint-lg: 1200px;
+$breakpoint-xl: 1600px;
+
+// z-index 层级
+$z-index-dropdown: 1000;
+$z-index-modal: 2000;
+$z-index-notification: 3000;
+$z-index-loading: 9999;
