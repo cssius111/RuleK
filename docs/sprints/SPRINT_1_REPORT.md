@@ -32,7 +32,7 @@
 
 ```
 RuleK/
-├── main_game.py          # 主游戏入口 ✅
+├── rulek.py             # 统一入口 ✅
 ├── src/
 │   ├── core/
 │   │   └── game_state.py # 游戏状态管理 ✅
@@ -41,8 +41,8 @@ RuleK/
 │   │   └── npc.py        # NPC系统 ✅
 │   └── ui/
 │       └── cli.py        # 命令行界面 ✅
-├── requirements_mvp.txt   # 最小依赖 ✅
-└── run_game.sh           # 启动脚本 ✅
+├── requirements.txt       # 项目依赖 ✅
+└── start.sh              # 启动脚本 ✅
 ```
 
 ## 🚀 核心功能实现
@@ -106,17 +106,17 @@ RuleK/
 
 ### 方式1：使用启动脚本
 ```bash
-chmod +x run_game.sh
-./run_game.sh
+chmod +x start.sh
+./start.sh
 ```
 
 ### 方式2：直接运行
 ```bash
 # 安装依赖
-pip install -r requirements_mvp.txt
+pip install -r requirements.txt
 
 # 运行游戏
-python main_game.py
+python rulek.py
 ```
 
 ## 🎯 下一步计划

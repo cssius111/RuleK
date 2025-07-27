@@ -18,20 +18,15 @@
 
 ## 快速开始
 
-### 1. 一键修复和测试
-```bash
-python scripts/fix_tests.py
-```
-
-### 2. 验证环境
+### 1. 验证环境
 ```bash
 python scripts/verify_env.py
 ```
 
-### 3. 运行特定测试
+### 2. 运行测试
 ```bash
 # 运行所有测试
-python scripts/test_quick.py
+python rulek.py test
 
 # 只运行单元测试
 pytest tests/unit/ -v
@@ -71,7 +66,7 @@ PydanticDeprecatedSince20: Support for class-based `config` is deprecated
 
 2. **开始游戏**:
    ```bash
-   python run_game.py
+   python rulek.py
    ```
 
 3. **开发新功能**:
@@ -85,7 +80,7 @@ PydanticDeprecatedSince20: Support for class-based `config` is deprecated
 
 1. **清理缓存**:
    ```bash
-   python scripts/cleanup_project.py
+   pytest --cache-clear
    ```
 
 2. **检查Python路径**:

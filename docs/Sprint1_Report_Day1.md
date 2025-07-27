@@ -84,7 +84,7 @@
 
 ```bash
 # 1. 运行完整游戏
-python run_game.py
+python rulek.py
 
 # 2. 运行测试
 python test_core.py
