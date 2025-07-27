@@ -19,9 +19,9 @@ flake8==6.1.0
 mypy==1.7.1
 
 # Web开发（未来使用）
-# fastapi==0.104.1
-# uvicorn[standard]==0.24.0
-# websockets==12.0
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+websockets==12.0
 
 # 注意事项：
 # 1. Python 3.7+ 必需（使用了asyncio）

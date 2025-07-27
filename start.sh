@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 # 快速启动脚本 - 同时启动后端和前端
 
 echo "🎮 启动规则怪谈管理者..."
@@ -28,6 +29,12 @@ echo "✅ 后端 PID: $BACKEND_PID"
 # 等待后端启动
 sleep 3
 
+# 检查后端是否仍在运行
+if ! kill -0 $BACKEND_PID 2>/dev/null; then
+    echo "❌ 后端启动失败"
+    exit 1
+fi
+
 # 检查前端依赖
 echo "📦 检查前端依赖..."
 cd web/frontend
@@ -44,6 +51,13 @@ echo "✅ 前端 PID: $FRONTEND_PID"
 
 # 等待前端启动
 sleep 3
+
+# 检查前端是否仍在运行
+if ! kill -0 $FRONTEND_PID 2>/dev/null; then
+    echo "❌ 前端启动失败"
+    kill $BACKEND_PID 2>/dev/null
+    exit 1
+fi
 
 echo ""
 echo "✨ 规则怪谈管理者已启动！"

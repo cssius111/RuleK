@@ -23,7 +23,13 @@ class Config:
     def _load_env(self):
         """加载环境变量"""
         env_file = self.project_root / ".env"
-        
+
+        # 如果 .env 不存在则尝试使用 .env.example
+        if not env_file.exists():
+            example_file = self.project_root / ".env.example"
+            if example_file.exists():
+                env_file = example_file
+
         if env_file.exists():
             try:
                 with open(env_file, 'r') as f:
@@ -35,7 +41,7 @@ class Config:
                             value = value.strip().strip('"').strip("'")
                             os.environ[key] = value
                             self._config[key] = value
-                logger.info("环境变量加载成功")
+                logger.info(f"环境变量加载成功 ({env_file.name})")
             except Exception as e:
                 logger.error(f"加载.env文件失败: {e}")
         else:
