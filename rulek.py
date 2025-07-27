@@ -13,7 +13,7 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 from src.utils.logger import setup_logger
-from src.utils.config import load_config
+from src.utils.config import config
 
 
 def run_cli_game():

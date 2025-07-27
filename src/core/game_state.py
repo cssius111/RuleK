@@ -32,6 +32,10 @@ class GameState:
     npcs_died: int = 0
     rules_triggered: int = 0
 
+    # 规则
+    active_rules: List[str] = field(default_factory=list)
+    turn: int = 0  # 当前回合（与current_turn同步）
+    
     # 角色
     npcs: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     
@@ -106,6 +110,9 @@ class GameStateManager:
         self.log(f"新游戏开始 - ID: {game_id}")
         self._trigger_event("game_start", {"state": self.state})
         
+        # 创建默认NPC
+        self._create_default_npcs()
+        
         return self.state
         
     def load_game(self, game_id: str) -> bool:
@@ -147,12 +154,15 @@ class GameStateManager:
             print(f"读取存档失败: {e}")
             return False
             
-    def save_game(self) -> bool:
+    def save_game(self, filename: Optional[str] = None) -> bool:
         """保存游戏"""
         if not self.state:
             return False
             
-        save_file = self.save_dir / f"{self.state.game_id}.json"
+        if filename:
+            save_file = self.save_dir / filename
+        else:
+            save_file = self.save_dir / f"{self.state.game_id}.json"
         
         try:
             save_data = {
@@ -315,6 +325,29 @@ class GameStateManager:
             "rules_triggered": self.state.rules_triggered,
             "survival_rate": f"{len(self.get_active_npcs())}/{len(self.npcs)}"
         }
+
+    def _create_default_npcs(self):
+        """创建默认NPC"""
+        try:
+            from ..models.npc import generate_random_npc
+            
+            default_npc_names = ["张三", "李四", "王五"]
+            for name in default_npc_names:
+                npc = generate_random_npc(name)
+                npc_dict = npc.__dict__ if hasattr(npc, '__dict__') else npc
+                self.add_npc(npc_dict)
+        except ImportError:
+            # 如果无法导入NPC模块，创建简单的NPC
+            for i, name in enumerate(["张三", "李四", "王五"]):
+                simple_npc = {
+                    "id": f"npc_{i+1}",
+                    "name": name,
+                    "hp": 100,
+                    "sanity": 100,
+                    "fear": 0,
+                    "location": "living_room"
+                }
+                self.add_npc(simple_npc)
 
 
 # 单元测试

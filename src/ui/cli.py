@@ -3,9 +3,8 @@
 提供简单的文本交互界面
 """
 import os
-import sys
 from typing import Optional, List, Dict, Any
-from colorama import init, Fore, Back, Style
+from colorama import init, Fore, Style
 import asyncio
 
 # 初始化colorama以支持跨平台颜色
@@ -60,7 +59,7 @@ class CLI:
         print("\n" + Colors.MENU + "请选择操作:")
         for key, desc in options:
             print(f"  [{key}] {desc}")
-        print(f"  [0] 返回/退出")
+        print("  [0] 返回/退出")
         
     def get_input(self, prompt: str = "> ") -> str:
         """获取用户输入"""

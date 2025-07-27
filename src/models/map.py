@@ -2,8 +2,8 @@
 地图系统数据模型
 定义游戏中的区域、连接关系和地图管理
 """
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-from typing import Dict, List, Optional, Any, Set, Tuple
+from pydantic import BaseModel, Field, field_validator
+from typing import Dict, List, Optional, Any, Set
 from enum import Enum
 from dataclasses import dataclass
 from pathlib import Path

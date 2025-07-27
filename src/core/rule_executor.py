@@ -131,17 +131,40 @@ class RuleExecutor:
         """检查时间是否在范围内
         
         Args:
-            current_time: 当前时间字符串，格式为 "HH:MM"
+            current_time: 当前时间字符串，支持 "H:MM" 或 "HH:MM" 格式
             time_range: 时间范围字典，包含 "from" 和 "to" 键
             
         Returns:
             bool: 时间是否在范围内
         """
         try:
+            # 标准化时间格式函数
+            def normalize_time(time_str: str) -> str:
+                """将时间字符串标准化为 HH:MM 格式"""
+                if not time_str:
+                    return ""
+                parts = time_str.split(":")
+                if len(parts) != 2:
+                    return ""
+                hour, minute = parts
+                # 补充前导零
+                hour = hour.zfill(2)
+                minute = minute.zfill(2)
+                return f"{hour}:{minute}"
+            
+            # 标准化所有时间
+            current_time = normalize_time(current_time)
+            start_time = normalize_time(time_range.get("from", ""))
+            end_time = normalize_time(time_range.get("to", ""))
+            
+            # 验证格式
+            if not all([current_time, start_time, end_time]):
+                return False
+            
             # 使用 datetime 解析时间以确保格式正确
             current = datetime.strptime(current_time, "%H:%M")
-            start = datetime.strptime(time_range["from"], "%H:%M")
-            end = datetime.strptime(time_range["to"], "%H:%M")
+            start = datetime.strptime(start_time, "%H:%M")
+            end = datetime.strptime(end_time, "%H:%M")
             
             # 将所有时间转换为当天的时间
             today = datetime.now().date()
@@ -156,16 +179,17 @@ class RuleExecutor:
                 if current >= start:  # 当前时间在今天的范围内
                     return True
                 # 将结束时间调整到第二天
-                end = end.replace(day=today.day + 1) if today.day < 31 else end.replace(month=today.month + 1, day=1)
+                from datetime import timedelta
+                end = end + timedelta(days=1)
                 # 也需要检查当前时间是否在第二天的范围内
-                current_tomorrow = current.replace(day=today.day + 1) if today.day < 31 else current.replace(month=today.month + 1, day=1)
+                current_tomorrow = current + timedelta(days=1)
                 return current_tomorrow <= end
             else:
                 # 正常情况：开始时间小于等于结束时间
                 return start <= current <= end
                 
         except ValueError as e:
-            logger.error(f"时间格式错误: {e}. 期望格式: HH:MM")
+            logger.error(f"时间格式错误: {e}. 期望格式: HH:MM 或 H:MM")
             return False
         except Exception as e:
             logger.error(f"时间范围检查失败: {e}")

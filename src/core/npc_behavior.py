@@ -3,7 +3,7 @@ NPC行为系统
 实现NPC的AI行为逻辑
 """
 import random
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from enum import Enum
 from dataclasses import dataclass
 

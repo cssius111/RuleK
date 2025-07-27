@@ -5,16 +5,14 @@ DeepSeek API客户端模块
 import httpx
 import asyncio
 import json
-import time
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import hashlib
 from pathlib import Path
 import logging
 
 # 导入配置系统
-from src.utils.config import get_deepseek_config, is_test_mode
 
 # 设置日志
 logger = logging.getLogger(__name__)

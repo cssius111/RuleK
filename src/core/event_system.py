@@ -2,7 +2,7 @@
 随机事件系统
 增加游戏的不可预测性和氛围
 """
-from typing import Dict, List, Optional, Any, Callable
+from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 from enum import Enum
 from datetime import datetime

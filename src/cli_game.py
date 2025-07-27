@@ -5,8 +5,6 @@
 import os
 import sys
 import asyncio
-from typing import Optional
-from datetime import datetime
 
 # 添加项目根目录到Python路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -15,7 +13,7 @@ from src.core.game_state import GameStateManager
 from src.core.enums import GamePhase, GameMode
 from src.core.rule_executor import RuleExecutor, RuleContext
 from src.core.npc_behavior import NPCBehavior
-from src.models.rule import Rule, TriggerCondition, RuleEffect, EffectType, RULE_TEMPLATES
+from src.models.rule import Rule, RULE_TEMPLATES
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -46,7 +44,7 @@ class CLIGame:
             return
             
         state = self.game_manager.state
-        print(f"\n📊 游戏状态")
+        print("\n📊 游戏状态")
         print(f"├─ 回合: {state.turn} | 第{state.day}天 {state.current_time}")
         print(f"├─ 阶段: {state.phase.value}")
         print(f"├─ 模式: {'幕后管理' if state.mode == GameMode.BACKSTAGE else '亲自下场'}")
@@ -82,7 +80,7 @@ class CLIGame:
         if not events:
             return
             
-        print(f"\n📋 最近事件:")
+        print("\n📋 最近事件:")
         for event in events:
             time = event.get("game_time", "")
             type_ = event.get("type", "unknown")
@@ -321,7 +319,7 @@ class CLIGame:
         
         # 显示统计
         stats = self.rule_executor.get_execution_stats()
-        print(f"\n本回合统计:")
+        print("\n本回合统计:")
         print(f"- 规则触发次数: {stats['total_executions']}")
         print(f"- 存活NPC: {len(self.game_manager.get_alive_npcs())}")
         print(f"- 当前恐惧积分: {self.game_manager.state.fear_points}")
@@ -389,7 +387,7 @@ class CLIGame:
         print(f"\n结束原因: {reason}")
         
         summary = self.game_manager.get_summary()
-        print(f"\n游戏统计:")
+        print("\n游戏统计:")
         print(f"- 总回合数: {summary['turn']}")
         print(f"- 存活天数: {summary['day']}")
         print(f"- 最终恐惧积分: {summary['fear_points']}")
