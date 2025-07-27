@@ -130,6 +130,26 @@ class Config:
 config = Config()
 
 
+def load_config(path: str | None = None) -> Config:
+    """从指定路径加载JSON配置并更新全局配置对象"""
+    if path:
+        cfg_path = Path(path)
+        if cfg_path.exists():
+            try:
+                with open(cfg_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if isinstance(data, dict):
+                        config._config.update(data)
+                        logger.info(f"已加载自定义配置: {path}")
+                    else:
+                        logger.warning(f"配置文件{path}不是有效的JSON对象")
+            except Exception as e:
+                logger.error(f"加载自定义配置失败: {e}")
+        else:
+            logger.error(f"配置文件不存在: {path}")
+    return config
+
+
 # 便捷函数
 def get_deepseek_config() -> Dict[str, str]:
     """获取DeepSeek配置"""
@@ -144,3 +164,13 @@ def is_test_mode() -> bool:
 def is_debug_mode() -> bool:
     """是否处于调试模式"""
     return config.is_debug_mode()
+
+
+__all__ = [
+    "Config",
+    "config",
+    "load_config",
+    "get_deepseek_config",
+    "is_test_mode",
+    "is_debug_mode",
+]
