@@ -286,6 +286,18 @@ class GameStateManager:
     def get_active_npcs(self) -> List[Dict[str, Any]]:
         """获取存活的NPC列表"""
         return [npc for npc in self.npcs if npc.get("hp", 0) > 0]
+
+    def get_npcs_in_location(self, location: str) -> List[Dict[str, Any]]:
+        """获取指定位置的NPC"""
+        return [npc for npc in self.npcs
+                if npc.get("location") == location]
+
+    def get_alive_npcs(self) -> List[Dict[str, Any]]:
+        """获取仍然存活且未被标记为死亡的NPC"""
+        return [
+            npc for npc in self.npcs
+            if npc.get("hp", 0) > 0 and npc.get("alive", True) is not False
+        ]
         
     def get_active_rules(self) -> List[Any]:
         """获取激活的规则列表"""
