@@ -12,7 +12,8 @@ import logging
 from pathlib import Path
 
 from src.core.game_state import GameState
-from src.models.rule import Rule, RuleManager
+from src.models.rule import Rule
+from src.models.rule_manager import RuleManager
 from src.models.npc import NPC, NPCManager
 from src.core.narrator import Narrator
 from src.core.dialogue_system import DialogueSystem
