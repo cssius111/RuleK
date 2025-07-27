@@ -276,12 +276,12 @@ class SaveManager:
             "fear_points": state.fear_points,
             "current_time": state.current_time,
             "active_rules": list(state.active_rules),
-            "events_history": state.events_history[-100:],  # 只保存最近100条事件
+            "events_history": getattr(state, "events_history", getattr(state, "event_log", []))[-100:],  # 只保存最近100条事件
             "statistics": {
                 "total_fear_gained": state.total_fear_gained,
                 "npcs_died": state.npcs_died,
                 "rules_triggered": state.rules_triggered,
-                "rules_discovered": state.rules_discovered
+                "rules_discovered": getattr(state, "rules_discovered", 0)
             }
         }
     
@@ -355,7 +355,8 @@ class SaveManager:
         
         # 恢复集合类型
         state.active_rules = set(data.get("active_rules", []))
-        state.events_history = data.get("events_history", [])
+        events = data.get("events_history", data.get("event_log", []))
+        state.events_history = events
         
         # 恢复统计信息
         stats = data.get("statistics", {})
