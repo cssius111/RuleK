@@ -42,7 +42,7 @@ cp .env.example .env
 
 ```bash
 # 运行主游戏（推荐）
-python main_game_v2.py
+python rulek.py
 
 # 或运行快速演示
 python scripts/demo_sprint2.py
@@ -62,8 +62,7 @@ RuleK/
 │   ├── unit/              # 单元测试
 │   └── integration/       # 集成测试
 ├── scripts/                # 脚本文件
-│   ├── demo_sprint2.py    # Sprint 2功能演示
-│   └── run_tests.py       # 测试运行器
+│   └── demo_sprint2.py    # Sprint 2功能演示
 ├── data/                   # 游戏数据
 │   ├── saves/             # 存档文件
 │   └── cache/             # API缓存
@@ -77,15 +76,14 @@ RuleK/
 ## 🧪 运行测试
 
 ```bash
-# 运行测试脚本（推荐）
-python scripts/run_tests.py
+# 使用统一入口
+python rulek.py test
 
-# 或直接使用pytest
+# 或直接使用 pytest
 pytest tests/
 
 # 运行覆盖率测试
-python -m coverage run -m pytest tests/
-python -m coverage report
+pytest tests/ --cov=src --cov-report=term
 ```
 
 ## 🎯 游戏玩法

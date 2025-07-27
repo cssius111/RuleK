@@ -18,7 +18,7 @@
 7. `src/models/rule.py` - 新增10个规则模板
 
 ### 游戏和测试 (3个文件)
-8. `main_game_v2.py` - 集成AI功能的主游戏
+8. `rulek.py` - 统一入口（替代 `main_game_v2.py`）
 9. `test_sprint2.py` - Sprint 2功能测试
 10. `test_sprint2_integration.py` - 集成测试脚本
 
@@ -31,7 +31,7 @@
 
 ### 1. 运行完整游戏
 ```bash
-python main_game_v2.py
+python rulek.py
 ```
 
 ### 2. 测试所有新功能
@@ -93,7 +93,7 @@ python -m src.core.event_system
 
 ## 🎯 下一步
 
-1. **立即可玩**: 运行 `python main_game_v2.py` 体验完整游戏
+1. **立即可玩**: 运行 `python rulek.py` 体验完整游戏
 2. **Web开发**: 查看 `SPRINT_3_PLAN.md` 开始Web UI开发
 3. **自定义内容**: 编辑JSON文件添加自己的规则和事件
 
