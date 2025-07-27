@@ -14,7 +14,7 @@ from pathlib import Path
 from src.core.game_state import GameState
 from src.models.rule import Rule
 from src.models.rule_manager import RuleManager
-from src.models.npc import NPC, NPCManager
+from src.models import NPC, NPCManager
 from src.core.narrator import Narrator
 from src.core.dialogue_system import DialogueSystem
 from src.core.event_system import EventSystem
