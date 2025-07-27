@@ -11,7 +11,8 @@ from datetime import datetime
 # 添加项目根目录到Python路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from src.core.game_state import GameStateManager, GamePhase, GameMode
+from src.core.game_state import GameStateManager
+from src.core.enums import GamePhase, GameMode
 from src.core.rule_executor import RuleExecutor, RuleContext
 from src.core.npc_behavior import NPCBehavior
 from src.models.rule import Rule, TriggerCondition, RuleEffect, EffectType, RULE_TEMPLATES

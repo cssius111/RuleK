@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 import json
 from pathlib import Path
 
+from .enums import GamePhase, GameMode
+
 
 @dataclass
 class GameState:
@@ -21,8 +23,9 @@ class GameState:
     fear_points: int = 1000
     
     # 游戏阶段
-    phase: str = "preparation"  # preparation, dialogue, action, resolution
+    phase: GamePhase = GamePhase.SETUP
     time_of_day: str = "morning"  # morning, afternoon, evening, night
+    mode: GameMode = GameMode.BACKSTAGE
     
     # 统计
     total_fear_gained: int = 0
@@ -42,7 +45,8 @@ class GameState:
             "started_at": self.started_at.isoformat(),
             "current_turn": self.current_turn,
             "fear_points": self.fear_points,
-            "phase": self.phase,
+            "phase": self.phase.value,
+            "mode": self.mode.value,
             "time_of_day": self.time_of_day,
             "total_fear_gained": self.total_fear_gained,
             "npcs_died": self.npcs_died,
@@ -88,7 +92,9 @@ class GameStateManager:
         self.state = GameState(
             game_id=game_id,
             fear_points=config.get("initial_fear_points", 1000),
-            difficulty=config.get("difficulty", "normal")
+            difficulty=config.get("difficulty", "normal"),
+            phase=GamePhase.SETUP,
+            mode=GameMode.BACKSTAGE,
         )
         self.state.npcs = {}
         
@@ -119,8 +125,9 @@ class GameStateManager:
                 started_at=datetime.fromisoformat(data["state"]["started_at"]),
                 current_turn=data["state"]["current_turn"],
                 fear_points=data["state"]["fear_points"],
-                phase=data["state"]["phase"],
+                phase=GamePhase(data["state"].get("phase", GamePhase.SETUP.value)),
                 time_of_day=data["state"]["time_of_day"],
+                mode=GameMode(data["state"].get("mode", GameMode.BACKSTAGE.value)),
                 total_fear_gained=data["state"]["total_fear_gained"],
                 npcs_died=data["state"]["npcs_died"],
                 rules_triggered=data["state"]["rules_triggered"],
@@ -184,11 +191,11 @@ class GameStateManager:
         self.log(f"第 {self.state.current_turn} 回合 - {self.get_time_display()}")
         self.log(f"当前恐惧点数: {self.state.fear_points}")
         
-    def change_phase(self, new_phase: str):
+    def change_phase(self, new_phase: GamePhase):
         """改变游戏阶段"""
         old_phase = self.state.phase
         self.state.phase = new_phase
-        self.log(f"阶段转换: {old_phase} → {new_phase}")
+        self.log(f"阶段转换: {old_phase.value} → {new_phase.value}")
         
     def add_fear_points(self, amount: int, source: str = "unknown"):
         """增加恐惧点数"""
