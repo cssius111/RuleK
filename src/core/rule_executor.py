@@ -277,10 +277,11 @@ class RuleExecutor:
         else:
             logger.warning(f"未知的副作用: {side_effect}")
             
-    def _add_scene_effect(self, location: str, effect: str):
+    def _add_scene_effect(self, location: str, effect: str) -> bool:
         """添加场景效果"""
-        # TODO: 实现场景效果系统
+        # TODO: 接入真实场景系统
         logger.info(f"场景效果: {location} - {effect}")
+        return True
         
     def _alert_nearby_npcs(self, location: str):
         """警告附近的NPC"""
@@ -291,15 +292,17 @@ class RuleExecutor:
                 "suspicion": min(100, npc.get("suspicion", 0) + 5)
             })
             
-    def _change_room_temp(self, location: str, change: int):
+    def _change_room_temp(self, location: str, change: int) -> bool:
         """改变房间温度"""
-        # TODO: 实现环境系统
+        # TODO: 接入真实环境系统
         logger.info(f"温度变化: {location} {change:+d}°C")
+        return True
         
-    def _trigger_light_event(self, location: str):
+    def _trigger_light_event(self, location: str) -> bool:
         """触发灯光事件"""
-        # TODO: 实现灯光系统
+        # TODO: 接入真实灯光系统
         logger.info(f"灯光闪烁: {location}")
+        return True
         
     def update_cooldowns(self):
         """更新所有规则的冷却时间"""
