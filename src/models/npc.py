@@ -413,6 +413,10 @@ class NPC(BaseModel):
         """Pydantic配置"""
         use_enum_values = True
 
+    def to_dict(self) -> Dict[str, Any]:
+        """Return a dictionary representation of the NPC."""
+        return self.model_dump()
+
 
 # NPC名字池
 NPC_NAMES = [
