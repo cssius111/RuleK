@@ -1,0 +1,29 @@
+# 核心依赖
+pydantic==2.5.0
+httpx==0.25.2
+
+# CLI界面（可选）
+colorama==0.4.6
+
+# 日志（可选）
+loguru==0.7.2
+
+# 测试
+pytest==7.4.3
+pytest-asyncio==0.21.1
+coverage==7.3.2
+
+# 开发工具（可选）
+black==23.12.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Web开发（未来使用）
+# fastapi==0.104.1
+# uvicorn[standard]==0.24.0
+# websockets==12.0
+
+# 注意事项：
+# 1. Python 3.7+ 必需（使用了asyncio）
+# 2. 大部分功能使用Python标准库
+# 3. Mock模式下不需要API密钥

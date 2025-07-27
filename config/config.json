@@ -1,0 +1,18 @@
+{
+  "game": {
+    "initial_fear_points": 1000,
+    "max_npcs": 8,
+    "max_rules": 20,
+    "turn_duration": 300
+  },
+  "api": {
+    "deepseek_endpoint": "https://api.deepseek.com/v1/chat/completions",
+    "max_retries": 3,
+    "timeout": 30
+  },
+  "debug": {
+    "enable_logging": true,
+    "log_level": "INFO",
+    "save_replay": true
+  }
+}
