@@ -159,47 +159,35 @@ def create_default_npcs(self):
     print("✅ 已修复默认NPC创建")
 
 def fix_time_range_check():
-    """修复时间范围检查以支持宽松格式"""
+    """修复时间范围检查，严格验证时间格式"""
     print("\n🔧 修复时间范围检查...")
     
     rule_executor_path = PROJECT_ROOT / "src/core/rule_executor.py"
     with open(rule_executor_path, 'r', encoding='utf-8') as f:
         content = f.read()
     
-    # 修改 _check_time_range 方法以支持宽松的时间格式
+    # 修改 _check_time_range 方法，使用正则检查格式
     new_method = '''    def _check_time_range(self, current_time: str, time_range: Dict[str, str]) -> bool:
         """检查时间是否在范围内
-        
+
         Args:
-            current_time: 当前时间字符串，支持 "H:MM" 或 "HH:MM" 格式
+            current_time: 当前时间字符串，格式为 "HH:MM"
             time_range: 时间范围字典，包含 "from" 和 "to" 键
-            
+
         Returns:
             bool: 时间是否在范围内
         """
         try:
-            # 标准化时间格式函数
-            def normalize_time(time_str: str) -> str:
-                """将时间字符串标准化为 HH:MM 格式"""
-                if not time_str:
-                    return ""
-                parts = time_str.split(":")
-                if len(parts) != 2:
-                    return ""
-                hour, minute = parts
-                # 补充前导零
-                hour = hour.zfill(2)
-                minute = minute.zfill(2)
-                return f"{hour}:{minute}"
-            
-            # 标准化所有时间
-            current_time = normalize_time(current_time)
-            start_time = normalize_time(time_range.get("from", ""))
-            end_time = normalize_time(time_range.get("to", ""))
-            
-            # 验证格式
-            if not all([current_time, start_time, end_time]):
-                return False
+            import re
+
+            start_time = time_range.get("from", "")
+            end_time = time_range.get("to", "")
+
+            pattern = re.compile(r"^\d{2}:\d{2}$")
+            for label, t in {"current_time": current_time, "start_time": start_time, "end_time": end_time}.items():
+                if not pattern.match(t):
+                    logger.error(f"时间格式错误: '{t}' 不符合 HH:MM 格式")
+                    return False
             
             # 使用 datetime 解析时间以确保格式正确
             current = datetime.strptime(current_time, "%H:%M")
@@ -229,7 +217,7 @@ def fix_time_range_check():
                 return start <= current <= end
                 
         except ValueError as e:
-            logger.error(f"时间格式错误: {e}. 期望格式: HH:MM 或 H:MM")
+            logger.error(f"时间格式错误: {e}. 期望格式: HH:MM")
             return False
         except Exception as e:
             logger.error(f"时间范围检查失败: {e}")
