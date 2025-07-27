@@ -120,7 +120,7 @@ backend/
 创建 `.env` 文件（如果需要）：
 ```
 DEEPSEEK_API_KEY=your_api_key_here
-LOG_LEVEL=INFO
+LOG_LEVEL=INFO  # 或數值，例如 20
 ```
 
 ### 日志

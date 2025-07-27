@@ -119,7 +119,7 @@ def main():
     
     args = parser.parse_args()
     
-    # 设置日志级别
+    # 设置日志级别（支持传入 logging.INFO 或 "INFO" 等值）
     log_level = logging.DEBUG if args.debug else logging.INFO
     logger = setup_logger("main", level=log_level)
     

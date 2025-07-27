@@ -63,14 +63,29 @@ class ColoredFormatter(logging.Formatter):
 
 def setup_logger(
     name: str,
-    level: str = "INFO",
+    level: str | int = "INFO",
     log_file: Optional[str] = None,
     console: bool = True
 ) -> logging.Logger:
-    """设置日志器"""
-    
+    """设置日志器
+
+    Parameters
+    ----------
+    name : str
+        日志器名称
+    level : str | int, optional
+        日志级别，可以是 ``"INFO"`` 这样的字符串或 ``logging.INFO`` 的整数值。
+    log_file : Optional[str], optional
+        如果提供则写入指定的日志文件
+    console : bool, optional
+        是否输出到控制台
+    """
+
     logger = logging.getLogger(name)
-    logger.setLevel(LOG_LEVELS.get(level.upper(), logging.INFO))
+    if isinstance(level, int):
+        logger.setLevel(level)
+    else:
+        logger.setLevel(LOG_LEVELS.get(str(level).upper(), logging.INFO))
     
     # 清除现有处理器
     logger.handlers.clear()
