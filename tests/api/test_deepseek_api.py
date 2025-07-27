@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.api.deepseek_client import DeepSeekClient
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 
 
 class TestDeepSeekAPI:
@@ -110,26 +110,34 @@ class TestDeepSeekAPI:
         except Exception as e:
             pytest.fail(f"叙事生成失败: {e}")
     
-    def test_sync_methods(self, mock_client):
+    @pytest.mark.asyncio
+    async def test_sync_methods(self, mock_client):
         """测试同步方法（使用模拟）"""
         print("测试同步方法...")
-        
+
         # 模拟API响应
         mock_response = {
             "choices": [{
                 "message": {
-                    "content": "这是一个测试响应"
+                    "content": "测试NPC：这是一个测试响应"
                 }
             }]
         }
-        
-        with patch.object(mock_client, '_make_request', return_value=mock_response):
-            response = mock_client.generate_dialogue(
-                context="测试",
-                participants=["测试NPC"]
-            )
-            
-            assert response == "这是一个测试响应"
+
+        npc_states = [{
+            "name": "测试NPC",
+            "fear": 0,
+            "sanity": 100,
+            "status": "normal",
+            "rationality": 5,
+            "courage": 5,
+        }]
+        scene_context = {"location": "测试地点", "time": "白天"}
+
+        with patch.object(mock_client, "_make_request", new=AsyncMock(return_value=mock_response)):
+            dialogues = await mock_client.generate_dialogue(npc_states, scene_context)
+
+            assert dialogues == [{"speaker": "测试NPC", "text": "这是一个测试响应"}]
             print("✓ 同步方法测试通过")
     
     @pytest.mark.asyncio
