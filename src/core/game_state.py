@@ -28,6 +28,9 @@ class GameState:
     total_fear_gained: int = 0
     npcs_died: int = 0
     rules_triggered: int = 0
+
+    # 角色
+    npcs: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     
     # 游戏设置
     difficulty: str = "normal"  # easy, normal, hard
@@ -44,7 +47,8 @@ class GameState:
             "total_fear_gained": self.total_fear_gained,
             "npcs_died": self.npcs_died,
             "rules_triggered": self.rules_triggered,
-            "difficulty": self.difficulty
+            "difficulty": self.difficulty,
+            "npcs": self.npcs
         }
 
 
@@ -86,6 +90,7 @@ class GameStateManager:
             fear_points=config.get("initial_fear_points", 1000),
             difficulty=config.get("difficulty", "normal")
         )
+        self.state.npcs = {}
         
         self.rules = []
         self.npcs = []
@@ -123,7 +128,8 @@ class GameStateManager:
             )
             
             self.rules = data.get("rules", [])
-            self.npcs = data.get("npcs", [])
+            self.npcs = list(data.get("state", {}).get("npcs", {}).values())
+            self.state.npcs = data.get("state", {}).get("npcs", {})
             self.spirits = data.get("spirits", [])
             self.game_log = data.get("game_log", [])
             
@@ -206,6 +212,8 @@ class GameStateManager:
     def add_npc(self, npc: Dict[str, Any]):
         """添加NPC"""
         self.npcs.append(npc)
+        if self.state:
+            self.state.npcs[npc.get("id")] = npc
         self.log(f"NPC [{npc['name']}] 加入游戏")
         
     def update_npc(self, npc_id: str, updates: Dict[str, Any]):
@@ -214,12 +222,16 @@ class GameStateManager:
             if npc.get("id") == npc_id:
                 npc.update(updates)
                 break
+        if self.state and npc_id in self.state.npcs:
+            self.state.npcs[npc_id].update(updates)
                 
     def remove_npc(self, npc_id: str):
         """移除NPC（死亡）"""
         for i, npc in enumerate(self.npcs):
             if npc.get("id") == npc_id:
                 dead_npc = self.npcs.pop(i)
+                if self.state:
+                    self.state.npcs.pop(npc_id, None)
                 self.state.npcs_died += 1
                 self.log(f"NPC [{dead_npc['name']}] 已死亡")
                 self._trigger_event("npc_died", {"npc": dead_npc})
