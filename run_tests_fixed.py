@@ -9,7 +9,7 @@ from pathlib import Path
 
 def main():
     """运行测试，忽略已知的警告"""
-    project_root = Path(__file__).parent.parent
+    project_root = Path(__file__).parent
     os.chdir(project_root)
     
     print("🧪 规则怪谈管理者 - 测试运行器（已修复版）")
@@ -25,9 +25,7 @@ def main():
         "tests/",
         "-v",                           # 详细输出
         "--tb=short",                   # 简短回溯
-        "--asyncio-mode=auto",          # 自动异步模式
         "-W", "ignore::DeprecationWarning",  # 忽略弃用警告
-        "-W", "ignore::PydanticDeprecatedSince20",  # 忽略Pydantic警告
         "--color=yes",                  # 彩色输出
     ]
     

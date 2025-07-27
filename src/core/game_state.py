@@ -154,10 +154,13 @@ class GameStateManager:
             print(f"读取存档失败: {e}")
             return False
             
-    def save_game(self, filename: Optional[str] = None) -> bool:
-        """保存游戏"""
+    def save_game(self, filename: Optional[str] = None) -> Optional[str]:
+        """保存游戏
+
+        Returns the path to the saved file if successful, otherwise ``None``.
+        """
         if not self.state:
-            return False
+            return None
             
         if filename:
             save_file = self.save_dir / filename
@@ -165,10 +168,36 @@ class GameStateManager:
             save_file = self.save_dir / f"{self.state.game_id}.json"
         
         try:
+            # 转换NPC对象为纯字典
+            serialized_state_npcs = {}
+            for npc_id, npc in self.state.npcs.items():
+                if hasattr(npc, "model_dump"):
+                    serialized_state_npcs[npc_id] = npc.model_dump()
+                elif hasattr(npc, "dict"):
+                    serialized_state_npcs[npc_id] = npc.dict()
+                elif isinstance(npc, dict):
+                    serialized_state_npcs[npc_id] = npc
+                else:
+                    serialized_state_npcs[npc_id] = npc.__dict__
+
+            serialized_npcs = []
+            for npc in self.npcs:
+                if hasattr(npc, "model_dump"):
+                    serialized_npcs.append(npc.model_dump())
+                elif hasattr(npc, "dict"):
+                    serialized_npcs.append(npc.dict())
+                elif isinstance(npc, dict):
+                    serialized_npcs.append(npc)
+                else:
+                    serialized_npcs.append(npc.__dict__)
+
+            state_data = self.state.to_dict()
+            state_data["npcs"] = serialized_state_npcs
+
             save_data = {
-                "state": self.state.to_dict(),
+                "state": state_data,
                 "rules": [r.dict() if hasattr(r, 'dict') else r for r in self.rules],
-                "npcs": self.npcs,
+                "npcs": serialized_npcs,
                 "spirits": self.spirits,
                 "game_log": self.game_log[-100:],  # 只保存最近100条日志
                 "saved_at": datetime.now().isoformat()
@@ -178,11 +207,11 @@ class GameStateManager:
                 json.dump(save_data, f, indent=2, ensure_ascii=False)
                 
             self.log("游戏已保存")
-            return True
+            return str(save_file)
             
         except Exception as e:
             print(f"保存游戏失败: {e}")
-            return False
+            return None
             
     def advance_turn(self):
         """推进回合"""

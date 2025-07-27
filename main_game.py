@@ -403,8 +403,9 @@ class RuleKGame:
         
     def save_game(self):
         """保存游戏"""
-        if self.game_state.save_game():
-            self.cli.print_success("游戏已保存！")
+        path = self.game_state.save_game()
+        if path:
+            self.cli.print_success(f"游戏已保存到: {path}")
         else:
             self.cli.print_error("保存失败！")
         self.cli.get_input("\n按回车继续...")
