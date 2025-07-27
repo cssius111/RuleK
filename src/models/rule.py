@@ -114,7 +114,19 @@ class Rule(BaseModel):
         # 检查时间条件
         if self.trigger.time_range:
             current_time = context.get('current_time', '00:00')
-            # TODO: 实现时间范围检查逻辑
+            try:
+                current = int(current_time.replace(":", ""))
+                start = int(self.trigger.time_range["from"].replace(":", ""))
+                end = int(self.trigger.time_range["to"].replace(":", ""))
+
+                if start <= end:
+                    if not (start <= current <= end):
+                        return False
+                else:
+                    if not (current >= start or current <= end):
+                        return False
+            except Exception:
+                return False
             
         # 检查地点条件
         if self.trigger.location:
