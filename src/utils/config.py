@@ -23,7 +23,11 @@ class Config:
     
     def _load_env(self):
         """加载环境变量"""
-        from dotenv import find_dotenv, load_dotenv
+        try:
+            from dotenv import find_dotenv, load_dotenv
+        except ImportError:
+            logger.warning("python-dotenv 未安装，跳过加载 .env 文件")
+            return
 
         # 使用绝对路径查找 .env，兼容不同工作目录
         search_path = self.project_root / ".env"

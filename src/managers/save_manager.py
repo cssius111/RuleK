@@ -271,6 +271,7 @@ class SaveManager:
         return {
             "game_id": state.game_id,
             "turn": state.turn,
+            "day": state.day,
             "phase": state.phase,
             "fear_points": state.fear_points,
             "current_time": state.current_time,
@@ -344,12 +345,13 @@ class SaveManager:
     
     def _deserialize_game_state(self, data: Dict[str, Any]) -> GameState:
         """反序列化游戏状态"""
-        state = GameState()
+        state = GameState(game_id=data.get("game_id", "unknown"))
         
         # 恢复基本属性
-        for key in ["game_id", "turn", "phase", "fear_points", "current_time"]:
+        for key in ["game_id", "turn", "day", "phase", "fear_points", "current_time"]:
             if key in data:
                 setattr(state, key, data[key])
+        state.current_turn = state.turn
         
         # 恢复集合类型
         state.active_rules = set(data.get("active_rules", []))

@@ -18,6 +18,7 @@ class GameState:
     game_id: str
     started_at: datetime = field(default_factory=datetime.now)
     current_turn: int = 0
+    day: int = 1
     
     # 资源
     fear_points: int = 1000
@@ -35,6 +36,16 @@ class GameState:
     # 规则
     active_rules: List[str] = field(default_factory=list)
     turn: int = 0  # 当前回合（与current_turn同步）
+
+    # 兼容旧字段
+    @property
+    def current_time(self) -> str:
+        """向后兼容的时间字段"""
+        return self.time_of_day
+
+    @current_time.setter
+    def current_time(self, value: str):
+        self.time_of_day = value
     
     # 角色
     npcs: Dict[str, Dict[str, Any]] = field(default_factory=dict)
@@ -49,10 +60,12 @@ class GameState:
             "started_at": self.started_at.isoformat(),
             "current_turn": self.current_turn,
             "turn": self.turn,
+            "day": self.day,
             "fear_points": self.fear_points,
             "phase": self.phase.value,
             "mode": self.mode.value,
             "time_of_day": self.time_of_day,
+            "current_time": self.current_time,
             "active_rules": self.active_rules,
             "total_fear_gained": self.total_fear_gained,
             "npcs_died": self.npcs_died,
@@ -102,6 +115,8 @@ class GameStateManager:
             phase=GamePhase.SETUP,
             mode=GameMode.BACKSTAGE,
         )
+        self.state.turn = self.state.current_turn
+        self.state.day = 1
         self.state.npcs = {}
         
         self.rules = []
@@ -142,6 +157,8 @@ class GameStateManager:
                 rules_triggered=data["state"]["rules_triggered"],
                 difficulty=data["state"]["difficulty"]
             )
+            self.state.turn = self.state.current_turn
+            self.state.day = data["state"].get("day", 1)
             
             self.rules = data.get("rules", [])
             self.npcs = list(data.get("state", {}).get("npcs", {}).values())
@@ -219,14 +236,17 @@ class GameStateManager:
         """推进回合"""
         if not self.state:
             raise RuntimeError("游戏未初始化")
-            
+
         self.state.current_turn += 1
+        self.state.turn = self.state.current_turn
         self._trigger_event("turn_start", {"turn": self.state.current_turn})
-        
+
         # 更新时间
         time_progression = ["morning", "afternoon", "evening", "night"]
         current_index = time_progression.index(self.state.time_of_day)
         self.state.time_of_day = time_progression[(current_index + 1) % 4]
+        if current_index == len(time_progression) - 1:
+            self.state.day += 1
         
         self.log(f"\n{'='*50}")
         self.log(f"第 {self.state.current_turn} 回合 - {self.get_time_display()}")
