@@ -227,8 +227,41 @@ class RuleKGame:
         print(chapter.title)
         print()
         await self.cli.animated_text(chapter.content, 0.03)
-        
+
         self.cli.get_input("\n按回车开始游戏...")
+
+    async def load_game_menu(self):
+        """加载游戏菜单"""
+        self.cli.clear_screen()
+        self.cli.print_header("继续游戏")
+
+        save_dir = self.game_state.save_dir
+        saves = list(save_dir.glob("*.json"))
+
+        if not saves:
+            self.cli.print_warning("没有找到存档文件")
+            self.cli.get_input("\n按回车返回...")
+            return
+
+        save_choice = self.cli.select_from_list(
+            saves,
+            lambda x: x.stem.replace("game_", "").replace("_", " ")
+        )
+
+        if save_choice:
+            game_id = save_choice.stem
+            if self.game_state.load_game(game_id):
+                self.current_game_id = game_id
+                self.cli.print_success("游戏加载成功！")
+                await asyncio.sleep(1)
+                await self.game_loop()
+            else:
+                self.cli.print_error("加载失败！")
+                self.cli.get_input("\n按回车返回...")
+
+    async def load_game(self):
+        """兼容旧接口"""
+        await self.load_game_menu()
         
     async def game_loop(self):
         """游戏主循环"""
