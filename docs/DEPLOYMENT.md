@@ -28,7 +28,7 @@
 ```bash
 # API配置
 DEEPSEEK_API_KEY=your_production_api_key
-LOG_LEVEL=WARNING
+LOG_LEVEL=WARNING  # 也可以使用數字值，例如 30
 DEBUG=False
 
 # 数据库配置（如果使用）

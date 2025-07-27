@@ -146,7 +146,7 @@ python rulek.py test integration
 
 ```env
 DEEPSEEK_API_KEY=your_api_key_here
-LOG_LEVEL=INFO
+LOG_LEVEL=INFO  # 也可以使用數字值，例如 20
 DEBUG=False
 ```
 
