@@ -41,13 +41,14 @@ class TestDeepSeekAPI:
             response = await client.generate_dialogue_async(
                 context="测试场景：玩家们在客厅相遇",
                 participants=["张三", "李四"],
-                max_tokens=100
+                max_tokens=100,
             )
-            
+
             assert response is not None
-            assert isinstance(response, str)
+            assert isinstance(response, list)
             assert len(response) > 0
-            print(f"✓ API响应成功: {response[:50]}...")
+            assert all("speaker" in d and "text" in d for d in response)
+            print(f"✓ API响应成功: {response[0]['text'][:50]}...")
             
         except Exception as e:
             pytest.fail(f"API连接失败: {e}")
@@ -190,10 +191,11 @@ class TestAPIIntegration:
         dialogue = await client.generate_dialogue_async(
             context="夜晚，两个陌生人被困在了一栋诡异的房子里",
             participants=[npc["name"] for npc in npcs],
-            max_tokens=150
+            max_tokens=150,
         )
-        assert dialogue is not None
-        print(f"   ✓ 对话生成: {dialogue[:80]}...")
+        assert isinstance(dialogue, list)
+        assert len(dialogue) > 0
+        print(f"   ✓ 对话生成: {dialogue[0]['text'][:80]}...")
         
         # 3. 评估规则
         print("3. 评估规则...")

@@ -250,6 +250,32 @@ class DeepSeekClient:
             self.cache.set(cache_key, {"npcs": len(npc_states)}, {"dialogues": dialogues})
         
         return dialogues
+
+    async def generate_dialogue_async(
+        self,
+        context: str,
+        participants: List[str],
+        max_tokens: Optional[int] = None,
+    ) -> List[Dict[str, str]]:
+        """Simplified async wrapper for :meth:`generate_dialogue`.
+
+        Args:
+            context: 场景描述文本
+            participants: 参与对话的角色名称列表
+            max_tokens: 与 ``generate_dialogue`` 兼容的占位参数
+
+        Returns:
+            对话列表 ``[{"speaker": str, "text": str}]``
+        """
+
+        npc_states = [{"name": name} for name in participants]
+        scene_context = {"description": context}
+
+        # 目前 ``generate_dialogue`` 并未暴露 ``max_tokens`` 参数，
+        # 因此在此仅保持接口兼容，不直接使用该值。
+        _ = max_tokens
+
+        return await self.generate_dialogue(npc_states, scene_context)
     
     async def evaluate_rule(
         self,
