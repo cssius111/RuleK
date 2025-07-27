@@ -15,35 +15,23 @@ class Config:
     """配置管理类"""
     
     def __init__(self):
-        self.project_root = Path(__file__).parent.parent
+        # 获取项目根目录，确保无论工作目录如何变化都能正确定位
+        self.project_root = Path(__file__).resolve().parents[2]
         self._config = {}
         self._load_env()
         self._load_config_files()
     
     def _load_env(self):
         """加载环境变量"""
-        env_file = self.project_root / ".env"
+        from dotenv import find_dotenv, load_dotenv
 
-        # 如果 .env 不存在则尝试使用 .env.example
-        if not env_file.exists():
-            example_file = self.project_root / ".env.example"
-            if example_file.exists():
-                env_file = example_file
+        # 使用绝对路径查找 .env，兼容不同工作目录
+        search_path = self.project_root / ".env"
+        dotenv_path = find_dotenv(str(search_path), usecwd=False)
 
-        if env_file.exists():
-            try:
-                with open(env_file, 'r') as f:
-                    for line in f:
-                        line = line.strip()
-                        if line and not line.startswith('#') and '=' in line:
-                            key, value = line.split('=', 1)
-                            key = key.strip()
-                            value = value.strip().strip('"').strip("'")
-                            os.environ[key] = value
-                            self._config[key] = value
-                logger.info(f"环境变量加载成功 ({env_file.name})")
-            except Exception as e:
-                logger.error(f"加载.env文件失败: {e}")
+        if dotenv_path and Path(dotenv_path).exists():
+            load_dotenv(dotenv_path)
+            logger.info(f"环境变量加载成功: {dotenv_path}")
         else:
             logger.warning("未找到.env文件，使用默认配置")
     
