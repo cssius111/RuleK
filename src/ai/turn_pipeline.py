@@ -3,6 +3,7 @@
 AI回合管线
 负责协调AI生成的对话、行动和叙事
 """
+from __future__ import annotations
 import logging
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
