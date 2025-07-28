@@ -24,7 +24,6 @@ from src.core.rule_executor import RuleExecutor, RuleContext
 from src.core.npc_behavior import NPCBehavior
 from src.models.rule import Rule, RULE_TEMPLATES
 from src.utils.logger import get_logger
-from src.utils.config import config as global_config
 
 logger = get_logger(__name__)
 
@@ -33,13 +32,10 @@ class CLIGame:
     """命令行游戏界面"""
     
     def __init__(self):
-        # 检查AI配置
-        ai_config = global_config.get("ai_enabled", False)
-        self.game_manager = GameStateManager(config={"ai_enabled": ai_config})
+        self.game_manager = GameStateManager()
         self.rule_executor = None
         self.npc_behavior = None
         self.running = True
-        self.ai_enabled = ai_config
         
     def clear_screen(self):
         """清屏"""
@@ -53,8 +49,6 @@ class CLIGame:
         print("=" * 60)
         print("🎭 规则怪谈管理者 - Rules of Horror Manager 🎭".center(60))
         print("=" * 60)
-        if self.ai_enabled:
-            print("🤖 AI模式已启用".center(60))
         
     def print_game_status(self):
         """打印游戏状态"""
@@ -146,16 +140,10 @@ class CLIGame:
             "difficulty": "normal"
         }
         
-        # 询问AI启用
-        ai_choice = input("\n启用AI功能？(y/n): ").strip().lower()
-        self.ai_enabled = ai_choice == 'y'
-        self.game_manager.ai_enabled = self.ai_enabled
-        
-        print("\n使用默认设置:")
+        print("使用默认设置:")
         print(f"- 初始恐惧积分: {config['initial_fear_points']}")
         print(f"- NPC数量: {config['starting_npcs']}")
         print(f"- 难度: {config['difficulty']}")
-        print(f"- AI模式: {'启用' if self.ai_enabled else '关闭'}")
         
         confirm = input("\n确认开始? (y/n): ").strip().lower()
         if confirm != 'y':
@@ -165,16 +153,6 @@ class CLIGame:
         self.game_manager.new_game(config=config)
         self.rule_executor = RuleExecutor(self.game_manager)
         self.npc_behavior = NPCBehavior(self.game_manager)
-        
-        # 初始化AI管线
-        if self.ai_enabled:
-            print("\n🤖 初始化AI系统...")
-            success = await self.game_manager.init_ai_pipeline()
-            if success:
-                print("✅ AI系统就绪！")
-            else:
-                print("⚠️  AI初始化失败，使用本地模式")
-                self.ai_enabled = False
         
         print("\n✅ 游戏创建成功！")
         await asyncio.sleep(1)
@@ -215,13 +193,8 @@ class CLIGame:
         print("2. 查看NPC状态")
         print("3. 切换控制模式")
         print("4. 开始回合")
-        if self.ai_enabled:
-            print("5. AI模式回合")
-            print("6. 保存游戏")
-            print("7. 返回主菜单")
-        else:
-            print("5. 保存游戏")
-            print("6. 返回主菜单")
+        print("5. 保存游戏")
+        print("6. 返回主菜单")
         
         choice = input("\n请选择: ").strip()
         
@@ -235,13 +208,9 @@ class CLIGame:
         elif choice == "4":
             self.game_manager.change_phase(GamePhase.ACTION)
             self.game_manager.advance_turn()
-        elif choice == "5" and self.ai_enabled:
-            await self.ai_turn_phase()
-        elif choice == "5" and not self.ai_enabled:
+        elif choice == "5":
             self.save_game()
-        elif choice == "6" and self.ai_enabled:
-            self.save_game()
-        elif (choice == "6" and not self.ai_enabled) or (choice == "7" and self.ai_enabled):
+        elif choice == "6":
             self.running = False
             
     async def manage_rules(self):
@@ -253,13 +222,8 @@ class CLIGame:
         
         print("\n1. 创建新规则")
         print("2. 使用模板创建")
-        if self.ai_enabled:
-            print("3. 🤖 AI解析规则")
-            print("4. 升级规则")
-            print("5. 返回")
-        else:
-            print("3. 升级规则")
-            print("4. 返回")
+        print("3. 升级规则")
+        print("4. 返回")
         
         choice = input("\n请选择: ").strip()
         
@@ -267,15 +231,13 @@ class CLIGame:
             await self.create_custom_rule()
         elif choice == "2":
             await self.create_rule_from_template()
-        elif choice == "3" and self.ai_enabled:
-            await self.create_rule_with_ai()
-        elif (choice == "3" and not self.ai_enabled) or (choice == "4" and self.ai_enabled):
+        elif choice == "3":
             print("升级功能尚未实现")
             await asyncio.sleep(1)
             
     async def create_custom_rule(self):
         """创建自定义规则"""
-        print("\n🔧 自定义规则创建")
+        print("\n🔧  自定义规则创建")
         print("（此功能需要详细的规则参数输入界面）")
         print("\n示例自定义规则参数：")
         print("- 名称: 自定义规则")
@@ -333,105 +295,6 @@ class CLIGame:
         except (ValueError, IndexError):
             print("无效选择！")
             await asyncio.sleep(1)
-            
-    async def create_rule_with_ai(self):
-        """使用AI创建规则"""
-        print("\n🤖 AI规则解析")
-        print("请用自然语言描述你想要的规则：")
-        print("例如：'晚上10点后不能开灯，否则会吸引怪物'")
-        
-        rule_description = input("\n规则描述: ").strip()
-        if not rule_description:
-            return
-            
-        print("\n🤖 AI正在解析规则...")
-        try:
-            result = await self.game_manager.evaluate_rule_nl(rule_description)
-            
-            if "error" in result:
-                print(f"❌ 解析失败: {result['error']}")
-                print(f"💡 建议: {result.get('suggestion', '请尝试更清晰地描述规则')}")
-                await asyncio.sleep(3)
-                return
-                
-            # 显示解析结果
-            print("\n📊 解析结果:")
-            print(f"规则名称: {result['name']}")
-            print(f"预估成本: {result['cost']} 恐惧积分")
-            print(f"难度等级: {result['difficulty']}/10")
-            print(f"预计恐惧收益: {result.get('estimated_fear_gain', '未知')}")
-            
-            if result['loopholes']:
-                print("\n⚠️ 潜在漏洞:")
-                for loophole in result['loopholes']:
-                    print(f"  - {loophole}")
-                    
-            print(f"\n💡 改进建议: {result['suggestion']}")
-            
-            # 询问是否创建
-            if self.game_manager.state.fear_points >= result['cost']:
-                confirm = input("\n确认创建此规则? (y/n): ").strip().lower()
-                if confirm == 'y':
-                    # TODO: 实现规则创建逻辑
-                    print("✅ 规则创建功能即将实现！")
-            else:
-                print(f"\n❌ 恐惧积分不足！需要 {result['cost']}，当前只有 {self.game_manager.state.fear_points}")
-                
-        except Exception as e:
-            print(f"❌ AI解析失败: {e}")
-            
-        await asyncio.sleep(3)
-            
-    async def ai_turn_phase(self):
-        """AI驱动的回合"""
-        print("\n🤖 AI回合模式")
-        print("AI将生成NPC对话和行动计划")
-        
-        confirm = input("\n开始AI回合? (y/n): ").strip().lower()
-        if confirm != 'y':
-            return
-            
-        try:
-            # 执行AI回合
-            print("\n🤖 AI正在生成回合内容...")
-            plan = await self.game_manager.run_ai_turn()
-            
-            if plan:
-                # 显示对话
-                if plan.dialogue:
-                    print("\n【NPC对话】")
-                    for d in plan.dialogue:
-                        print(f"{d.speaker}: {d.text}")
-                        if d.emotion:
-                            print(f"  (情绪: {d.emotion})")
-                    
-                # 显示行动计划
-                if plan.actions:
-                    print("\n【行动计划】")
-                    for a in plan.actions:
-                        action_desc = f"{a.npc} → {a.action}"
-                        if a.target:
-                            action_desc += f" {a.target}"
-                        if a.reason:
-                            action_desc += f" ({a.reason})"
-                        print(f"- {action_desc}")
-                        
-                # 询问是否执行
-                execute = input("\n执行这些行动? (y/n): ").strip().lower()
-                if execute == 'y':
-                    # 执行行动会在AI管线中完成
-                    print("✅ 行动已执行")
-                    
-                    # 进入结算阶段
-                    self.game_manager.change_phase(GamePhase.RESOLUTION)
-                    await self.resolution_phase()
-            else:
-                print("⚠️ AI回合生成失败")
-                
-        except Exception as e:
-            print(f"❌ AI回合出错: {e}")
-            
-        await asyncio.sleep(2)
             
     async def action_phase(self):
         """行动阶段"""
@@ -495,56 +358,17 @@ class CLIGame:
         print(f"- 存活NPC: {len(self.game_manager.get_alive_npcs())}")
         print(f"- 当前恐惧积分: {self.game_manager.state.fear_points}")
         
-        # AI叙事生成
-        if self.ai_enabled and self.game_manager.ai_pipeline:
-            choice = input("\n生成本回合叙事？(y/n): ").strip().lower()
-            if choice == 'y':
-                print("\n📖 生成叙事中...")
-                try:
-                    narrative = await self.game_manager.generate_narrative()
-                    print("\n【回合叙事】")
-                    print("-" * 60)
-                    print(narrative)
-                    print("-" * 60)
-                except Exception as e:
-                    print(f"⚠️ 叙事生成失败: {e}")
-        
         input("\n按回车进入下一回合...")
         
         # 回到准备阶段
         self.game_manager.change_phase(GamePhase.SETUP)
         
     async def dialogue_phase(self):
-        """对话阶段"""
+        """对话阶段（简化版）"""
         print("\n💬 对话阶段")
+        print("（对话生成功能需要接入AI）")
         
-        if self.ai_enabled and self.game_manager.ai_pipeline:
-            # 使用AI生成对话
-            print("🤖 AI正在生成对话...")
-            try:
-                plan = await self.game_manager.run_ai_turn(force_dialogue=True)
-                if plan and plan.dialogue:
-                    print("\n[对话内容]")
-                    for d in plan.dialogue:
-                        print(f"  {d.speaker}: {d.text}")
-                        if d.emotion:
-                            print(f"    (情绪: {d.emotion})")
-                        await asyncio.sleep(1.5)
-                else:
-                    print("⚠️ AI未生成对话")
-            except Exception as e:
-                print(f"⚠️ AI对话生成失败: {e}")
-                await self._fallback_dialogue()
-        else:
-            # 退化到简单对话
-            await self._fallback_dialogue()
-                
-        _pause()
-        # 进入下一个阶段
-        self.game_manager.change_phase(GamePhase.ACTION)
-    
-    async def _fallback_dialogue(self):
-        """备用对话生成"""
+        # 模拟一些简单对话
         npcs = self.game_manager.get_alive_npcs()
         if len(npcs) >= 2:
             import random
@@ -559,6 +383,10 @@ class CLIGame:
             for dialogue in dialogues:
                 print(f"  {dialogue}")
                 await asyncio.sleep(1)
+                
+        _pause()
+        # 进入下一个阶段
+        self.game_manager.change_phase(GamePhase.ACTION)
         
     async def switch_mode(self):
         """切换控制模式"""
@@ -619,18 +447,6 @@ class CLIGame:
                     print("✅ 游戏加载成功！")
                     self.rule_executor = RuleExecutor(self.game_manager)
                     self.npc_behavior = NPCBehavior(self.game_manager)
-                    
-                    # 如果存档启用了AI，尝试初始化
-                    if self.game_manager.ai_enabled:
-                        print("🤖 初始化AI系统...")
-                        success = await self.game_manager.init_ai_pipeline()
-                        if success:
-                            print("✅ AI系统就绪！")
-                            self.ai_enabled = True
-                        else:
-                            print("⚠️ AI初始化失败")
-                            self.ai_enabled = False
-                    
                     await asyncio.sleep(1)
                     await self.game_loop()
                 else:
@@ -661,10 +477,6 @@ class CLIGame:
         print(f"- 最终恐惧积分: {summary['fear_points_final']}")
         print(f"- 创建规则数: {summary['rules_created']}")
         
-        # 关闭AI客户端
-        if self.ai_enabled and self.game_manager.ai_pipeline:
-            await self.game_manager.close_ai()
-        
         input("\n按回车返回主菜单...")
         
     async def run(self):
@@ -677,10 +489,6 @@ class CLIGame:
         except Exception as e:
             logger.error(f"游戏出错: {e}", exc_info=True)
             print(f"\n❌ 游戏出错: {e}")
-        finally:
-            # 确保关闭AI客户端
-            if hasattr(self, 'game_manager') and self.game_manager.ai_pipeline:
-                await self.game_manager.close_ai()
 
 
 async def main():

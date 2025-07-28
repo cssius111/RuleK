@@ -30,7 +30,12 @@ from src.utils.logger import setup_logger
 # 导入数据模型
 from .models import (
     GameCreateRequest, GameStateResponse, RuleCreateRequest,
-    ActionRequest, WebSocketMessage
+    ActionRequest, WebSocketMessage,
+    # AI相关模型
+    AITurnRequest, AITurnPlanResponse,
+    AIRuleEvaluationRequest, AIRuleEvaluationResponse,
+    AINarrativeRequest, AINarrativeResponse,
+    AIDialogueResponse, AIActionResponse
 )
 from .services.game_service import GameService
 from .services.session_manager import SessionManager
@@ -184,6 +189,105 @@ async def load_game(filename: str):
         raise HTTPException(status_code=404, detail="Save file not found")
     except Exception as e:
         logger.error(f"Failed to load game: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ==================== AI相关API ====================
+
+@app.post("/api/games/{game_id}/ai/turn", response_model=AITurnPlanResponse)
+async def run_ai_turn(game_id: str, request: AITurnRequest):
+    """执行AI驱动的回合"""
+    game_service = session_manager.get_game(game_id)
+    if not game_service:
+        raise HTTPException(status_code=404, detail="Game not found")
+    
+    # 检查游戏是否启用AI
+    if not game_service.is_ai_enabled():
+        raise HTTPException(status_code=400, detail="AI is not enabled for this game")
+    
+    try:
+        plan = await game_service.run_ai_turn(
+            force_dialogue=request.force_dialogue
+        )
+        return plan
+    except Exception as e:
+        logger.error(f"Failed to run AI turn: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/games/{game_id}/ai/evaluate-rule", response_model=AIRuleEvaluationResponse)
+async def evaluate_rule_ai(game_id: str, request: AIRuleEvaluationRequest):
+    """使用AI评估自然语言规则"""
+    game_service = session_manager.get_game(game_id)
+    if not game_service:
+        raise HTTPException(status_code=404, detail="Game not found")
+    
+    if not game_service.is_ai_enabled():
+        raise HTTPException(status_code=400, detail="AI is not enabled for this game")
+    
+    try:
+        result = await game_service.evaluate_rule_nl(
+            rule_description=request.rule_description
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Failed to evaluate rule: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/games/{game_id}/ai/narrative", response_model=AINarrativeResponse)
+async def generate_narrative(game_id: str, request: AINarrativeRequest):
+    """AI生成回合叙事"""
+    game_service = session_manager.get_game(game_id)
+    if not game_service:
+        raise HTTPException(status_code=404, detail="Game not found")
+    
+    if not game_service.is_ai_enabled():
+        raise HTTPException(status_code=400, detail="AI is not enabled for this game")
+    
+    try:
+        narrative = await game_service.generate_narrative(
+            include_hidden=request.include_hidden_events
+        )
+        return AINarrativeResponse(
+            narrative=narrative,
+            word_count=len(narrative),
+            style=request.style
+        )
+    except Exception as e:
+        logger.error(f"Failed to generate narrative: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/games/{game_id}/ai/status")
+async def get_ai_status(game_id: str):
+    """AI状态检查"""
+    game_service = session_manager.get_game(game_id)
+    if not game_service:
+        raise HTTPException(status_code=404, detail="Game not found")
+    
+    return {
+        "ai_enabled": game_service.is_ai_enabled(),
+        "ai_initialized": game_service.is_ai_initialized(),
+        "features": {
+            "dialogue_generation": True,
+            "action_planning": True,
+            "narrative_generation": True,
+            "rule_evaluation": True
+        }
+    }
+
+@app.post("/api/games/{game_id}/ai/init")
+async def initialize_ai(game_id: str):
+    """初始化AI系统"""
+    game_service = session_manager.get_game(game_id)
+    if not game_service:
+        raise HTTPException(status_code=404, detail="Game not found")
+    
+    try:
+        success = await game_service.init_ai_pipeline()
+        if success:
+            return {"message": "AI initialized successfully"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to initialize AI")
+    except Exception as e:
+        logger.error(f"Failed to initialize AI: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # ==================== WebSocket ====================

@@ -9,6 +9,10 @@ import json
 from pathlib import Path
 
 from .enums import GamePhase, GameMode
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.ai.turn_pipeline import AITurnPipeline
 
 
 @dataclass
@@ -97,7 +101,7 @@ class GameState:
 class GameStateManager:
     """游戏状态管理器"""
     
-    def __init__(self, save_dir: str = "data/saves"):
+    def __init__(self, save_dir: str = "data/saves", config: Dict[str, Any] = None):
         self.save_dir = Path(save_dir)
         self.save_dir.mkdir(parents=True, exist_ok=True)
         
@@ -106,6 +110,11 @@ class GameStateManager:
         self.npcs: List[Dict[str, Any]] = []
         self.spirits: List[Dict[str, Any]] = []
         self.game_log: List[str] = []
+        
+        # 配置
+        self.config = config or {}
+        self.ai_enabled = self.config.get("ai_enabled", False)
+        self.ai_pipeline: Optional['AITurnPipeline'] = None
         
         # 事件监听器
         self.event_listeners = {
@@ -461,6 +470,162 @@ class GameStateManager:
             "rules_triggered": self.state.rules_triggered,
             "survival_rate": f"{len(self.get_active_npcs())}/{len(self.npcs)}"
         }
+    
+    # ========== AI集成方法 ==========
+    
+    async def init_ai_pipeline(self):
+        """初始化AI管线"""
+        if self.ai_enabled:
+            try:
+                from src.api.deepseek_client import DeepSeekClient, APIConfig
+                from src.ai.turn_pipeline import AITurnPipeline
+                
+                # 创建DeepSeek客户端
+                api_config = APIConfig()
+                ds_client = DeepSeekClient(api_config)
+                
+                # 创建AI管线
+                self.ai_pipeline = AITurnPipeline(self, ds_client)
+                self.log("AI管线初始化成功")
+                return True
+            except Exception as e:
+                self.log(f"AI管线初始化失败: {str(e)}")
+                self.ai_enabled = False
+                return False
+        return False
+    
+    async def run_ai_turn(self, force_dialogue: bool = True):
+        """运行AI驱动的回合"""
+        if not self.ai_pipeline:
+            self.log("AI未启用或未初始化")
+            return None
+        
+        try:
+            # 执行AI回合
+            plan = await self.ai_pipeline.run_turn_ai(force_dialogue=force_dialogue)
+            self.log(f"AI回合执行完成，生成{len(plan.dialogue)}条对话，{len(plan.actions)}个行动")
+            return plan
+        except Exception as e:
+            self.log(f"AI回合执行失败: {str(e)}")
+            return None
+    
+    async def generate_narrative(self, include_hidden: bool = False) -> str:
+        """生成回合叙事"""
+        if not self.ai_pipeline:
+            return "AI叙事生成未启用"
+        
+        try:
+            narrative = await self.ai_pipeline.generate_turn_narrative(
+                include_hidden_events=include_hidden
+            )
+            return narrative
+        except Exception as e:
+            self.log(f"叙事生成失败: {str(e)}")
+            return "叙事生成失败，请查看日志"
+    
+    async def evaluate_rule_nl(self, rule_description: str) -> Dict[str, Any]:
+        """评估自然语言规则"""
+        if not self.ai_pipeline:
+            return {
+                "error": "AI未启用",
+                "suggestion": "请先启用AI功能"
+            }
+        
+        try:
+            result = await self.ai_pipeline.evaluate_player_rule(rule_description)
+            return result
+        except Exception as e:
+            self.log(f"规则评估失败: {str(e)}")
+            return {
+                "error": str(e),
+                "suggestion": "请尝试更清晰地描述规则"
+            }
+    
+    def get_npc_states_for_ai(self) -> List[Dict[str, Any]]:
+        """为AI准备NPC状态数据"""
+        npc_states = []
+        for npc in self.get_active_npcs():
+            npc_state = {
+                "name": npc.get("name", "未知"),
+                "fear": npc.get("fear", 0),
+                "sanity": npc.get("sanity", 100),
+                "traits": npc.get("traits", []),
+                "status": npc.get("status", "正常"),
+                "location": npc.get("location", "未知位置"),
+                "inventory": npc.get("inventory", [])
+            }
+            npc_states.append(npc_state)
+        return npc_states
+    
+    def get_scene_context_for_ai(self) -> Dict[str, Any]:
+        """为AI准备场景上下文"""
+        if not self.state:
+            return {}
+        
+        # 获取最近事件
+        recent_events = self.state.events_history[-5:] if self.state.events_history else []
+        recent_event_descriptions = []
+        for event in recent_events:
+            if isinstance(event, dict):
+                desc = event.get("description", str(event))
+            else:
+                desc = str(event)
+            recent_event_descriptions.append(desc)
+        
+        # 构建上下文
+        context = {
+            "current_location": "游戏世界",  # TODO: 实现具体位置追踪
+            "recent_events": recent_event_descriptions,
+            "active_rules": self.state.active_rules,
+            "ambient_fear_level": self._calculate_ambient_fear(),
+            "special_conditions": self._get_special_conditions()
+        }
+        
+        return context
+    
+    def _calculate_ambient_fear(self) -> int:
+        """计算环境恐惧等级"""
+        base_fear = 30
+        
+        # 时间因素
+        if self.state and self.state.time_of_day == "night":
+            base_fear += 20
+        
+        # 死亡事件影响
+        if self.state:
+            base_fear += self.state.npcs_died * 10
+        
+        # 规则数量影响
+        base_fear += len(self.rules) * 5
+        
+        return min(100, base_fear)
+    
+    def _get_special_conditions(self) -> List[str]:
+        """获取特殊条件"""
+        conditions = []
+        
+        if self.state:
+            # 时间条件
+            if self.state.time_of_day == "night":
+                conditions.append("深夜时分")
+            
+            # 生存状况
+            alive_count = len(self.get_active_npcs())
+            if alive_count <= 2:
+                conditions.append("仅剩少数幸存者")
+            
+            # 恐惧等级
+            avg_fear = sum(npc.get("fear", 0) for npc in self.get_active_npcs()) / max(alive_count, 1)
+            if avg_fear > 70:
+                conditions.append("集体恐慌")
+        
+        return conditions
+    
+    async def close_ai(self):
+        """关闭AI客户端"""
+        if self.ai_pipeline and hasattr(self.ai_pipeline, 'ds_client'):
+            await self.ai_pipeline.ds_client.close()
+            self.log("AI客户端已关闭")
 
     def _create_default_npcs(self):
         """创建默认NPC"""

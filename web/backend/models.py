@@ -185,3 +185,73 @@ class SaveGameInfo(BaseModel):
 class LoadGameRequest(BaseModel):
     """加载游戏请求"""
     filename: str
+
+
+# ==================== AI相关模型 ====================
+
+class AITurnRequest(BaseModel):
+    """AI回合请求"""
+    force_dialogue: bool = Field(default=True, description="是否强制生成对话")
+    include_hidden_events: bool = Field(default=False, description="叙事中是否包含隐藏事件")
+    
+
+class AIDialogueResponse(BaseModel):
+    """AI对话响应"""
+    speaker: str
+    text: str
+    emotion: Optional[str] = None
+
+
+class AIActionResponse(BaseModel):
+    """AI行动响应"""
+    npc: str
+    action: str
+    target: Optional[str] = None
+    reason: Optional[str] = None
+    risk: Optional[str] = None
+    priority: int = 1
+
+
+class AITurnPlanResponse(BaseModel):
+    """AI回合计划响应"""
+    dialogue: List[AIDialogueResponse]
+    actions: List[AIActionResponse]
+    turn_summary: Optional[str] = None
+    atmosphere: Optional[str] = None
+
+
+class AIRuleEvaluationRequest(BaseModel):
+    """AI规则评估请求"""
+    rule_description: str = Field(..., min_length=5, max_length=500, description="规则的自然语言描述")
+    
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "rule_description": "晚上10点后不能开灯，否则会吸引怪物"
+            }
+        }
+    }
+
+
+class AIRuleEvaluationResponse(BaseModel):
+    """AI规则评估响应"""
+    name: str
+    cost: int
+    difficulty: int
+    loopholes: List[str]
+    suggestion: str
+    estimated_fear_gain: Optional[int] = None
+    parsed_rule: Dict[str, Any]
+    
+
+class AINarrativeRequest(BaseModel):
+    """AI叙事生成请求"""
+    include_hidden_events: bool = Field(default=False, description="是否包含隐藏事件")
+    style: str = Field(default="horror", description="叙事风格")
+    
+
+class AINarrativeResponse(BaseModel):
+    """AI叙事生成响应"""
+    narrative: str
+    word_count: int
+    style: str
