@@ -142,6 +142,56 @@ class GameStateManager:
         self._create_default_npcs()
         
         return self.state
+    
+    def _serialize_npc(self, npc: Any) -> Dict[str, Any]:
+        """序列化NPC对象为可保存的字典格式"""
+        if isinstance(npc, dict):
+            # 处理字典中的嵌套对象
+            result = {}
+            for key, value in npc.items():
+                if hasattr(value, 'dict'):  # Pydantic模型
+                    result[key] = value.dict()
+                elif hasattr(value, '__dict__') and not isinstance(value, (str, int, float, bool, list, dict, type(None))):
+                    # 其他对象
+                    result[key] = value.__dict__
+                else:
+                    result[key] = value
+            return result
+        elif hasattr(npc, "model_dump"):
+            return npc.model_dump()
+        elif hasattr(npc, "dict"):
+            return npc.dict()
+        elif hasattr(npc, "__dict__"):
+            # 递归处理嵌套对象
+            return self._serialize_npc(npc.__dict__)
+        else:
+            return npc
+    
+    def _serialize_rule(self, rule: Any) -> Dict[str, Any]:
+        """序列化规则对象为可保存的字典格式"""
+        if isinstance(rule, dict):
+            return rule
+        elif hasattr(rule, "model_dump"):
+            return rule.model_dump()
+        elif hasattr(rule, "dict"):
+            return rule.dict()
+        elif hasattr(rule, "__dict__"):
+            # 处理自定义类对象
+            result = {}
+            for key, value in rule.__dict__.items():
+                if key.startswith("_"):  # 跳过私有属性
+                    continue
+                if hasattr(value, "value"):  # 处理枚举
+                    result[key] = value.value
+                elif hasattr(value, "dict"):  # 处理嵌套的 Pydantic 模型
+                    result[key] = value.dict()
+                elif hasattr(value, "__dict__") and not isinstance(value, (str, int, float, bool, list, dict, type(None))):
+                    result[key] = self._serialize_rule(value)
+                else:
+                    result[key] = value
+            return result
+        else:
+            return str(rule)  # 最后的选择：转换为字符串
         
     def load_game(self, game_id: str) -> bool:
         """加载游戏存档"""
@@ -170,6 +220,8 @@ class GameStateManager:
             )
             self.state.turn = self.state.current_turn
             self.state.day = data["state"].get("day", 1)
+            self.state.active_rules = data["state"].get("active_rules", [])
+            self.state.events_history = data["state"].get("events_history", [])
             
             self.rules = data.get("rules", [])
             self.npcs = list(data.get("state", {}).get("npcs", {}).values())
@@ -193,7 +245,11 @@ class GameStateManager:
             return None
             
         if filename:
-            save_file = self.save_dir / filename
+            # 检查文件名是否已经包含.json扩展名
+            if not filename.endswith('.json'):
+                save_file = self.save_dir / f"{filename}.json"
+            else:
+                save_file = self.save_dir / filename
         else:
             save_file = self.save_dir / f"{self.state.game_id}.json"
         
@@ -201,32 +257,23 @@ class GameStateManager:
             # 转换NPC对象为纯字典
             serialized_state_npcs = {}
             for npc_id, npc in self.state.npcs.items():
-                if hasattr(npc, "model_dump"):
-                    serialized_state_npcs[npc_id] = npc.model_dump()
-                elif hasattr(npc, "dict"):
-                    serialized_state_npcs[npc_id] = npc.dict()
-                elif isinstance(npc, dict):
-                    serialized_state_npcs[npc_id] = npc
-                else:
-                    serialized_state_npcs[npc_id] = npc.__dict__
+                serialized_state_npcs[npc_id] = self._serialize_npc(npc)
 
             serialized_npcs = []
             for npc in self.npcs:
-                if hasattr(npc, "model_dump"):
-                    serialized_npcs.append(npc.model_dump())
-                elif hasattr(npc, "dict"):
-                    serialized_npcs.append(npc.dict())
-                elif isinstance(npc, dict):
-                    serialized_npcs.append(npc)
-                else:
-                    serialized_npcs.append(npc.__dict__)
+                serialized_npcs.append(self._serialize_npc(npc))
 
             state_data = self.state.to_dict()
             state_data["npcs"] = serialized_state_npcs
 
+            # 序列化规则
+            serialized_rules = []
+            for rule in self.rules:
+                serialized_rules.append(self._serialize_rule(rule))
+
             save_data = {
                 "state": state_data,
-                "rules": [r.dict() if hasattr(r, 'dict') else r for r in self.rules],
+                "rules": serialized_rules,
                 "npcs": serialized_npcs,
                 "spirits": self.spirits,
                 "game_log": self.game_log[-100:],  # 只保存最近100条日志
@@ -234,7 +281,7 @@ class GameStateManager:
             }
             
             with open(save_file, "w", encoding="utf-8") as f:
-                json.dump(save_data, f, indent=2, ensure_ascii=False)
+                json.dump(save_data, f, indent=2, ensure_ascii=False, default=str)
                 
             self.log("游戏已保存")
             return str(save_file)
@@ -284,9 +331,16 @@ class GameStateManager:
         return False
         
     def add_rule(self, rule: Any):
-        """添加规则"""
+        """添加规则
+        
+        Returns:
+            bool: 是否添加成功
+        """
         self.rules.append(rule)
+        if self.state:
+            self.state.active_rules.append(rule.id)
         self.log(f"规则 [{rule.name}] 已添加到游戏中")
+        return True
         
     def add_npc(self, npc: Dict[str, Any]):
         """添加NPC"""
@@ -410,7 +464,7 @@ class GameStateManager:
                 npc = generate_random_npc(name)
                 npc_dict = npc.__dict__ if hasattr(npc, '__dict__') else npc
                 self.add_npc(npc_dict)
-        except ImportError:
+        except ImportError as e:
             # 如果无法导入NPC模块，创建简单的NPC
             for i, name in enumerate(["张三", "李四", "王五"]):
                 simple_npc = {
@@ -419,7 +473,8 @@ class GameStateManager:
                     "hp": 100,
                     "sanity": 100,
                     "fear": 0,
-                    "location": "living_room"
+                    "location": "living_room",
+                    "alive": True
                 }
                 self.add_npc(simple_npc)
 

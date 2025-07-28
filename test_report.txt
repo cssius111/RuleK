@@ -1,0 +1,911 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.10, pytest-7.4.3, pluggy-1.6.0 -- /Users/chenpinle/anaconda3/envs/playwright_env/bin/python3.12
+cachedir: .pytest_cache
+rootdir: /Users/chenpinle/Desktop/杂/pythonProject/RuleK
+configfile: pyproject.toml
+plugins: cov-4.1.0, asyncio-0.21.1, playwright-0.7.0, anyio-3.7.1, base-url-2.1.0, mock-3.14.0
+asyncio: mode=Mode.AUTO
+collecting ... collected 39 items
+
+tests/cli/test_cli_game.py::TestMainMenu::test_new_game_creation_success 🎮 创建新游戏
+
+使用默认设置:
+- 初始恐惧积分: 1000
+- NPC数量: 4
+- 难度: normal
+[01:57:12] 新游戏开始 - ID: game_20250728_015712
+[01:57:12] NPC [张三] 加入游戏
+[01:57:12] NPC [李四] 加入游戏
+[01:57:12] NPC [王五] 加入游戏
+
+✅ 游戏创建成功！
+
+已创建 3 个NPC
+PASSED
+tests/cli/test_cli_game.py::TestMainMenu::test_new_game_cancel 🎮 创建新游戏
+
+使用默认设置:
+- 初始恐惧积分: 1000
+- NPC数量: 4
+- 难度: normal
+PASSED
+tests/cli/test_cli_game.py::TestMainMenu::test_main_menu_exit ============================================================
+           🎭 规则怪谈管理者 - Rules of Horror Manager 🎭            
+============================================================
+
+🎮 主菜单
+1. 新游戏
+2. 加载游戏
+3. 退出
+PASSED
+tests/cli/test_cli_game.py::TestMainMenu::test_main_menu_invalid_choice ============================================================
+           🎭 规则怪谈管理者 - Rules of Horror Manager 🎭            
+============================================================
+
+🎮 主菜单
+1. 新游戏
+2. 加载游戏
+3. 退出
+无效选择！
+============================================================
+           🎭 规则怪谈管理者 - Rules of Horror Manager 🎭            
+============================================================
+
+🎮 主菜单
+1. 新游戏
+2. 加载游戏
+3. 退出
+PASSED
+tests/cli/test_cli_game.py::TestGameStateDisplay::test_print_game_status_full [01:57:13] 新游戏开始 - ID: test_game
+[01:57:13] NPC [张三] 加入游戏
+[01:57:13] NPC [李四] 加入游戏
+[01:57:13] NPC [王五] 加入游戏
+PASSED
+tests/cli/test_cli_game.py::TestGameStateDisplay::test_print_game_status_no_state PASSED
+tests/cli/test_cli_game.py::TestGameStateDisplay::test_print_npcs_with_data [01:57:13] 新游戏开始 - ID: test_game
+[01:57:13] NPC [张三] 加入游戏
+[01:57:13] NPC [李四] 加入游戏
+[01:57:13] NPC [王五] 加入游戏
+PASSED
+tests/cli/test_cli_game.py::TestGameStateDisplay::test_print_rules_empty [01:57:13] 新游戏开始 - ID: test_game
+[01:57:13] NPC [张三] 加入游戏
+[01:57:13] NPC [李四] 加入游戏
+[01:57:13] NPC [王五] 加入游戏
+PASSED
+tests/cli/test_cli_game.py::TestGameStateDisplay::test_print_rules_with_data [01:57:13] 新游戏开始 - ID: test_game
+[01:57:13] NPC [张三] 加入游戏
+[01:57:13] NPC [李四] 加入游戏
+[01:57:13] NPC [王五] 加入游戏
+PASSED
+tests/cli/test_cli_game.py::TestGameStateDisplay::test_print_recent_events [01:57:13] 新游戏开始 - ID: test_game
+[01:57:13] NPC [张三] 加入游戏
+[01:57:13] NPC [李四] 加入游戏
+[01:57:13] NPC [王五] 加入游戏
+PASSED
+tests/cli/test_cli_game.py::TestSetupPhase::test_setup_phase_view_npcs [01:57:13] 新游戏开始 - ID: test_game
+[01:57:13] NPC [张三] 加入游戏
+[01:57:13] NPC [李四] 加入游戏
+[01:57:13] NPC [王五] 加入游戏
+
+⚙️  准备阶段
+1. 创建/管理规则
+2. 查看NPC状态
+3. 切换控制模式
+4. 开始回合
+5. 保存游戏
+6. 返回主菜单
+
+👥 NPC状态:
+------------------------------------------------------------
+   名字         位置        HP     理智     恐惧      状态   
+------------------------------------------------------------
+   张三    living_room    99     83     0       存活   
+   李四    living_room    90     92     0       存活   
+   王五    living_room    92     88     0       存活   
+PASSED
+tests/cli/test_cli_game.py::TestSetupPhase::test_setup_phase_switch_mode [01:57:13] 新游戏开始 - ID: test_game
+[01:57:13] NPC [张三] 加入游戏
+[01:57:13] NPC [李四] 加入游戏
+[01:57:13] NPC [王五] 加入游戏
+
+⚙️  准备阶段
+1. 创建/管理规则
+2. 查看NPC状态
+3. 切换控制模式
+4. 开始回合
+5. 保存游戏
+6. 返回主菜单
+
+已切换到: 亲自下场 模式
+PASSED
+tests/cli/test_cli_game.py::TestSetupPhase::test_setup_phase_start_turn [01:57:14] 新游戏开始 - ID: test_game
+[01:57:14] NPC [张三] 加入游戏
+[01:57:14] NPC [李四] 加入游戏
+[01:57:14] NPC [王五] 加入游戏
+
+⚙️  准备阶段
+1. 创建/管理规则
+2. 查看NPC状态
+3. 切换控制模式
+4. 开始回合
+5. 保存游戏
+6. 返回主菜单
+[01:57:14] 阶段转换: setup → action
+[01:57:14] 
+==================================================
+[01:57:14] 第 1 回合 - 下午 🌤️
+[01:57:14] 当前恐惧点数: 1000
+PASSED
+tests/cli/test_cli_game.py::TestSetupPhase::test_setup_phase_save_game [01:57:14] 新游戏开始 - ID: test_game
+[01:57:14] NPC [张三] 加入游戏
+[01:57:14] NPC [李四] 加入游戏
+[01:57:14] NPC [王五] 加入游戏
+
+⚙️  准备阶段
+1. 创建/管理规则
+2. 查看NPC状态
+3. 切换控制模式
+4. 开始回合
+5. 保存游戏
+6. 返回主菜单
+[01:57:14] 游戏已保存
+✅ 游戏已保存到: /private/var/folders/qg/ggt7d3b5509cyb9s5zxvr3lr0000gn/T/pytest-of-chenpinle/pytest-3/test_setup_phase_save_game0/saves/test_save.json
+PASSED
+tests/cli/test_cli_game.py::TestSetupPhase::test_setup_phase_return_menu [01:57:14] 新游戏开始 - ID: test_game
+[01:57:14] NPC [张三] 加入游戏
+[01:57:14] NPC [李四] 加入游戏
+[01:57:14] NPC [王五] 加入游戏
+
+⚙️  准备阶段
+1. 创建/管理规则
+2. 查看NPC状态
+3. 切换控制模式
+4. 开始回合
+5. 保存游戏
+6. 返回主菜单
+PASSED
+tests/cli/test_cli_game.py::TestRuleManagement::test_create_custom_rule_placeholder [01:57:14] 新游戏开始 - ID: test_game
+[01:57:14] NPC [张三] 加入游戏
+[01:57:14] NPC [李四] 加入游戏
+[01:57:14] NPC [王五] 加入游戏
+PASSED
+tests/cli/test_cli_game.py::TestRuleManagement::test_create_rule_from_template_success [01:57:14] 新游戏开始 - ID: test_game
+[01:57:14] NPC [张三] 加入游戏
+[01:57:14] NPC [李四] 加入游戏
+[01:57:14] NPC [王五] 加入游戏
+📜 规则管理
+
+
+📜 当前没有激活的规则
+
+1. 创建新规则
+2. 使用模板创建
+3. 升级规则
+4. 返回
+
+可用模板:
+1. 午夜照镜死 - 成本: 150
+   在午夜时分照镜子会被镜中的恶灵拖入镜中世界
+2. 红字禁忌 - 成本: 80
+   说出特定词语会触发诅咒
+3. 电话铃声 - 成本: 120
+   深夜电话响起，接听者会在七天后消失
+4. 群体幻觉 - 成本: 180
+   3人以上在同一房间时会集体发疯
+5. 影子模仿 - 成本: 200
+   做出特定动作后，影子会延迟模仿并攻击
+6. 敲门死 - 成本: 140
+   听到特定节奏的敲门声后开门会死亡
+7. 物品诅咒 - 成本: 100
+   拿起特定物品会被诅咒缠身
+8. 记忆删除 - 成本: 90
+   进入特定房间会忘记之前的所有规则
+9. 连锁反应 - 成本: 220
+   一人死亡会触发同房间其他人的死亡倒计时
+10. 浴室陷阱 - 成本: 110
+   在浴室待超过3分钟会被困住
+11. 开关灯死 - 成本: 160
+   连续3次开关灯会召唤黑暗中的东西
+
+规则 '午夜照镜死' 需要 170 恐惧积分
+当前积分: 1000
+[01:57:14] 规则 [午夜照镜死] 已添加到游戏中
+✅ 规则创建成功！
+PASSED
+tests/cli/test_cli_game.py::TestRuleManagement::test_create_rule_insufficient_points [01:57:14] 新游戏开始 - ID: test_game
+[01:57:14] NPC [张三] 加入游戏
+[01:57:14] NPC [李四] 加入游戏
+[01:57:14] NPC [王五] 加入游戏
+PASSED
+tests/cli/test_cli_game.py::TestRuleManagement::test_create_rule_invalid_template [01:57:14] 新游戏开始 - ID: test_game
+[01:57:14] NPC [张三] 加入游戏
+[01:57:14] NPC [李四] 加入游戏
+[01:57:14] NPC [王五] 加入游戏
+PASSED
+tests/cli/test_cli_game.py::TestRuleManagement::test_upgrade_rule_not_implemented [01:57:14] 新游戏开始 - ID: test_game
+[01:57:14] NPC [张三] 加入游戏
+[01:57:14] NPC [李四] 加入游戏
+[01:57:14] NPC [王五] 加入游戏
+PASSED
+tests/cli/test_cli_game.py::TestActionPhase::test_action_phase_with_npcs [01:57:14] 新游戏开始 - ID: test_game
+[01:57:14] NPC [张三] 加入游戏
+[01:57:14] NPC [李四] 加入游戏
+[01:57:14] NPC [王五] 加入游戏
+[01:57:14] 规则 [测试规则] 已添加到游戏中
+
+🎬 行动阶段
+
+NPC行动中...
+  张三 从 living_room 移动到 kitchen
+
+⚡ 张三 触发了规则 [测试规则]!
+2025-07-28 01:57:14 | [32mINFO[0m | src.core.rule_executor | 📝 执行规则: 测试规则 对 张三
+FAILED
+tests/cli/test_cli_game.py::TestActionPhase::test_action_phase_no_alive_npcs [01:57:14] 新游戏开始 - ID: test_game
+[01:57:14] NPC [张三] 加入游戏
+[01:57:14] NPC [李四] 加入游戏
+[01:57:14] NPC [王五] 加入游戏
+
+🎬 行动阶段
+
+NPC行动中...
+
+行动阶段结束
+[01:57:14] 阶段转换: setup → resolution
+PASSED
+tests/cli/test_cli_game.py::TestActionPhase::test_action_phase_rule_trigger [01:57:14] 新游戏开始 - ID: test_game
+[01:57:14] NPC [张三] 加入游戏
+[01:57:14] NPC [李四] 加入游戏
+[01:57:14] NPC [王五] 加入游戏
+PASSED
+tests/cli/test_cli_game.py::TestResolutionPhase::test_resolution_phase [01:57:14] 新游戏开始 - ID: test_game
+[01:57:14] NPC [张三] 加入游戏
+[01:57:14] NPC [李四] 加入游戏
+[01:57:14] NPC [王五] 加入游戏
+PASSED
+tests/cli/test_cli_game.py::TestDialoguePhase::test_dialogue_phase_with_npcs [01:57:14] 新游戏开始 - ID: test_game
+[01:57:14] NPC [张三] 加入游戏
+[01:57:14] NPC [李四] 加入游戏
+[01:57:14] NPC [王五] 加入游戏
+PASSED
+tests/cli/test_cli_game.py::TestDialoguePhase::test_dialogue_phase_insufficient_npcs [01:57:14] 新游戏开始 - ID: test_game
+[01:57:14] NPC [张三] 加入游戏
+[01:57:14] NPC [李四] 加入游戏
+[01:57:14] NPC [王五] 加入游戏
+
+💬 对话阶段
+（对话生成功能需要接入AI）
+[01:57:14] 阶段转换: setup → action
+PASSED
+tests/cli/test_cli_game.py::TestSaveLoad::test_save_game_success [01:57:14] 新游戏开始 - ID: test_game
+[01:57:14] NPC [张三] 加入游戏
+[01:57:14] NPC [李四] 加入游戏
+[01:57:14] NPC [王五] 加入游戏
+[01:57:14] 游戏已保存
+✅ 游戏已保存到: /private/var/folders/qg/ggt7d3b5509cyb9s5zxvr3lr0000gn/T/pytest-of-chenpinle/pytest-3/test_save_game_success0/saves/test_save.json
+PASSED
+tests/cli/test_cli_game.py::TestSaveLoad::test_save_game_empty_name [01:57:14] 新游戏开始 - ID: test_game
+[01:57:14] NPC [张三] 加入游戏
+[01:57:14] NPC [李四] 加入游戏
+[01:57:14] NPC [王五] 加入游戏
+PASSED
+tests/cli/test_cli_game.py::TestSaveLoad::test_load_game_success 📂 加载游戏
+
+可用存档:
+1. loaded_game
+❌ 加载失败：存档可能已损坏
+FAILED
+tests/cli/test_cli_game.py::TestSaveLoad::test_load_game_no_saves PASSED
+tests/cli/test_cli_game.py::TestSaveLoad::test_load_game_cancel 📂 加载游戏
+
+可用存档:
+1. test
+PASSED
+tests/cli/test_cli_game.py::TestGameOver::test_game_over_display [01:57:16] 新游戏开始 - ID: test_game
+[01:57:16] NPC [张三] 加入游戏
+[01:57:16] NPC [李四] 加入游戏
+[01:57:16] NPC [王五] 加入游戏
+PASSED
+tests/cli/test_cli_game.py::TestGameOver::test_game_loop_all_npcs_dead [01:57:16] 新游戏开始 - ID: test_game
+[01:57:16] NPC [张三] 加入游戏
+[01:57:16] NPC [李四] 加入游戏
+[01:57:16] NPC [王五] 加入游戏
+============================================================
+           🎭 规则怪谈管理者 - Rules of Horror Manager 🎭            
+============================================================
+
+📊 游戏状态
+├─ 回合: 0 | 第1天 morning
+├─ 阶段: setup
+├─ 模式: 幕后管理
+├─ 恐惧积分: 1000 💀
+├─ 活跃规则: 0
+└─ 存活NPC: 0/3
+
+============================================================
+                          💀 游戏结束 💀                          
+============================================================
+
+结束原因: 所有NPC都已死亡！
+
+游戏统计:
+- 总回合数: 0
+- 存活天数: 1
+- 最终恐惧积分: 1000
+- 创建规则数: 0
+PASSED
+tests/cli/test_cli_game.py::TestEdgeCasesAndErrors::test_print_rules_with_no_description [01:57:16] 新游戏开始 - ID: test_game
+[01:57:16] NPC [张三] 加入游戏
+[01:57:16] NPC [李四] 加入游戏
+[01:57:16] NPC [王五] 加入游戏
+PASSED
+tests/cli/test_cli_game.py::TestEdgeCasesAndErrors::test_switch_mode_toggle [01:57:16] 新游戏开始 - ID: test_game
+[01:57:16] NPC [张三] 加入游戏
+[01:57:16] NPC [李四] 加入游戏
+[01:57:16] NPC [王五] 加入游戏
+
+已切换到: 亲自下场 模式
+
+已切换到: 幕后管理 模式
+PASSED
+tests/cli/test_cli_game.py::TestEdgeCasesAndErrors::test_keyboard_interrupt_handling 
+
+👋 感谢游玩！
+PASSED
+tests/cli/test_cli_game.py::TestEdgeCasesAndErrors::test_save_game_exception_handling [01:57:18] 新游戏开始 - ID: test_game
+[01:57:18] NPC [张三] 加入游戏
+[01:57:18] NPC [李四] 加入游戏
+[01:57:18] NPC [王五] 加入游戏
+PASSED
+tests/cli/test_cli_game.py::TestEdgeCasesAndErrors::test_load_corrupted_save PASSED
+tests/cli/test_cli_game.py::TestIntegration::test_complete_game_flow ============================================================
+           🎭 规则怪谈管理者 - Rules of Horror Manager 🎭            
+============================================================
+
+🎮 主菜单
+1. 新游戏
+2. 加载游戏
+3. 退出
+🎮 创建新游戏
+
+使用默认设置:
+- 初始恐惧积分: 1000
+- NPC数量: 4
+- 难度: normal
+[01:57:18] 新游戏开始 - ID: game_20250728_015718
+[01:57:18] NPC [张三] 加入游戏
+[01:57:18] NPC [李四] 加入游戏
+[01:57:18] NPC [王五] 加入游戏
+
+✅ 游戏创建成功！
+
+已创建 3 个NPC
+============================================================
+           🎭 规则怪谈管理者 - Rules of Horror Manager 🎭            
+============================================================
+
+📊 游戏状态
+├─ 回合: 0 | 第1天 morning
+├─ 阶段: setup
+├─ 模式: 幕后管理
+├─ 恐惧积分: 1000 💀
+├─ 活跃规则: 0
+└─ 存活NPC: 3/3
+
+⚙️  准备阶段
+1. 创建/管理规则
+2. 查看NPC状态
+3. 切换控制模式
+4. 开始回合
+5. 保存游戏
+6. 返回主菜单
+📜 规则管理
+
+
+📜 当前没有激活的规则
+
+1. 创建新规则
+2. 使用模板创建
+3. 升级规则
+4. 返回
+
+可用模板:
+1. 午夜照镜死 - 成本: 150
+   在午夜时分照镜子会被镜中的恶灵拖入镜中世界
+2. 红字禁忌 - 成本: 80
+   说出特定词语会触发诅咒
+3. 电话铃声 - 成本: 120
+   深夜电话响起，接听者会在七天后消失
+4. 群体幻觉 - 成本: 180
+   3人以上在同一房间时会集体发疯
+5. 影子模仿 - 成本: 200
+   做出特定动作后，影子会延迟模仿并攻击
+6. 敲门死 - 成本: 140
+   听到特定节奏的敲门声后开门会死亡
+7. 物品诅咒 - 成本: 100
+   拿起特定物品会被诅咒缠身
+8. 记忆删除 - 成本: 90
+   进入特定房间会忘记之前的所有规则
+9. 连锁反应 - 成本: 220
+   一人死亡会触发同房间其他人的死亡倒计时
+10. 浴室陷阱 - 成本: 110
+   在浴室待超过3分钟会被困住
+11. 开关灯死 - 成本: 160
+   连续3次开关灯会召唤黑暗中的东西
+
+规则 '午夜照镜死' 需要 170 恐惧积分
+当前积分: 1000
+[01:57:18] 规则 [午夜照镜死] 已添加到游戏中
+✅ 规则创建成功！
+============================================================
+           🎭 规则怪谈管理者 - Rules of Horror Manager 🎭            
+============================================================
+
+📊 游戏状态
+├─ 回合: 0 | 第1天 morning
+├─ 阶段: setup
+├─ 模式: 幕后管理
+├─ 恐惧积分: 830 💀
+├─ 活跃规则: 1
+└─ 存活NPC: 3/3
+
+⚙️  准备阶段
+1. 创建/管理规则
+2. 查看NPC状态
+3. 切换控制模式
+4. 开始回合
+5. 保存游戏
+6. 返回主菜单
+[01:57:18] 阶段转换: setup → action
+[01:57:18] 
+==================================================
+[01:57:18] 第 1 回合 - 下午 🌤️
+[01:57:18] 当前恐惧点数: 830
+============================================================
+           🎭 规则怪谈管理者 - Rules of Horror Manager 🎭            
+============================================================
+
+📊 游戏状态
+├─ 回合: 1 | 第1天 afternoon
+├─ 阶段: action
+├─ 模式: 幕后管理
+├─ 恐惧积分: 830 💀
+├─ 活跃规则: 1
+└─ 存活NPC: 3/3
+
+🎬 行动阶段
+
+NPC行动中...
+  张三 与 李四 交谈
+  李四 从 living_room 移动到 kitchen
+  王五 与 张三 交谈
+
+行动阶段结束
+[01:57:18] 阶段转换: action → resolution
+============================================================
+           🎭 规则怪谈管理者 - Rules of Horror Manager 🎭            
+============================================================
+
+📊 游戏状态
+├─ 回合: 1 | 第1天 afternoon
+├─ 阶段: resolution
+├─ 模式: 幕后管理
+├─ 恐惧积分: 830 💀
+├─ 活跃规则: 1
+└─ 存活NPC: 3/3
+
+📊 回合结算
+
+本回合统计:
+- 规则触发次数: 0
+- 存活NPC: 3
+- 当前恐惧积分: 830
+[01:57:18] 阶段转换: resolution → setup
+============================================================
+           🎭 规则怪谈管理者 - Rules of Horror Manager 🎭            
+============================================================
+
+📊 游戏状态
+├─ 回合: 1 | 第1天 afternoon
+├─ 阶段: setup
+├─ 模式: 幕后管理
+├─ 恐惧积分: 830 💀
+├─ 活跃规则: 1
+└─ 存活NPC: 3/3
+
+⚙️  准备阶段
+1. 创建/管理规则
+2. 查看NPC状态
+3. 切换控制模式
+4. 开始回合
+5. 保存游戏
+6. 返回主菜单
+============================================================
+           🎭 规则怪谈管理者 - Rules of Horror Manager 🎭            
+============================================================
+
+📊 游戏状态
+├─ 回合: 1 | 第1天 afternoon
+├─ 阶段: setup
+├─ 模式: 幕后管理
+├─ 恐惧积分: 830 💀
+├─ 活跃规则: 1
+└─ 存活NPC: 3/3
+
+⚙️  准备阶段
+1. 创建/管理规则
+2. 查看NPC状态
+3. 切换控制模式
+4. 开始回合
+5. 保存游戏
+6. 返回主菜单
+保存游戏失败: Object of type datetime is not JSON serializable
+❌ 保存游戏失败
+============================================================
+           🎭 规则怪谈管理者 - Rules of Horror Manager 🎭            
+============================================================
+
+📊 游戏状态
+├─ 回合: 1 | 第1天 afternoon
+├─ 阶段: setup
+├─ 模式: 幕后管理
+├─ 恐惧积分: 830 💀
+├─ 活跃规则: 1
+└─ 存活NPC: 3/3
+
+⚙️  准备阶段
+1. 创建/管理规则
+2. 查看NPC状态
+3. 切换控制模式
+4. 开始回合
+5. 保存游戏
+6. 返回主菜单
+FAILED
+
+=================================== FAILURES ===================================
+_________________ TestActionPhase.test_action_phase_with_npcs __________________
+
+self = <cli.test_cli_game.TestActionPhase object at 0x1038f2210>
+initialized_game = <src.cli_game.CLIGame object at 0x103a55310>
+mock_input_sequence = <cli.conftest.mock_input_sequence.<locals>.InputSequence object at 0x103a55be0>
+
+    @pytest.mark.asyncio
+    async def test_action_phase_with_npcs(self, initialized_game, mock_input_sequence):
+        """测试NPC行动阶段 - 验证NPC行动和规则触发"""
+        mock_input_sequence.add("")  # 按回车继续
+    
+        # 添加一个规则
+        rule = Rule(
+            id="test_rule",
+            name="测试规则",
+            trigger=TriggerCondition(action="move", probability=1.0),
+            effect=RuleEffect(type=EffectType.FEAR_GAIN, fear_gain=10)
+        )
+        initialized_game.game_manager.add_rule(rule)
+    
+        with patch('asyncio.sleep', new_callable=AsyncMock):
+>           await initialized_game.action_phase()
+
+tests/cli/test_cli_game.py:302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <src.cli_game.CLIGame object at 0x103a55310>
+
+    async def action_phase(self):
+        """行动阶段"""
+        print("\n🎬 行动阶段")
+    
+        # NPC自动行动
+        print("\nNPC行动中...")
+    
+        for npc_id, npc in self.game_manager.state.npcs.items():
+            if not npc.get("alive", True):
+                continue
+    
+            # 决定行动
+            decision = self.npc_behavior.decide_action(npc)
+    
+            # 执行行动
+            result = self.npc_behavior.execute_action(npc, decision)
+    
+            # 显示行动
+            for msg in result["messages"]:
+                print(f"  {msg}")
+    
+            # 创建规则上下文
+            context = RuleContext(
+                actor=npc,
+                action=decision.action.value,
+                game_state=self.game_manager.state.to_dict()
+            )
+    
+            # 检查是否触发规则
+            triggered_rules = self.rule_executor.check_all_rules(context)
+    
+            for rule, probability in triggered_rules:
+                import random
+                if random.random() < probability:
+                    print(f"\n⚡ {npc['name']} 触发了规则 [{rule.name}]!")
+>                   exec_result = self.rule_executor.execute_rule(rule, context)
+
+src/cli_game.py:325: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <src.core.rule_executor.RuleExecutor object at 0x103a55820>
+rule = Rule(id='test_rule', name='测试规则', description='', level=1, creator='system', created_at=datetime.datetime(2025, 7, 28,...table=True, reverse_risk=0.1, active=True, cooldown_turns=0, times_triggered=1, times_discovered=0, upgrade_options=[])
+context = <src.core.rule_executor.RuleContext object at 0x103a54da0>
+
+    def execute_rule(self, rule: Rule, context: RuleContext) -> Dict[str, Any]:
+        """执行规则效果"""
+        logger.info(f"执行规则: {rule.name} 对 {context.actor_name}")
+    
+        # 应用规则效果
+        result = rule.apply_effect(context.actor)
+    
+        # 更新游戏状态
+>       self._apply_rule_effects(rule, context, result)
+
+src/core/rule_executor.py:246: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <src.core.rule_executor.RuleExecutor object at 0x103a55820>
+rule = Rule(id='test_rule', name='测试规则', description='', level=1, creator='system', created_at=datetime.datetime(2025, 7, 28,...table=True, reverse_risk=0.1, active=True, cooldown_turns=0, times_triggered=1, times_discovered=0, upgrade_options=[])
+context = <src.core.rule_executor.RuleContext object at 0x103a54da0>
+result = {'effect_type': <EffectType.FEAR_GAIN: 'fear_gain'>, 'fear_gained': 10, 'messages': [], 'success': True}
+
+    def _apply_rule_effects(self, rule: Rule, context: RuleContext, result: Dict):
+        """应用规则效果到游戏状态"""
+        # 获得恐惧积分
+        if result.get("fear_gained", 0) > 0:
+>           self.game_manager.gain_fear_points(
+                result["fear_gained"],
+                f"规则触发: {rule.name}"
+            )
+E           AttributeError: 'GameStateManager' object has no attribute 'gain_fear_points'. Did you mean: 'add_fear_points'?
+
+src/core/rule_executor.py:276: AttributeError
+------------------------------ Captured log call -------------------------------
+INFO     src.core.rule_executor:rule_executor.py:240 📝 执行规则: 测试规则 对 张三
+_____________________ TestSaveLoad.test_load_game_success ______________________
+
+self = <cli.test_cli_game.TestSaveLoad object at 0x1038f0260>
+cli_game = <src.cli_game.CLIGame object at 0x1039fa3c0>
+mock_input_sequence = <cli.conftest.mock_input_sequence.<locals>.InputSequence object at 0x1039fa6c0>
+temp_save_dir = PosixPath('/private/var/folders/qg/ggt7d3b5509cyb9s5zxvr3lr0000gn/T/pytest-of-chenpinle/pytest-3/test_load_game_success0/saves')
+
+    @pytest.mark.asyncio
+    async def test_load_game_success(self, cli_game, mock_input_sequence, temp_save_dir):
+        """测试成功加载游戏 - 验证状态恢复"""
+        # 创建测试存档
+        save_data = {
+            "state": {
+                "game_id": "loaded_game",
+                "started_at": "2024-01-01T00:00:00",
+                "current_turn": 10,
+                "fear_points": 500,
+                "phase": "setup",
+                "time_of_day": "evening",
+                "mode": "backstage",
+                "total_fear_gained": 500,
+                "npcs_died": 2,
+                "rules_triggered": 15,
+                "difficulty": "hard",
+                "day": 3,
+                "npcs": {},
+                "active_rules": ["rule_001"],
+                "events_history": []
+            },
+            "rules": [],
+            "npcs": [],
+            "spirits": [],
+            "game_log": ["游戏开始"]
+        }
+    
+        save_file = temp_save_dir / "loaded_game.json"
+        with open(save_file, "w") as f:
+            json.dump(save_data, f)
+    
+        cli_game.game_manager.save_dir = temp_save_dir
+        mock_input_sequence.add("1", "6")  # 选择第一个存档，然后退出
+    
+        with patch.object(cli_game, 'game_loop', new_callable=AsyncMock):
+            await cli_game.load_game_menu()
+    
+>       assert cli_game.game_manager.state is not None
+E       assert None is not None
+E        +  where None = <src.core.game_state.GameStateManager object at 0x1039fa210>.state
+E        +    where <src.core.game_state.GameStateManager object at 0x1039fa210> = <src.cli_game.CLIGame object at 0x1039fa3c0>.game_manager
+
+tests/cli/test_cli_game.py:467: AssertionError
+___________________ TestIntegration.test_complete_game_flow ____________________
+
+self = <cli.test_cli_game.TestIntegration object at 0x103918a10>
+cli_game = <src.cli_game.CLIGame object at 0x1024928d0>
+mock_input_sequence = <cli.conftest.mock_input_sequence.<locals>.InputSequence object at 0x1040e86b0>
+temp_save_dir = PosixPath('/private/var/folders/qg/ggt7d3b5509cyb9s5zxvr3lr0000gn/T/pytest-of-chenpinle/pytest-3/test_complete_game_flow0/saves')
+
+    @pytest.mark.asyncio
+    async def test_complete_game_flow(self, cli_game, mock_input_sequence, temp_save_dir):
+        """测试完整游戏流程 - 新建/规则/回合/保存/加载"""
+        cli_game.game_manager.save_dir = temp_save_dir
+    
+        # 完整流程输入序列
+        mock_input_sequence.add(
+            "1",        # 主菜单 - 新游戏
+            "y",        # 确认创建
+            "1",        # 准备阶段 - 创建规则
+            "2",        # 规则管理 - 使用模板
+            "1",        # 选择第一个模板
+            "y",        # 确认创建
+            "4",        # 返回规则管理
+            "4",        # 准备阶段 - 开始回合
+            "",         # 行动阶段 - 按回车
+            "",         # 结算阶段 - 按回车
+            "5",        # 准备阶段 - 保存游戏
+            "integration_test",  # 存档名
+            "",         # 按回车继续
+            "6"         # 返回主菜单
+        )
+    
+        with patch('asyncio.sleep', new_callable=AsyncMock):
+            await cli_game.run()
+    
+        # 验证存档创建
+        save_file = temp_save_dir / "integration_test.json"
+        assert save_file.exists()
+    
+        # 验证游戏状态
+        with open(save_file) as f:
+>           data = json.load(f)
+
+tests/cli/test_cli_game.py:642: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fp = <_io.TextIOWrapper name='/private/var/folders/qg/ggt7d3b5509cyb9s5zxvr3lr0000gn/T/pytest-of-chenpinle/pytest-3/test_complete_game_flow0/saves/integration_test.json' mode='r' encoding='UTF-8'>
+cls = None, object_hook = None, parse_float = None, parse_int = None
+parse_constant = None, object_pairs_hook = None, kw = {}
+
+    def load(fp, *, cls=None, object_hook=None, parse_float=None,
+            parse_int=None, parse_constant=None, object_pairs_hook=None, **kw):
+        """Deserialize ``fp`` (a ``.read()``-supporting file-like object containing
+        a JSON document) to a Python object.
+    
+        ``object_hook`` is an optional function that will be called with the
+        result of any object literal decode (a ``dict``). The return value of
+        ``object_hook`` will be used instead of the ``dict``. This feature
+        can be used to implement custom decoders (e.g. JSON-RPC class hinting).
+    
+        ``object_pairs_hook`` is an optional function that will be called with the
+        result of any object literal decoded with an ordered list of pairs.  The
+        return value of ``object_pairs_hook`` will be used instead of the ``dict``.
+        This feature can be used to implement custom decoders.  If ``object_hook``
+        is also defined, the ``object_pairs_hook`` takes priority.
+    
+        To use a custom ``JSONDecoder`` subclass, specify it with the ``cls``
+        kwarg; otherwise ``JSONDecoder`` is used.
+        """
+>       return loads(fp.read(),
+            cls=cls, object_hook=object_hook,
+            parse_float=parse_float, parse_int=parse_int,
+            parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+
+../../../../anaconda3/envs/playwright_env/lib/python3.12/json/__init__.py:293: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+s = '{\n  "state": {\n    "game_id": "game_20250728_015718",\n    "started_at": "2025-07-28T01:57:18.553669",\n    "curren...",\n      "description": "在午夜时分照镜子会被镜中的恶灵拖入镜中世界",\n      "level": 1,\n      "creator": "system",\n      "created_at": '
+cls = None, object_hook = None, parse_float = None, parse_int = None
+parse_constant = None, object_pairs_hook = None, kw = {}
+
+    def loads(s, *, cls=None, object_hook=None, parse_float=None,
+            parse_int=None, parse_constant=None, object_pairs_hook=None, **kw):
+        """Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance
+        containing a JSON document) to a Python object.
+    
+        ``object_hook`` is an optional function that will be called with the
+        result of any object literal decode (a ``dict``). The return value of
+        ``object_hook`` will be used instead of the ``dict``. This feature
+        can be used to implement custom decoders (e.g. JSON-RPC class hinting).
+    
+        ``object_pairs_hook`` is an optional function that will be called with the
+        result of any object literal decoded with an ordered list of pairs.  The
+        return value of ``object_pairs_hook`` will be used instead of the ``dict``.
+        This feature can be used to implement custom decoders.  If ``object_hook``
+        is also defined, the ``object_pairs_hook`` takes priority.
+    
+        ``parse_float``, if specified, will be called with the string
+        of every JSON float to be decoded. By default this is equivalent to
+        float(num_str). This can be used to use another datatype or parser
+        for JSON floats (e.g. decimal.Decimal).
+    
+        ``parse_int``, if specified, will be called with the string
+        of every JSON int to be decoded. By default this is equivalent to
+        int(num_str). This can be used to use another datatype or parser
+        for JSON integers (e.g. float).
+    
+        ``parse_constant``, if specified, will be called with one of the
+        following strings: -Infinity, Infinity, NaN.
+        This can be used to raise an exception if invalid JSON numbers
+        are encountered.
+    
+        To use a custom ``JSONDecoder`` subclass, specify it with the ``cls``
+        kwarg; otherwise ``JSONDecoder`` is used.
+        """
+        if isinstance(s, str):
+            if s.startswith('\ufeff'):
+                raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                                      s, 0)
+        else:
+            if not isinstance(s, (bytes, bytearray)):
+                raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+                                f'not {s.__class__.__name__}')
+            s = s.decode(detect_encoding(s), 'surrogatepass')
+    
+        if (cls is None and object_hook is None and
+                parse_int is None and parse_float is None and
+                parse_constant is None and object_pairs_hook is None and not kw):
+>           return _default_decoder.decode(s)
+
+../../../../anaconda3/envs/playwright_env/lib/python3.12/json/__init__.py:346: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.decoder.JSONDecoder object at 0x101d41790>
+s = '{\n  "state": {\n    "game_id": "game_20250728_015718",\n    "started_at": "2025-07-28T01:57:18.553669",\n    "curren...",\n      "description": "在午夜时分照镜子会被镜中的恶灵拖入镜中世界",\n      "level": 1,\n      "creator": "system",\n      "created_at": '
+_w = <built-in method match of re.Pattern object at 0x101f8ef60>
+
+    def decode(self, s, _w=WHITESPACE.match):
+        """Return the Python representation of ``s`` (a ``str`` instance
+        containing a JSON document).
+    
+        """
+>       obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+
+../../../../anaconda3/envs/playwright_env/lib/python3.12/json/decoder.py:338: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.decoder.JSONDecoder object at 0x101d41790>
+s = '{\n  "state": {\n    "game_id": "game_20250728_015718",\n    "started_at": "2025-07-28T01:57:18.553669",\n    "curren...",\n      "description": "在午夜时分照镜子会被镜中的恶灵拖入镜中世界",\n      "level": 1,\n      "creator": "system",\n      "created_at": '
+idx = 0
+
+    def raw_decode(self, s, idx=0):
+        """Decode a JSON document from ``s`` (a ``str`` beginning with
+        a JSON document) and return a 2-tuple of the Python
+        representation and the index in ``s`` where the document ended.
+    
+        This can be used to decode a JSON document from a string that may
+        have extraneous data at the end.
+    
+        """
+        try:
+            obj, end = self.scan_once(s, idx)
+        except StopIteration as err:
+>           raise JSONDecodeError("Expecting value", s, err.value) from None
+E           json.decoder.JSONDecodeError: Expecting value: line 129 column 21 (char 3046)
+
+../../../../anaconda3/envs/playwright_env/lib/python3.12/json/decoder.py:356: JSONDecodeError
+=============================== warnings summary ===============================
+../../../../anaconda3/envs/playwright_env/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:252
+  /Users/chenpinle/anaconda3/envs/playwright_env/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:252: PydanticDeprecatedSince20: `json_encoders` is deprecated. See https://docs.pydantic.dev/2.5/concepts/serialization/#custom-serializers for alternatives. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
+    warnings.warn(
+
+../../../../anaconda3/envs/playwright_env/lib/python3.12/site-packages/pydantic/_internal/_config.py:268
+  /Users/chenpinle/anaconda3/envs/playwright_env/lib/python3.12/site-packages/pydantic/_internal/_config.py:268: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+tests/cli/test_cli_game.py: 36 warnings
+  /Users/chenpinle/Desktop/杂/pythonProject/RuleK/src/core/game_state.py:160: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
+    result[key] = value.dict()
+
+tests/cli/test_cli_game.py: 37 warnings
+  /Users/chenpinle/anaconda3/envs/playwright_env/lib/python3.12/site-packages/pydantic/main.py:979: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
+    warnings.warn('The `dict` method is deprecated; use `model_dump` instead.', DeprecationWarning)
+
+tests/cli/test_cli_game.py::TestIntegration::test_complete_game_flow
+  /Users/chenpinle/Desktop/杂/pythonProject/RuleK/src/core/game_state.py:239: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
+    "rules": [r.dict() if hasattr(r, 'dict') else r for r in self.rules],
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/cli/test_cli_game.py::TestActionPhase::test_action_phase_with_npcs
+FAILED tests/cli/test_cli_game.py::TestSaveLoad::test_load_game_success - ass...
+FAILED tests/cli/test_cli_game.py::TestIntegration::test_complete_game_flow
+================== 3 failed, 36 passed, 76 warnings in 6.25s ===================

@@ -1,117 +1,100 @@
-# 修复总结
+# RuleK 测试修复总结
 
-## 🔧 已修复的问题
+## 修复的问题
 
-### 1. ✅ 脚本执行权限
-- **问题**：`./start.sh` 权限被拒绝
-- **修复**：需要手动添加执行权限
-  ```bash
-  chmod +x start.sh
-  chmod +x rulek.py scripts/dev_tools.py
-  ```
+### 1. 文件保存重复扩展名问题
 
-### 2. ✅ 导入错误
-- **问题**：`from src.utils.config import load_config` 失败
-- **修复**：更改为 `from src.utils.config import config`
-- **文件**：`rulek.py`
+**问题描述**: 保存游戏时，文件名会变成 `test_save.json.json`
 
-### 3. ✅ GameStateManager 问题
-- **save_game 签名**：
-  - 修改为接受可选的 `filename` 参数：`save_game(self, filename: Optional[str] = None)`
-  - 文件：`src/core/game_state.py`
-  
-- **默认NPC创建**：
-  - 添加 `_create_default_npcs()` 方法
-  - 在 `new_game()` 中自动创建3个默认NPC
-  
-- **缺失属性**：
-  - 在 `GameState` 类中添加 `active_rules: List[str]` 和 `turn: int`
+**根本原因**: 
+- `GameStateManager.save_game()` 方法总是给文件名添加 `.json` 扩展名
+- `CLIGame.save_game()` 方法也会检查并添加 `.json` 扩展名
+- 测试代码传入的文件名可能已经包含 `.json`
 
-### 4. ✅ 时间范围检查
-- **问题**：严格要求 "HH:MM" 格式，不接受 "H:MM"
-- **修复**：添加 `normalize_time()` 函数，支持两种格式
-- **文件**：`src/core/rule_executor.py`
+**修复方案**:
+1. 在 `src/core/game_state.py` 的 `save_game()` 方法中添加检查：
+   ```python
+   if filename:
+       # 检查文件名是否已经包含.json扩展名
+       if not filename.endswith('.json'):
+           save_file = self.save_dir / f"{filename}.json"
+       else:
+           save_file = self.save_dir / filename
+   ```
 
-### 5. ⚠️ 待处理问题
+2. 在 `src/cli_game.py` 中移除多余的 `.json` 添加逻辑
 
-#### 代码质量（ruff & mypy）
-需要运行以下命令自动修复大部分问题：
+### 2. DeepSeek API 缺失方法
+
+**问题描述**: 测试期望的几个异步方法不存在
+
+**缺失的方法**:
+- `evaluate_rule_async`
+- `generate_narrative_async`
+- `generate_npc_batch_async`
+
+**修复方案**:
+在 `src/api/deepseek_client.py` 中添加这些方法：
+
+1. `evaluate_rule_async` - 作为 `evaluate_rule` 的别名
+2. `generate_narrative_async` - 作为 `narrate_events` 的别名
+3. `generate_npc_batch_async` - 新实现的批量生成NPC功能
+
+### 3. API 连接错误
+
+**问题描述**: `httpx.ConnectError` 
+
+**原因**: 测试环境可能无法连接到外部API
+
+**建议**: 
+- 在测试中使用 Mock 模式
+- 或者在测试中 skip 需要网络的测试
+
+## 测试方法
+
+### 方式1: 快速验证修复
 ```bash
-# 自动修复格式问题
-ruff check src/ --fix
-
-# 查看类型检查问题
-mypy src/ --ignore-missing-imports
+chmod +x verify_all_fixes.sh
+./verify_all_fixes.sh
 ```
 
-主要的类型问题：
-- 缺少类型注解
-- Optional 类型未正确处理
-- 未定义的属性和方法
-
-#### 前端依赖
+### 方式2: 手动测试
 ```bash
-cd web/frontend && npm install
+python test_all_fixes.py
 ```
 
-## 📝 快速验证步骤
+### 方式3: 运行完整测试
+```bash
+python rulek.py test
+```
 
-1. **添加执行权限**：
-   ```bash
-   chmod +x start.sh
-   ```
+### 方式4: 只运行修复的测试
+```bash
+PYTEST_RUNNING=1 pytest -v tests/cli/test_cli_game.py::TestSaveLoad tests/api/test_deepseek_api.py -k "rule_evaluation or narrative_generation or batch_npc"
+```
 
-2. **运行测试验证**：
-   ```bash
-   python test_fixes.py
-   ```
+## 预期结果
 
-3. **运行完整测试套件**：
-   ```bash
-   python rulek.py test
-   ```
+修复后，以下测试应该通过：
+- ✅ `test_setup_phase_save_game`
+- ✅ `test_save_game_success`
+- ✅ `test_complete_game_flow`
+- ✅ `test_rule_evaluation`
+- ✅ `test_narrative_generation`
+- ✅ `test_batch_npc_generation`
 
-4. **启动游戏**：
-   ```bash
-   # 方式1：使用启动脚本
-   ./start.sh
-   
-   # 方式2：直接运行
-   python rulek.py web
-   ```
+API 连接测试可能仍然失败（取决于网络环境），但这是预期的。
 
-## 🎯 建议的后续步骤
+## 注意事项
 
-1. **安装缺失的开发工具**：
-   ```bash
-   pip install ruff mypy pytest pytest-cov
-   ```
+1. **API 测试**: 如果没有配置 DeepSeek API key，API 相关测试会失败。建议在测试中使用 Mock 模式。
 
-2. **修复剩余的代码质量问题**：
-   ```bash
-   python scripts/dev_tools.py check
-   ```
+2. **网络连接**: `test_api_connection` 测试需要网络连接，在离线环境中会失败。
 
-3. **安装前端依赖**：
-   ```bash
-   cd web/frontend && npm install
-   ```
+3. **Pydantic 警告**: 会看到一些关于 Pydantic v2 迁移的警告，这些不影响功能，可以在后续版本中解决。
 
-4. **创建 .env 文件**（如果还没有）：
-   ```bash
-   cp .env.example .env
-   # 编辑 .env 添加必要的配置
-   ```
+## 后续建议
 
-## 📌 注意事项
-
-- DeepSeek API 相关的测试会被跳过（除非配置了 API Key）
-- 部分高级功能（如副作用管理器）可能需要额外的实现
-- 建议在修复后运行完整的测试套件确保所有功能正常
-
-## 🚀 现在可以正常启动了！
-
-所有核心问题已修复，游戏应该可以正常运行。如果遇到其他问题，请检查：
-1. Python 版本是否 >= 3.10
-2. 所有依赖是否已安装（`pip install -r requirements.txt`）
-3. 是否有正确的 `.env` 配置文件
+1. 考虑将 API 测试改为使用 Mock，避免依赖外部服务
+2. 升级 Pydantic 到 v2，解决弃用警告
+3. 添加更多的单元测试覆盖边界情况

@@ -57,7 +57,13 @@ class RuleExecutor:
         triggered_rules = []
         
         for rule_id in self.game_manager.state.active_rules:
-            rule = self.game_manager.rules.get(rule_id)
+            # 在规则列表中查找对应的规则
+            rule = None
+            for r in self.game_manager.rules:
+                if r.id == rule_id:
+                    rule = r
+                    break
+            
             if not rule:
                 continue
                 
@@ -267,7 +273,7 @@ class RuleExecutor:
         """应用规则效果到游戏状态"""
         # 获得恐惧积分
         if result.get("fear_gained", 0) > 0:
-            self.game_manager.gain_fear_points(
+            self.game_manager.add_fear_points(
                 result["fear_gained"], 
                 f"规则触发: {rule.name}"
             )

@@ -3,6 +3,15 @@
 提供简单的CLI界面来玩游戏
 """
 import os
+
+
+# --- test-friendly pause helper ---
+import os
+def _pause():
+    if os.getenv('PYTEST_RUNNING') == '1':
+        return
+    _pause()
+# --- end helper ---
 import sys
 import asyncio
 
@@ -30,6 +39,9 @@ class CLIGame:
         
     def clear_screen(self):
         """清屏"""
+        # 在测试环境中不清屏
+        if os.environ.get('PYTEST_RUNNING'):
+            return
         os.system('cls' if os.name == 'nt' else 'clear')
         
     def print_header(self):
@@ -45,7 +57,7 @@ class CLIGame:
             
         state = self.game_manager.state
         print("\n📊 游戏状态")
-        print(f"├─ 回合: {state.turn} | 第{state.day}天 {state.current_time}")
+        print(f"├─ 回合: {state.current_turn} | 第{state.day}天 {state.current_time}")
         print(f"├─ 阶段: {state.phase.value}")
         print(f"├─ 模式: {'幕后管理' if state.mode == GameMode.BACKSTAGE else '亲自下场'}")
         print(f"├─ 恐惧积分: {state.fear_points} 💀")
@@ -71,8 +83,8 @@ class CLIGame:
             return
             
         print("\n📜 激活的规则:")
-        for i, (rule_id, rule) in enumerate(self.game_manager.rules.items(), 1):
-            print(f"{i}. {rule.name} (等级{rule.level}) - {rule.description[:30]}...")
+        for i, rule in enumerate(self.game_manager.rules, 1):
+            print(f"{i}. {rule.name} (等级{rule.level}) - {(rule.description or '')[:30]}...")
             
     def print_recent_events(self, limit=5):
         """打印最近的事件"""
@@ -145,6 +157,9 @@ class CLIGame:
         print("\n✅ 游戏创建成功！")
         await asyncio.sleep(1)
         
+        # 显示初始NPC
+        print(f"\n已创建 {len(self.game_manager.state.npcs)} 个NPC")
+        
         # 进入游戏循环
         await self.game_loop()
         
@@ -187,7 +202,7 @@ class CLIGame:
             await self.manage_rules()
         elif choice == "2":
             self.print_npcs()
-            input("\n按回车继续...")
+            _pause()
         elif choice == "3":
             await self.switch_mode()
         elif choice == "4":
@@ -219,6 +234,20 @@ class CLIGame:
         elif choice == "3":
             print("升级功能尚未实现")
             await asyncio.sleep(1)
+            
+    async def create_custom_rule(self):
+        """创建自定义规则"""
+        print("\n🔧  自定义规则创建")
+        print("（此功能需要详细的规则参数输入界面）")
+        print("\n示例自定义规则参数：")
+        print("- 名称: 自定义规则")
+        print("- 触发动作: 需要选择")
+        print("- 效果类型: 需要选择")
+        print("- 恐惧点消耗: 需要输入")
+        print("- 破纽设置: 可选")
+        
+        print("\n当前版本请使用模板创建规则")
+        await asyncio.sleep(3)
         
     async def create_rule_from_template(self):
         """从模板创建规则"""
@@ -250,6 +279,8 @@ class CLIGame:
                     confirm = input("确认创建? (y/n): ").strip().lower()
                     if confirm == 'y':
                         if self.game_manager.add_rule(rule):
+                            # 扣除恐惧积分
+                            self.game_manager.spend_fear_points(cost)
                             print("✅ 规则创建成功！")
                         else:
                             print("❌ 规则创建失败！")
@@ -257,7 +288,10 @@ class CLIGame:
                     print("❌ 恐惧积分不足！")
                     
                 await asyncio.sleep(2)
-                
+            else:
+                print("无效选择！")
+                await asyncio.sleep(1)
+            
         except (ValueError, IndexError):
             print("无效选择！")
             await asyncio.sleep(1)
@@ -299,7 +333,7 @@ class CLIGame:
                     print(f"\n⚡ {npc['name']} 触发了规则 [{rule.name}]!")
                     exec_result = self.rule_executor.execute_rule(rule, context)
                     
-                    for msg in exec_result.get("messages", []):
+                    for msg in exec_result.get("messages", []) or []:
                         print(f"   {msg}")
                         
             await asyncio.sleep(0.5)  # 短暂延迟，让玩家能看清
@@ -350,7 +384,8 @@ class CLIGame:
                 print(f"  {dialogue}")
                 await asyncio.sleep(1)
                 
-        input("\n按回车继续...")
+        _pause()
+        # 进入下一个阶段
         self.game_manager.change_phase(GamePhase.ACTION)
         
     async def switch_mode(self):
@@ -366,17 +401,66 @@ class CLIGame:
         """保存游戏"""
         save_name = input("输入存档名称: ").strip()
         if save_name:
-            path = self.game_manager.save_game(save_name)
-            print(f"✅ 游戏已保存到: {path}")
+            try:
+                path = self.game_manager.save_game(save_name)
+                if path:
+                    print(f"✅ 游戏已保存到: {path}")
+                else:
+                    print("❌ 保存游戏失败")
+            except Exception as e:
+                print(f"❌ 保存失败: {e}")
         else:
             print("❌ 存档名称不能为空")
-        input("\n按回车继续...")
+        _pause()
         
     async def load_game_menu(self):
         """加载游戏菜单"""
-        # TODO: 实现加载功能
-        print("加载功能尚未实现")
-        await asyncio.sleep(1)
+        from pathlib import Path
+        
+        self.clear_screen()
+        print("📂 加载游戏\n")
+        
+        # 使用data/saves作为存档目录
+        save_dir = self.game_manager.save_dir
+        if not save_dir.exists():
+            print("没有找到任何存档")
+            await asyncio.sleep(2)
+            return
+            
+        saves = list(save_dir.glob("*.json"))
+        if not saves:
+            print("没有找到任何存档")
+            await asyncio.sleep(2)
+            return
+            
+        print("可用存档:")
+        for i, save_file in enumerate(saves, 1):
+            print(f"{i}. {save_file.stem}")
+            
+        choice = input("\n选择存档编号 (0取消): ").strip()
+        
+        try:
+            idx = int(choice) - 1
+            if 0 <= idx < len(saves):
+                game_id = saves[idx].stem
+                if self.game_manager.load_game(game_id):
+                    print("✅ 游戏加载成功！")
+                    self.rule_executor = RuleExecutor(self.game_manager)
+                    self.npc_behavior = NPCBehavior(self.game_manager)
+                    await asyncio.sleep(1)
+                    await self.game_loop()
+                else:
+                    print("❌ 加载失败：存档可能已损坏")
+                    await asyncio.sleep(2)
+            elif choice == "0":
+                return
+            else:
+                print("无效选择")
+                await asyncio.sleep(1)
+        except ValueError:
+            if choice != "0":
+                print("请输入数字")
+                await asyncio.sleep(1)
         
     async def game_over(self, reason: str):
         """游戏结束"""
@@ -388,10 +472,10 @@ class CLIGame:
         
         summary = self.game_manager.get_summary()
         print("\n游戏统计:")
-        print(f"- 总回合数: {summary['turn']}")
-        print(f"- 存活天数: {summary['day']}")
-        print(f"- 最终恐惧积分: {summary['fear_points']}")
-        print(f"- 创建规则数: {summary['active_rules']}")
+        print(f"- 总回合数: {summary['turns_played']}")
+        print(f"- 存活天数: {self.game_manager.state.day}")
+        print(f"- 最终恐惧积分: {summary['fear_points_final']}")
+        print(f"- 创建规则数: {summary['rules_created']}")
         
         input("\n按回车返回主菜单...")
         

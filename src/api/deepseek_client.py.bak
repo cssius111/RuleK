@@ -1,0 +1,648 @@
+"""
+DeepSeek API客户端模块
+负责与DeepSeek API进行通信，生成对话、评估规则、叙述事件
+"""
+import httpx
+import asyncio
+import json
+from typing import Dict, List, Optional, Any
+from datetime import datetime, timedelta
+from dataclasses import dataclass
+import hashlib
+from pathlib import Path
+import logging
+
+# 导入配置系统
+
+# 设置日志
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class APIConfig:
+    """API配置"""
+    api_key: str = ""
+    base_url: str = "https://api.deepseek.com/v1"
+    model: str = "deepseek-chat"
+    max_retries: int = 3
+    timeout: int = 30
+    cache_enabled: bool = True
+    cache_dir: Path = Path("data/cache/api")
+    mock_mode: bool = False  # 离线测试模式
+
+
+@dataclass
+class CacheEntry:
+    """缓存条目"""
+    key: str
+    response: Dict[str, Any]
+    timestamp: datetime
+    ttl: int = 3600  # 缓存时间（秒）
+    
+    def is_expired(self) -> bool:
+        """检查是否过期"""
+        return datetime.now() > self.timestamp + timedelta(seconds=self.ttl)
+
+
+class ResponseCache:
+    """响应缓存管理器"""
+    
+    def __init__(self, cache_dir: Path):
+        self.cache_dir = cache_dir
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.memory_cache: Dict[str, CacheEntry] = {}
+# 无 API Key 时自动进入 mock 模式
+if not getattr(self.config, 'api_key', None):
+    self.config.mock_mode = True
+    self.mock_mode = True
+
+    
+    def _generate_key(self, prompt: str, params: Dict[str, Any]) -> str:
+        """生成缓存键"""
+        content = json.dumps({"prompt": prompt, "params": params}, sort_keys=True)
+        return hashlib.md5(content.encode()).hexdigest()
+    
+    def get(self, prompt: str, params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """获取缓存"""
+        key = self._generate_key(prompt, params)
+        
+        # 先检查内存缓存
+        if key in self.memory_cache:
+            entry = self.memory_cache[key]
+            if not entry.is_expired():
+                logger.debug(f"Cache hit (memory): {key}")
+                return entry.response
+            else:
+                del self.memory_cache[key]
+        
+        # 检查文件缓存
+        cache_file = self.cache_dir / f"{key}.json"
+        if cache_file.exists():
+            try:
+                with open(cache_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    entry = CacheEntry(
+                        key=key,
+                        response=data['response'],
+                        timestamp=datetime.fromisoformat(data['timestamp'])
+                    )
+                    if not entry.is_expired():
+                        self.memory_cache[key] = entry
+                        logger.debug(f"Cache hit (file): {key}")
+                        return entry.response
+                    else:
+                        cache_file.unlink()
+            except Exception as e:
+                logger.error(f"Failed to load cache: {e}")
+        
+        return None
+    
+    def set(self, prompt: str, params: Dict[str, Any], response: Dict[str, Any]):
+        """设置缓存"""
+        key = self._generate_key(prompt, params)
+        entry = CacheEntry(
+            key=key,
+            response=response,
+            timestamp=datetime.now()
+        )
+        
+        # 保存到内存
+        self.memory_cache[key] = entry
+        
+        # 保存到文件
+        cache_file = self.cache_dir / f"{key}.json"
+        try:
+            with open(cache_file, 'w', encoding='utf-8') as f:
+                json.dump({
+                    'response': response,
+                    'timestamp': entry.timestamp.isoformat()
+                }, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.error(f"Failed to save cache: {e}")
+
+
+class DeepSeekClient:
+    """DeepSeek API客户端"""
+    
+    def __init__(self, config: Optional[APIConfig] = None):
+        self.config = config or APIConfig()
+        self.cache = ResponseCache(self.config.cache_dir) if self.config.cache_enabled else None
+        self.client = httpx.AsyncClient(timeout=self.config.timeout)
+        
+        # Mock模式下的预设响应
+        self.mock_responses = self._init_mock_responses()
+    
+    def _init_mock_responses(self) -> Dict[str, List[str]]:
+        """初始化Mock响应"""
+        return {
+            "dialogue": [
+                "我...我看到了什么？那个影子刚才是不是动了？",
+                "大家冷静！我们必须团结在一起才能活下去！",
+                "这个房间的温度怎么突然变得这么冷...",
+                "你们有没有听到...那个声音？好像有人在哭泣。",
+                "我觉得这里的规则有问题，镜子似乎是关键。"
+            ],
+            "rule_evaluation": [
+                {
+                    "cost_estimate": 150,
+                    "difficulty": 7,
+                    "loopholes": ["可以通过闭眼规避", "破碎的镜子无效"],
+                    "suggestion": "这是一个有趣的规则，建议增加触发条件的复杂度。"
+                }
+            ],
+            "narration": [
+                "夜幕降临，废弃公寓里的温度骤然下降。走廊尽头传来若有若无的脚步声，每个人都紧张地望向声音的来源...",
+                "浴室的镜子上慢慢浮现出血红的字迹，倒映着惊恐的面孔。恐惧如同冰冷的手指，紧紧扼住了每个人的喉咙。",
+                "时钟指向午夜，整栋建筑陷入了死一般的寂静。突然，一声凄厉的尖叫撕裂了黑暗..."
+            ]
+        }
+    
+    async def _make_request(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """发送API请求"""
+        if self.config.mock_mode:
+            # Mock模式，返回预设响应
+            await asyncio.sleep(0.5)  # 模拟网络延迟
+            return {"choices": [{"message": {"content": "Mock response"}}]}
+        
+        headers = {
+            "Authorization": f"Bearer {self.config.api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        for attempt in range(self.config.max_retries):
+            try:
+                response = await self.client.post(
+                    f"{self.config.base_url}/{endpoint}",
+                    headers=headers,
+                    json=data
+                )
+                response.raise_for_status()
+                return response.json()
+            
+            except httpx.TimeoutException:
+                logger.warning(f"Request timeout (attempt {attempt + 1}/{self.config.max_retries})")
+                if attempt < self.config.max_retries - 1:
+                    await asyncio.sleep(2 ** attempt)
+                else:
+                    raise
+            
+            except httpx.HTTPStatusError as e:
+                logger.error(f"HTTP error: {e}")
+                if e.response.status_code == 429:  # Rate limit
+                    await asyncio.sleep(5)
+                else:
+                    raise
+    
+    async def generate_dialogue(
+        self,
+        npc_states: List[Dict[str, Any]],
+        scene_context: Dict[str, Any],
+        dialogue_type: str = "normal"
+    ) -> List[Dict[str, str]]:
+        """
+        生成NPC对话
+        
+        Args:
+            npc_states: NPC状态列表
+            scene_context: 场景上下文（位置、时间、最近事件等）
+            dialogue_type: 对话类型（normal, morning, night, emergency）
+            
+        Returns:
+            对话列表 [{"speaker": "NPC名", "text": "对话内容"}]
+        """
+        # 检查缓存
+        cache_key = f"dialogue_{dialogue_type}"
+        cached = self.cache.get(cache_key, {"npcs": len(npc_states)}) if self.cache else None
+        if cached:
+            return cached.get("dialogues", [])
+        
+        # 构建提示词
+        prompt = self._build_dialogue_prompt(npc_states, scene_context, dialogue_type)
+        
+        # Mock模式
+        if self.config.mock_mode:
+            import random
+            dialogues = []
+            for npc in npc_states[:2]:  # 最多2个NPC对话
+                text = random.choice(self.mock_responses["dialogue"])
+                dialogues.append({
+                    "speaker": npc["name"],
+                    "text": text
+                })
+            return dialogues
+        
+        # 调用API
+        data = {
+            "model": self.config.model,
+            "messages": [
+                {"role": "system", "content": "你是一个恐怖故事的叙述者，负责生成NPC的对话。"},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.8,
+            "max_tokens": 500
+        }
+        
+        response = await self._make_request("chat/completions", data)
+        
+        # 解析响应
+        content = response["choices"][0]["message"]["content"]
+        dialogues = self._parse_dialogue_response(content, npc_states)
+        
+        # 缓存结果
+        if self.cache:
+            self.cache.set(cache_key, {"npcs": len(npc_states)}, {"dialogues": dialogues})
+        
+        return dialogues
+
+    async def generate_dialogue_async(
+        self,
+        context: str,
+        participants: List[str],
+        max_tokens: Optional[int] = None,
+    ) -> List[Dict[str, str]]:
+        """Simplified async wrapper for :meth:`generate_dialogue`.
+
+        Args:
+            context: 场景描述文本
+            participants: 参与对话的角色名称列表
+            max_tokens: 与 ``generate_dialogue`` 兼容的占位参数
+
+        Returns:
+            对话列表 ``[{"speaker": str, "text": str}]``
+        """
+
+        npc_states = [{"name": name} for name in participants]
+        scene_context = {"description": context}
+
+        # 目前 ``generate_dialogue`` 并未暴露 ``max_tokens`` 参数，
+        # 因此在此仅保持接口兼容，不直接使用该值。
+        _ = max_tokens
+
+        return await self.generate_dialogue(npc_states, scene_context)
+    
+    async def evaluate_rule(
+        self,
+        rule_draft: Dict[str, Any],
+        world_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        评估规则设计
+        
+        Args:
+            rule_draft: 规则草案
+            world_context: 世界状态摘要
+            
+        Returns:
+            评估结果 {"cost": int, "loopholes": [], "suggestions": str}
+        """
+        # Mock模式
+        if self.config.mock_mode:
+            import random
+            return random.choice(self.mock_responses["rule_evaluation"])
+        
+        prompt = self._build_rule_evaluation_prompt(rule_draft, world_context)
+        
+        data = {
+            "model": self.config.model,
+            "messages": [
+                {"role": "system", "content": "你是一个游戏规则评估专家，负责分析规则的成本、破绽和平衡性。"},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.3,
+            "max_tokens": 800
+        }
+        
+        response = await self._make_request("chat/completions", data)
+        content = response["choices"][0]["message"]["content"]
+        
+        return self._parse_rule_evaluation(content)
+    
+    async def narrate_events(
+        self,
+        events: List[Dict[str, Any]],
+        atmosphere: str = "horror"
+    ) -> str:
+        """
+        生成事件叙述
+        
+        Args:
+            events: 事件列表
+            atmosphere: 氛围类型（horror, suspense, dark_humor）
+            
+        Returns:
+            叙事文本
+        """
+        # Mock模式
+        if self.config.mock_mode:
+            import random
+            return random.choice(self.mock_responses["narration"])
+        
+        prompt = self._build_narration_prompt(events, atmosphere)
+        
+        data = {
+            "model": self.config.model,
+            "messages": [
+                {"role": "system", "content": f"你是一个{atmosphere}风格的小说作家，负责将游戏事件转化为引人入胜的叙述。"},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.9,
+            "max_tokens": 600
+        }
+        
+        response = await self._make_request("chat/completions", data)
+        return response["choices"][0]["message"]["content"]
+    
+    def _build_dialogue_prompt(
+        self,
+        npc_states: List[Dict[str, Any]],
+        scene_context: Dict[str, Any],
+        dialogue_type: str
+    ) -> str:
+        """构建对话生成提示词"""
+        prompt = f"""场景：{scene_context.get('location', '未知地点')}，时间：{scene_context.get('time', '深夜')}
+        
+参与对话的NPC：
+"""
+        for npc in npc_states:
+            prompt += f"""
+- {npc['name']}：
+  恐惧程度：{npc.get('fear', 0)}/100
+  理智值：{npc.get('sanity', 100)}/100
+  性格：理性{npc.get('rationality', 5)} 勇气{npc.get('courage', 5)}
+  状态：{npc.get('status', 'normal')}
+"""
+        
+        if scene_context.get('recent_events'):
+            prompt += f"\n最近发生的事件：{scene_context['recent_events']}\n"
+        
+        prompt += f"""
+请生成一段{dialogue_type}类型的对话，要求：
+1. 反映每个NPC的当前状态和性格
+2. 对话要自然、符合恐怖氛围
+3. 每人说1-2句话
+4. 格式：NPC名：对话内容
+
+输出格式示例：
+小明：我觉得这里不对劲...
+小红：别说了，我们快离开这里！
+"""
+        return prompt
+    
+    def _build_rule_evaluation_prompt(
+        self,
+        rule_draft: Dict[str, Any],
+        world_context: Dict[str, Any]
+    ) -> str:
+        """构建规则评估提示词"""
+        return f"""请评估以下规则设计：
+
+规则名称：{rule_draft.get('name', '未命名')}
+触发条件：{json.dumps(rule_draft.get('trigger', {}), ensure_ascii=False)}
+效果：{json.dumps(rule_draft.get('effect', {}), ensure_ascii=False)}
+要求：{json.dumps(rule_draft.get('requirements', {}), ensure_ascii=False)}
+
+当前游戏状态：
+- 已有规则数：{world_context.get('rule_count', 0)}
+- 平均恐惧等级：{world_context.get('avg_fear', 0)}
+
+请提供：
+1. 成本估算（50-500之间）
+2. 可能的破绽（2-3个）
+3. 平衡性建议
+4. 实施难度（1-10）
+
+以JSON格式输出。
+"""
+    
+    def _build_narration_prompt(
+        self,
+        events: List[Dict[str, Any]],
+        atmosphere: str
+    ) -> str:
+        """构建叙事生成提示词"""
+        events_desc = "\n".join([
+            f"- {e.get('type', '未知事件')}：{e.get('description', '')}"
+            for e in events
+        ])
+        
+        return f"""请将以下游戏事件转化为{atmosphere}风格的叙述：
+
+{events_desc}
+
+要求：
+1. 200-300字的连贯叙述
+2. 营造恐怖/悬疑氛围
+3. 不要直接描述游戏机制
+4. 使用生动的环境描写和心理描写
+5. 以第三人称叙述
+"""
+    
+    def _parse_dialogue_response(
+        self,
+        content: str,
+        npc_states: List[Dict[str, Any]]
+    ) -> List[Dict[str, str]]:
+        """解析对话响应"""
+        dialogues = []
+        lines = content.strip().split('\n')
+        
+        for line in lines:
+            if '：' in line or ':' in line:
+                parts = line.replace(':', '：').split('：', 1)
+                if len(parts) == 2:
+                    speaker = parts[0].strip()
+                    text = parts[1].strip()
+                    # 验证说话者是否在NPC列表中
+                    if any(npc['name'] == speaker for npc in npc_states):
+                        dialogues.append({
+                            "speaker": speaker,
+                            "text": text
+                        })
+        
+        return dialogues
+    
+    def _parse_rule_evaluation(self, content: str) -> Dict[str, Any]:
+        """解析规则评估响应"""
+        try:
+            # 尝试直接解析JSON
+            return json.loads(content)
+        except:
+            # 如果不是纯JSON，尝试提取信息
+            result = {
+                "cost_estimate": 150,
+                "difficulty": 5,
+                "loopholes": [],
+                "suggestion": ""
+            }
+            
+            # 简单的文本解析逻辑
+            if "成本" in content:
+                # 提取成本数字
+                import re
+                cost_match = re.search(r'成本[：:]\s*(\d+)', content)
+                if cost_match:
+                    result["cost_estimate"] = int(cost_match.group(1))
+            
+            return result
+    
+    async def evaluate_rule_async(
+        self,
+        rule_draft: Dict[str, Any],
+        world_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """evaluate_rule 的异步别名，用于兼容测试"""
+        return await self.evaluate_rule(rule_draft, world_context)
+    
+    async def generate_narrative_async(
+        self,
+        events: List[Dict[str, Any]],
+        atmosphere: str = "horror"
+    ) -> str:
+        """narrate_events 的异步别名，用于兼容测试"""
+        return await self.narrate_events(events, atmosphere)
+    
+    async def generate_npc_batch_async(
+        self,
+        count: int,
+        traits: Optional[List[str]] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        批量生成NPC
+        
+        Args:
+            count: 要生成的NPC数量
+            traits: 性格特征列表（可选）
+            
+        Returns:
+            NPC列表，每个包含 name 和 background
+        """
+        # Mock模式
+        if self.config.mock_mode:
+            npcs = []
+            names = ["张三", "李四", "王五", "赵六", "钱七"]
+            backgrounds = [
+                "曾经是一名医生，因为一次医疗事故失去了执照",
+                "大学生，喜欢探索废弃建筑寻求刺激",
+                "失业的程序员，最近压力很大",
+                "退役军人，有轻微的PTSD",
+                "私家侦探，正在调查失踪案件"
+            ]
+            
+            for i in range(min(count, len(names))):
+                npc = {
+                    "name": names[i],
+                    "background": backgrounds[i % len(backgrounds)]
+                }
+                if traits and i < len(traits):
+                    npc["trait"] = traits[i]
+                npcs.append(npc)
+            
+            return npcs
+        
+        # 构建提示词
+        prompt = f"""请生成{count}个恐怖游戏中的NPC角色。
+
+要求：
+1. 每个NPC都要有独特的中文名字
+2. 每个NPC都要有简短的背景故事（50字以内）
+3. 背景要暗示他们为什么会出现在恐怖场景中
+"""
+        
+        if traits:
+            prompt += f"\n4. 分别赋予以下性格特征：{', '.join(traits)}\n"
+        
+        prompt += "\n请以JSON数组格式输出，每个对象包含name和background字段。"
+        
+        data = {
+            "model": self.config.model,
+            "messages": [
+                {"role": "system", "content": "你是一个恐怖游戏的角色设计师。"},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.8,
+            "max_tokens": 800
+        }
+        
+        response = await self._make_request("chat/completions", data)
+        content = response["choices"][0]["message"]["content"]
+        
+        # 解析响应
+        try:
+            npcs = json.loads(content)
+            if isinstance(npcs, list):
+                return npcs[:count]  # 确保不超过请求的数量
+        except:
+            # 解析失败时返回默认值
+            return [{"name": f"NPC{i+1}", "background": "神秘人物"} for i in range(count)]
+    
+    async def close(self):
+        """关闭客户端"""
+        await self.client.aclose()
+
+
+# 便捷函数
+async def create_client(config_path: Optional[str] = None) -> DeepSeekClient:
+    """创建客户端实例"""
+    config = APIConfig()
+    
+    if config_path:
+        config_file = Path(config_path)
+        if config_file.exists():
+            with open(config_file, 'r') as f:
+                config_data = json.load(f)
+                for key, value in config_data.items():
+                    if hasattr(config, key):
+                        setattr(config, key, value)
+    
+    return DeepSeekClient(config)
+
+
+# 测试代码
+if __name__ == "__main__":
+    async def test_client():
+        # 创建Mock模式客户端进行测试
+        config = APIConfig(mock_mode=True)
+        client = DeepSeekClient(config)
+        
+        # 测试对话生成
+        npc_states = [
+            {"name": "小明", "fear": 60, "sanity": 70, "status": "frightened"},
+            {"name": "小红", "fear": 40, "sanity": 85, "status": "normal"}
+        ]
+        
+        scene_context = {
+            "location": "废弃浴室",
+            "time": "午夜",
+            "recent_events": "刚才镜子里出现了诡异的影子"
+        }
+        
+        print("测试对话生成...")
+        dialogues = await client.generate_dialogue(npc_states, scene_context)
+        for d in dialogues:
+            print(f"{d['speaker']}: {d['text']}")
+        
+        # 测试规则评估
+        print("\n测试规则评估...")
+        rule_draft = {
+            "name": "回头杀",
+            "trigger": {"action": "turn_around", "conditions": ["alone"]},
+            "effect": {"type": "instant_death"}
+        }
+        
+        evaluation = await client.evaluate_rule(rule_draft, {"rule_count": 3})
+        print(f"评估结果: {evaluation}")
+        
+        # 测试叙事生成
+        print("\n测试叙事生成...")
+        events = [
+            {"type": "rule_triggered", "description": "小明触发了镜中恶魔规则"},
+            {"type": "npc_death", "description": "小明被拖入镜中消失"}
+        ]
+        
+        narration = await client.narrate_events(events)
+        print(f"叙事: {narration}")
+        
+        await client.close()
+    
+    # 运行测试
+    asyncio.run(test_client())
