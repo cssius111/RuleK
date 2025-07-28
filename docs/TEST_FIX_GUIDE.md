@@ -25,18 +25,12 @@
 
 ## 🚀 如何运行测试
 
-### 方法1: 使用快速测试脚本（推荐）
+### 快速运行
 ```bash
-python scripts/test_quick.py
+python rulek.py test
 ```
 
-### 方法2: 使用测试运行器
-```bash
-python scripts/run_tests.py
-# 然后选择要运行的测试类型
-```
-
-### 方法3: 直接使用 pytest
+### 直接使用 pytest
 ```bash
 # 运行所有测试
 pytest tests/ -v
@@ -72,9 +66,9 @@ pytest tests/ --cov=src --cov-report=term-missing
 
 ## 🧹 项目维护
 
-运行项目清理和健康检查：
+清理 pytest 缓存：
 ```bash
-python scripts/cleanup_project.py
+pytest --cache-clear
 ```
 
 ## 📊 测试覆盖率
@@ -102,8 +96,7 @@ pytest tests/ --cov=src --cov-report=html
    ```
 4. **清理缓存**:
    ```bash
-   python scripts/cleanup_project.py
-   # 选择 1 清理缓存
+   pytest --cache-clear
    ```
 
 ## ✅ 下一步

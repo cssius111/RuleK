@@ -1,9 +1,0 @@
-# 核心依赖 - MVP版本
-pydantic>=2.0.0
-colorama>=0.4.6
-
-# 可选依赖（后续功能需要）
-# fastapi>=0.104.1
-# uvicorn[standard]>=0.24.0
-# httpx>=0.25.2
-# tenacity>=8.2.3

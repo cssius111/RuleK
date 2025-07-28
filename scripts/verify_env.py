@@ -202,8 +202,8 @@ def main():
     if passed == total:
         print("\n🎉 环境配置完美！可以开始运行测试了。")
         print("\n下一步:")
-        print("1. 运行所有测试: python scripts/run_tests.py")
-        print("2. 开始游戏: python run_game.py")
+        print("1. 运行所有测试: python rulek.py test")
+        print("2. 开始游戏: python rulek.py")
     else:
         print("\n⚠️  有些检查未通过，请根据上面的提示进行修复。")
         print("\n建议:")

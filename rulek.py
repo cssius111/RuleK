@@ -23,9 +23,9 @@ def run_cli_game():
 
 
 def run_demo_game():
-    """运行演示版本"""
-    from scripts.demo_sprint2 import main as demo_main
-    demo_main()
+    """运行演示版本（已集成到 CLI）"""
+    print("Demo 模式已合并到 CLI，直接启动 CLI 版本")
+    run_cli_game()
 
 
 def run_web_server():

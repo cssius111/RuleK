@@ -9,10 +9,10 @@
 cd RuleK
 
 # 安装依赖（仅需pydantic和colorama）
-pip install -r requirements_mvp.txt
+pip install -r requirements.txt
 
 # 运行游戏
-python main_game.py
+python rulek.py
 ```
 
 ### 2. 游戏流程演示
@@ -104,7 +104,7 @@ A: 在游戏菜单选择 `[5] 保存游戏`，下次可以通过"继续游戏"�
 ## 🎭 立即开始你的恐怖支配之旅！
 
 ```bash
-python main_game.py
+python rulek.py
 ```
 
 祝你在规则怪谈的世界中玩得愉快！记住：最好的规则是那些看似无害，却能带来最大恐惧的规则...

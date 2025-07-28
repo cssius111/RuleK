@@ -6,7 +6,7 @@
 - **问题**：`./start.sh` 权限被拒绝
 - **修复**：需要手动添加执行权限
   ```bash
-  chmod +x start.sh quick_start.sh run_game.sh
+  chmod +x start.sh
   chmod +x rulek.py scripts/dev_tools.py
   ```
 
