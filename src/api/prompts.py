@@ -362,7 +362,7 @@ class PromptManager:
         event_type = event.get('type', 'unknown')
         
         if event_type == 'dialogue':
-            return f"{event.get('speaker', '某人')}说："{event.get('text', '...')}"" 
+            return f"{event.get('speaker', '某人')}说：{event.get('text', '...')}"
         elif event_type == 'action':
             actor = event.get('actor', '某人')
             action = event.get('action', '做了什么')
