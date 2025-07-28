@@ -275,17 +275,31 @@ class CLIGame:
             
     async def create_custom_rule(self):
         """创建自定义规则"""
-        print("\n🔧 自定义规则创建")
-        print("（此功能需要详细的规则参数输入界面）")
-        print("\n示例自定义规则参数：")
-        print("- 名称: 自定义规则")
-        print("- 触发动作: 需要选择")
-        print("- 效果类型: 需要选择")
-        print("- 恐惧点消耗: 需要输入")
-        print("- 破纽设置: 可选")
-        
-        print("\n当前版本请使用模板创建规则")
-        await asyncio.sleep(3)
+        try:
+            from src.custom_rule_creator import create_custom_rule_enhanced
+            
+            rule = await create_custom_rule_enhanced()
+            if rule:
+                # 检查积分
+                cost = rule.calculate_total_cost()
+                if self.game_manager.state.fear_points >= cost:
+                    confirm = input(f"\n确认花费 {cost} 恐惧积分创建此规则? (y/n): ").strip().lower()
+                    if confirm == 'y':
+                        if self.game_manager.add_rule(rule):
+                            self.game_manager.spend_fear_points(cost)
+                            print("✅ 规则创建成功！")
+                        else:
+                            print("❌ 规则创建失败！")
+                else:
+                    print(f"❌ 恐惧积分不足！需要 {cost}，当前只有 {self.game_manager.state.fear_points}")
+            
+            await asyncio.sleep(2)
+        except ImportError:
+            # 如果没有自定义规则创建器，使用原来的提示
+            print("\n🔧 自定义规则创建")
+            print("（此功能需要详细的规则参数输入界面）")
+            print("\n当前版本请使用模板创建规则")
+            await asyncio.sleep(3)
         
     async def create_rule_from_template(self):
         """从模板创建规则"""

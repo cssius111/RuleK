@@ -443,6 +443,11 @@ class GameStateManager:
         """当前回合数"""
         return self.state.current_turn if self.state else 0
         
+        @property
+    def difficulty(self) -> str:
+        """获取当前游戏难度"""
+        return self.state.difficulty if self.state else "normal"
+        
     @property
     def is_game_over(self) -> bool:
         """检查游戏是否结束"""

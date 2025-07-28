@@ -63,8 +63,20 @@ class GameService:
         # 加载配置
         self.config = load_config()
         
-        # 初始化游戏状态
-        self.game_state = GameState(game_id=self.game_id, difficulty=self.difficulty)
+        # 初始化游戏状态管理器
+        # 从 Config 对象中提取配置信息
+        save_dir = self.config.get('save_dir', 'data/saves')
+        
+        # 获取游戏配置 - 处理嵌套结构
+        game_cfg = self.config._config.get('game', {}) if hasattr(self.config, '_config') else {}
+        game_config = {
+            'initial_fear_points': game_cfg.get('initial_fear_points', 1000),
+            'ai_enabled': game_cfg.get('ai_enabled', False),
+            'difficulty': self.difficulty
+        }
+        self.game_state_manager = GameStateManager(save_dir=save_dir, config=game_config)
+        self.game_state_manager.new_game(self.game_id)
+        self.game_state = self.game_state_manager.state
         
         # 初始化地图
         self.map_manager = MapManager()
@@ -74,8 +86,8 @@ class GameService:
         self.rule_manager = RuleManager()
         self.npc_manager = NPCManager()
         self.event_system = EventSystem()
-        self.npc_behavior = NPCBehavior()
-        self.rule_executor = RuleExecutor()
+        self.npc_behavior = NPCBehavior(self.game_state_manager)
+        self.rule_executor = RuleExecutor(self.game_state_manager)
         
         # 初始化AI系统
         self.deepseek_client = DeepSeekClient()
@@ -438,11 +450,12 @@ class GameService:
             if not self._initialized:
                 await self.initialize()
             
-            # 创建GameStateManager适配器
-            self.game_state_manager = GameStateManager()
+            # 确保game_state_manager已经初始化
+            if not hasattr(self, 'game_state_manager') or not self.game_state_manager:
+                logger.error("GameStateManager not initialized")
+                return False
             
             # 同步游戏状态
-            self.game_state_manager.state = self.game_state
             self.game_state_manager.rules = self.rule_manager.active_rules
             self.game_state_manager.npcs = list(self.npc_manager.npcs.values())
             

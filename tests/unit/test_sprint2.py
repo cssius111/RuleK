@@ -11,7 +11,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
 
 from src.api.deepseek_client import DeepSeekClient, APIConfig
-from src.core.dialogue_system import DialogueSystem, DialogueType, DialogueContext
+from src.core.dialogue_system import DialogueSystem
 from src.core.narrator import Narrator, GameEvent, EventSeverity, NarrativeStyle
 from src.models.npc import generate_random_npc
 

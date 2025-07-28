@@ -1,308 +1,220 @@
-# -*- coding: utf-8 -*-
 """
-API数据模型定义
-使用Pydantic进行数据验证和序列化
+AI API 数据模型定义
+使用 Pydantic 进行数据验证和序列化
 """
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import List, Optional, Literal, Dict, Any
 from datetime import datetime
 
-# ---------- 对话和行动 ----------
+
+# ========== 对话和行动相关 ==========
+
 class DialogueTurn(BaseModel):
     """单个对话回合"""
-    speaker: str = Field(..., description="说话者名字")
-    text: str = Field(..., description="对话内容")
-    emotion: Optional[str] = Field(None, description="情绪标签")
+    speaker: str = Field(description="说话者名字")
+    text: str = Field(description="对话内容")
+    emotion: Optional[Literal["fear", "calm", "panic", "suspicious", "angry"]] = Field(
+        default="calm", description="情绪标签"
+    )
     
-    class Config:
-        schema_extra = {
-            "example": {
-                "speaker": "张三",
-                "text": "我...我看到了什么？那个影子刚才是不是动了？",
-                "emotion": "恐惧"
-            }
-        }
+    model_config = ConfigDict(extra="allow")
 
 
 class PlannedAction(BaseModel):
-    """计划的NPC行动"""
-    npc: str = Field(..., description="执行行动的NPC名字")
-    action: Literal["move", "search", "talk", "use_item", "wait", "defend", "investigate", "hide", "run", "custom"] = Field(..., description="行动类型")
-    target: Optional[str] = Field(None, description="目标地点或对象")
-    reason: Optional[str] = Field(None, description="选择该行动的心理/逻辑理由")
-    risk: Optional[str] = Field(None, description="可能的风险简述")
-    priority: Optional[int] = Field(1, description="行动优先级(1-5)", ge=1, le=5)
+    """NPC计划的行动"""
+    npc: str = Field(description="执行者名字")
+    action: Literal["move", "search", "talk", "use_item", "wait", "defend", "investigate", "hide", "run", "custom"] = Field(
+        description="行动类型"
+    )
+    target: Optional[str] = Field(default=None, description="目标对象或地点")
+    reason: Optional[str] = Field(default=None, description="行动理由")
+    risk: Optional[str] = Field(default=None, description="潜在风险")
+    priority: Literal["high", "medium", "low"] = Field(default="medium", description="优先级")
     
-    class Config:
-        schema_extra = {
-            "example": {
-                "npc": "李四",
-                "action": "move",
-                "target": "kitchen",
-                "reason": "听到厨房传来奇怪的声音，想去查看",
-                "risk": "可能触发厨房的规则",
-                "priority": 3
-            }
-        }
+    model_config = ConfigDict(extra="allow")
 
 
 class TurnPlan(BaseModel):
     """回合计划：包含对话和行动"""
-    dialogue: List[DialogueTurn] = Field(default_factory=list, description="NPC对话列表")
-    actions: List[PlannedAction] = Field(default_factory=list, description="NPC行动列表")
-    turn_summary: Optional[str] = Field(None, description="回合总结")
-    atmosphere: Optional[str] = Field("tense", description="回合氛围")
+    dialogue: List[DialogueTurn] = Field(default_factory=list, description="对话列表")
+    actions: List[PlannedAction] = Field(default_factory=list, description="行动计划列表")
+    atmosphere: Optional[str] = Field(default=None, description="氛围描述")
     
-    @validator("dialogue")
-    def validate_dialogue_count(cls, v):
-        if len(v) > 10:
-            raise ValueError("单回合对话不应超过10条")
-        return v
-    
-    @validator("actions")
-    def validate_action_count(cls, v):
-        if len(v) > 6:
-            raise ValueError("单回合行动不应超过6个")
-        return v
-    
-    class Config:
-        schema_extra = {
-            "example": {
-                "dialogue": [
-                    {"speaker": "张三", "text": "大家冷静！我们必须团结在一起！"},
-                    {"speaker": "李四", "text": "这个房间的温度怎么突然变得这么冷..."}
-                ],
-                "actions": [
-                    {"npc": "张三", "action": "search", "target": "desk", "reason": "寻找线索"}
-                ],
-                "turn_summary": "NPC们开始探索房间，气氛越发紧张",
-                "atmosphere": "horror"
-            }
-        }
+    model_config = ConfigDict(extra="allow")
 
 
-# ---------- 叙事 ----------
+# ========== 叙事相关 ==========
+
 class NarrativeOut(BaseModel):
     """叙事输出"""
-    narrative: str = Field(..., description="叙事文本")
-    style: Optional[str] = Field("horror", description="叙事风格")
-    word_count: Optional[int] = Field(None, description="字数统计")
+    narrative: str = Field(description="叙事文本")
+    style: Literal["horror", "suspense", "mystery"] = Field(default="horror", description="叙事风格")
     
-    @validator("narrative")
-    def enforce_len(cls, v):
-        """确保叙事长度至少200字"""
+    @field_validator("narrative")
+    def enforce_min_length(cls, v):
+        """确保叙事文本长度"""
         if len(v) < 200:
-            v += "\n\n……夜色渐深，真正的恐怖才刚刚开始。"
+            # 自动补充到最小长度
+            v += "\n\n夜色愈发深沉，诡异的氛围笼罩着整个空间。每个人都能感受到，真正的恐怖才刚刚开始……"
         return v
     
-    @validator("word_count", always=True)
-    def calculate_word_count(cls, v, values):
-        if "narrative" in values:
-            return len(values["narrative"])
-        return v
-    
-    class Config:
-        schema_extra = {
-            "example": {
-                "narrative": "夜幕降临，废弃公寓里的温度骤然下降。走廊尽头传来若有若无的脚步声...",
-                "style": "horror",
-                "word_count": 250
-            }
-        }
+    model_config = ConfigDict(extra="allow")
 
 
-# ---------- 规则评估 ----------
+# ========== 规则评估相关 ==========
+
 class RuleTrigger(BaseModel):
     """规则触发器"""
-    type: Literal["time", "location", "action", "item", "dialogue", "condition", "composite"] = Field(..., description="触发器类型")
+    type: Literal["action", "time", "location", "dialogue", "event", "compound"] = Field(
+        description="触发类型"
+    )
     conditions: List[str] = Field(default_factory=list, description="触发条件列表")
-    logic: Optional[Literal["AND", "OR"]] = Field("AND", description="条件逻辑关系")
+    probability: float = Field(default=0.8, ge=0.0, le=1.0, description="触发概率")
     
-    class Config:
-        schema_extra = {
-            "example": {
-                "type": "time",
-                "conditions": ["hour >= 22", "hour <= 6"],
-                "logic": "AND"
-            }
-        }
+    model_config = ConfigDict(extra="allow")
 
 
 class RuleEffect(BaseModel):
     """规则效果"""
-    type: Literal["death", "injury", "fear", "sanity", "teleport", "transform", "reveal", "custom"] = Field(..., description="效果类型")
+    type: Literal["instant_death", "damage", "fear_gain", "teleport", "transform", "summon", "custom"] = Field(
+        description="效果类型"
+    )
     params: Dict[str, Any] = Field(default_factory=dict, description="效果参数")
-    description: Optional[str] = Field(None, description="效果描述")
+    description: str = Field(default="", description="效果描述")
     
-    class Config:
-        schema_extra = {
-            "example": {
-                "type": "death",
-                "params": {"method": "心脏停止跳动", "instant": True},
-                "description": "违反者将立即死亡"
-            }
-        }
+    model_config = ConfigDict(extra="allow")
 
 
 class RuleEvalResult(BaseModel):
     """规则评估结果"""
-    name: str = Field(..., description="规则名称")
-    trigger: RuleTrigger = Field(..., description="规则触发器")
-    effect: RuleEffect = Field(..., description="规则效果")
-    cooldown: int = Field(0, description="冷却时间（秒）", ge=0)
-    cost: int = Field(..., description="规则成本", ge=50, le=500)
-    difficulty: int = Field(..., description="规则难度", ge=1, le=10)
-    loopholes: List[str] = Field(default_factory=list, description="规则漏洞")
-    suggestion: str = Field("", description="改进建议")
-    estimated_fear_gain: Optional[int] = Field(None, description="预估恐惧值收益")
+    name: str = Field(description="规则名称")
+    trigger: RuleTrigger = Field(description="触发条件")
+    effect: RuleEffect = Field(description="规则效果")
+    cooldown: int = Field(default=0, ge=0, le=10, description="冷却回合数")
+    cost: int = Field(description="消耗的恐惧点数")
+    difficulty: int = Field(description="规则难度（1-10）")
+    loopholes: List[str] = Field(default_factory=list, description="规则破绽")
+    suggestion: str = Field(default="", description="改进建议")
     
-    @validator("cost")
-    def cost_range(cls, v):
+    @field_validator("cost")
+    def validate_cost(cls, v):
+        """验证成本范围"""
         if not (50 <= v <= 500):
-            raise ValueError("成本必须在50-500之间")
+            # 自动修正到合理范围
+            v = max(50, min(500, v))
         return v
     
-    @validator("difficulty")
-    def difficulty_range(cls, v):
+    @field_validator("difficulty")
+    def validate_difficulty(cls, v):
+        """验证难度范围"""
         if not (1 <= v <= 10):
-            raise ValueError("难度必须在1-10之间")
+            # 自动修正到合理范围
+            v = max(1, min(10, v))
         return v
     
-    @validator("loopholes")
-    def limit_loopholes(cls, v):
-        if len(v) > 5:
-            return v[:5]  # 最多保留5个漏洞
-        return v
+    model_config = ConfigDict(extra="allow")
+
+
+# ========== 复合响应 ==========
+
+class DialoguePlanBundle(BaseModel):
+    """对话和计划的组合响应"""
+    turn_plan: TurnPlan = Field(description="回合计划")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="元数据")
     
-    class Config:
-        schema_extra = {
-            "example": {
-                "name": "午夜镜像",
-                "trigger": {
-                    "type": "composite",
-                    "conditions": ["time == 00:00", "location == bathroom", "action == look_mirror"]
-                },
-                "effect": {
-                    "type": "death",
-                    "params": {"method": "被镜中的自己拖入"}
-                },
-                "cooldown": 3600,
-                "cost": 300,
-                "difficulty": 8,
-                "loopholes": ["可以闭眼", "破碎的镜子无效"],
-                "suggestion": "建议增加镜子完整性检测",
-                "estimated_fear_gain": 150
-            }
-        }
+    model_config = ConfigDict(extra="allow")
 
 
-# ---------- NPC状态 ----------
-class NPCState(BaseModel):
-    """NPC状态信息"""
-    name: str = Field(..., description="NPC名字")
-    fear: int = Field(..., description="恐惧值", ge=0, le=100)
-    sanity: int = Field(..., description="理智值", ge=0, le=100)
-    traits: List[str] = Field(default_factory=list, description="性格特征")
-    status: str = Field("正常", description="当前状态")
-    location: str = Field(..., description="当前位置")
-    inventory: List[str] = Field(default_factory=list, description="携带物品")
-    relationships: Dict[str, int] = Field(default_factory=dict, description="与其他NPC的关系值")
+# ========== 游戏状态相关 ==========
+
+class NPCStateForAI(BaseModel):
+    """供AI使用的NPC状态"""
+    name: str
+    fear: int = Field(ge=0, le=100)
+    sanity: int = Field(ge=0, le=100)
+    hp: int = Field(ge=0, le=100)
+    traits: List[str] = Field(default_factory=list)
+    status: str = Field(default="正常")
+    location: str
+    inventory: List[str] = Field(default_factory=list)
+    relationships: Dict[str, int] = Field(
+        default_factory=dict, 
+        description="与其他NPC的关系值"
+    )
     
-    @validator("traits")
-    def limit_traits(cls, v):
-        if len(v) > 3:
-            return v[:3]  # 最多3个性格特征
-        return v
-    
-    class Config:
-        schema_extra = {
-            "example": {
-                "name": "张三",
-                "fear": 35,
-                "sanity": 80,
-                "traits": ["谨慎", "理性", "领导力"],
-                "status": "轻微恐慌",
-                "location": "living_room",
-                "inventory": ["手电筒", "笔记本"],
-                "relationships": {"李四": 60, "王五": 40}
-            }
-        }
+    model_config = ConfigDict(extra="allow")
 
 
-# ---------- 场景上下文 ----------
 class SceneContext(BaseModel):
-    """场景上下文信息"""
-    current_location: str = Field(..., description="当前主要场景")
-    time_of_day: str = Field(..., description="时间段")
-    weather: Optional[str] = Field(None, description="天气状况")
-    recent_events: List[str] = Field(default_factory=list, description="最近发生的事件")
-    active_rules: List[str] = Field(default_factory=list, description="当前激活的规则")
-    ambient_fear_level: int = Field(50, description="环境恐惧等级", ge=0, le=100)
-    special_conditions: List[str] = Field(default_factory=list, description="特殊条件")
+    """场景上下文"""
+    current_location: str
+    time_of_day: Literal["morning", "afternoon", "evening", "night"]
+    recent_events: List[str] = Field(default_factory=list)
+    active_rules: List[str] = Field(default_factory=list)
+    ambient_fear_level: int = Field(ge=0, le=100)
+    special_conditions: List[str] = Field(default_factory=list)
     
-    @validator("recent_events")
-    def limit_events(cls, v):
-        return v[-5:]  # 只保留最近5条事件
+    model_config = ConfigDict(extra="allow")
+
+
+# ========== 错误处理 ==========
+
+class AIError(BaseModel):
+    """AI错误响应"""
+    error: str = Field(description="错误信息")
+    error_type: Literal["parse", "validation", "api", "timeout", "unknown"] = Field(
+        default="unknown"
+    )
+    suggestion: Optional[str] = Field(default=None, description="建议的解决方案")
+    fallback_used: bool = Field(default=False, description="是否使用了降级方案")
     
-    class Config:
-        schema_extra = {
-            "example": {
-                "current_location": "abandoned_hospital",
-                "time_of_day": "深夜",
-                "weather": "雷雨",
-                "recent_events": [
-                    "张三发现了一本神秘日记",
-                    "李四听到二楼传来脚步声",
-                    "王五的手电筒突然熄灭"
-                ],
-                "active_rules": ["午夜镜像", "暗夜低语"],
-                "ambient_fear_level": 75,
-                "special_conditions": ["停电", "通讯中断"]
-            }
-        }
+    model_config = ConfigDict(extra="allow")
 
 
-# ---------- API响应模型 ----------
-class APIResponse(BaseModel):
-    """统一API响应格式"""
-    success: bool = Field(..., description="请求是否成功")
-    data: Optional[Any] = Field(None, description="响应数据")
-    error: Optional[str] = Field(None, description="错误信息")
-    timestamp: datetime = Field(default_factory=datetime.now, description="响应时间")
+# ========== 批处理请求 ==========
+
+class BatchRequest(BaseModel):
+    """批量请求"""
+    requests: List[Dict[str, Any]] = Field(description="请求列表")
+    priority: Literal["high", "normal", "low"] = Field(default="normal")
+    timeout: int = Field(default=30, ge=10, le=120, description="超时时间(秒)")
     
-    class Config:
-        schema_extra = {
-            "example": {
-                "success": True,
-                "data": {"message": "操作成功"},
-                "error": None,
-                "timestamp": "2024-12-20T10:30:00"
-            }
-        }
+    model_config = ConfigDict(extra="allow")
 
 
-# ---------- 批量操作模型 ----------
-class NPCBatchGenerateRequest(BaseModel):
-    """批量生成NPC请求"""
-    count: int = Field(..., description="生成数量", ge=1, le=10)
-    trait_pool: Optional[List[str]] = Field(None, description="性格特征池")
-    fear_range: Optional[tuple[int, int]] = Field((20, 60), description="恐惧值范围")
-    sanity_range: Optional[tuple[int, int]] = Field((60, 90), description="理智值范围")
+# ========== 工具函数 ==========
+
+def create_error_response(error_msg: str, error_type: str = "unknown") -> AIError:
+    """创建标准错误响应"""
+    suggestions = {
+        "parse": "请检查输入格式是否正确",
+        "validation": "请确保所有必需字段都已提供且格式正确",
+        "api": "API服务暂时不可用，请稍后重试",
+        "timeout": "请求超时，可能是网络问题或服务器繁忙",
+        "unknown": "发生未知错误，请联系技术支持"
+    }
     
-    @validator("fear_range", "sanity_range")
-    def validate_range(cls, v):
-        if v and (v[0] < 0 or v[1] > 100 or v[0] > v[1]):
-            raise ValueError("范围必须在0-100之间，且最小值不能大于最大值")
-        return v
+    return AIError(
+        error=error_msg,
+        error_type=error_type,
+        suggestion=suggestions.get(error_type, suggestions["unknown"]),
+        fallback_used=True
+    )
 
 
-class NPCBatchGenerateResponse(BaseModel):
-    """批量生成NPC响应"""
-    npcs: List[NPCState] = Field(..., description="生成的NPC列表")
-    generation_time: float = Field(..., description="生成耗时（秒）")
+def validate_turn_plan(plan: TurnPlan) -> List[str]:
+    """验证回合计划的合法性"""
+    issues = []
     
-    @validator("npcs")
-    def validate_npcs(cls, v):
-        if not v:
-            raise ValueError("至少需要生成一个NPC")
-        return v
+    # 检查对话
+    if not plan.dialogue:
+        issues.append("缺少对话内容")
+    
+    # 检查行动
+    npc_actions = {}
+    for action in plan.actions:
+        if action.npc in npc_actions:
+            issues.append(f"NPC {action.npc} 有多个行动")
+        npc_actions[action.npc] = action
+    
+    return issues

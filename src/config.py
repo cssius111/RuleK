@@ -1,7 +1,7 @@
 """
 API配置数据模型
 """
-from typing import Optional
+from typing import Optional, Dict, Any
 
 
 class APIConfig:
@@ -24,3 +24,17 @@ class APIConfig:
             self.model = config_dict.get("model", "deepseek-chat")
             self.timeout = config_dict.get("timeout", 30)
             self.max_retries = config_dict.get("max_retries", 3)
+
+
+class Config:
+    """Config类，用于兼容旧代码"""
+    
+    def __init__(self):
+        from src.utils.config import config as global_config
+        self._config = global_config._config
+        self.api = APIConfig()
+    
+    def get(self, key: str, default: Any = None) -> Any:
+        """获取配置值"""
+        from src.utils.config import config as global_config
+        return global_config.get(key, default)

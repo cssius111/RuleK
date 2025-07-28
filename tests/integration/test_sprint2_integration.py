@@ -11,11 +11,11 @@ from typing import List
 # 添加项目根目录到Python路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from src.models.map import MapManager, create_default_map, Area
+from src.models.map import MapManager, Area
 from src.models.npc import NPC, generate_random_npc, NPCAction
 from src.models.rule import Rule, RULE_TEMPLATES, TriggerCondition, RuleEffect, EffectType
 from src.core.event_system import EventSystem, GameEvent, EventType
-from src.core.dialogue_system import DialogueSystem, DialogueType, DialogueContext
+from src.core.dialogue_system import DialogueSystem
 from src.core.narrator import Narrator, GameEvent as NarrativeEvent, EventSeverity, NarrativeStyle
 
 

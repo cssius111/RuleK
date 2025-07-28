@@ -1,0 +1,69 @@
+*** Begin Patch
+--- a/src/core/game_state.py
++++ b/src/core/game_state.py
+@@ -383,6 +383,12 @@ class GameStateManager:
+         """当前回合数"""
+         return self.state.current_turn if self.state else 0
+         
++    @property
++    def difficulty(self) -> str:
++        """获取当前游戏难度"""
++        return self.state.difficulty if self.state else "normal"
++        
+     @property
+     def is_game_over(self) -> bool:
+         """检查游戏是否结束"""
+         
+--- a/src/cli_game.py
++++ b/src/cli_game.py
+@@ -91,8 +91,13 @@ class CLIGame:
+         """打印最近的事件"""
+         events = self.game_manager.state.events_history[-limit:]
+         print("\n🗒️  最近事件:")
+         for event in events:
+-            time_str = event.get("game_time", "??:??")
+-            print(f"[{time_str}] {event.get('description', '未知事件')}")
++            # 处理 Event 对象和 dict 的兼容性
++            if hasattr(event, 'to_dict'):
++                event_dict = event.to_dict()
++            else:
++                event_dict = event if isinstance(event, dict) else {"description": str(event)}
++            time_str = event_dict.get("game_time", "??:??")
++            print(f"[{time_str}] {event_dict.get('description', '未知事件')}")
+             
+     def _pause(self):
+-        """暂停，等待用户按回车继续"""
+-        if self.is_testing:
+-            return
+-        input("\n按回车继续...")
++        """暂停，等待用户按回车继续（修复递归问题）"""
++        if not self.is_testing:
++            input("\n按回车继续...")
+         
+--- a/src/api/deepseek_client.py
++++ b/src/api/deepseek_client.py
+@@ -152,9 +152,9 @@ class DeepSeekClient:
+                 # 内容太短，补充内容
+                 text += f"\n\n夜色渐深，恐惧如影随形..."
+             return text
+             
+-    def _ensure_len_text(self, text: str) -> str:
++    def _ensure_len_text(self, text: str, min_len: int = 200) -> str:
+         """确保文本长度符合要求"""
+-        if len(text) < 50:
++        if len(text) < min_len:
+             text += " ……故事还在继续，恐惧从未离去。"
+         return text
+         
+@@ -195,6 +195,9 @@ class DeepSeekClient:
+                     # 尝试从响应中提取 JSON
+                     if 'json' in message.lower() or '{' in message:
+                         json_str = self._extract_json(message)
+                         res = json.loads(json_str)
++                        # 处理字段名不匹配问题
++                        if "cost_estimate" in res and "cost" not in res:
++                            res["cost"] = res["cost_estimate"]
+                         
+                         # 规范化输出
+                         return {
+*** End Patch
