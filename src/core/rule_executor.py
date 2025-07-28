@@ -340,7 +340,7 @@ class RuleExecutor:
             logger.info(f"副作用 {side_effect} 应用成功")
             # 如果副作用产生了额外恐惧值，添加到游戏中
             if result.get("fear_bonus"):
-                self.game_manager.gain_fear_points(
+                self.game_manager.add_fear_points(
                     result["fear_bonus"],
                     f"副作用: {side_effect}"
                 )
