@@ -10,7 +10,7 @@ import os
 def _pause():
     if os.getenv('PYTEST_RUNNING') == '1':
         return
-    _pause()
+    input("\n按回车继续...")
 # --- end helper ---
 import sys
 import asyncio

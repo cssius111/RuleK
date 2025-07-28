@@ -36,7 +36,6 @@ class GameState:
     # 规则
     active_rules: List[str] = field(default_factory=list)
     events_history: List[Dict[str, Any]] = field(default_factory=list)
-    turn: int = 0  # 当前回合（与current_turn同步）
 
     # 兼容旧字段
     @property
@@ -56,6 +55,15 @@ class GameState:
     @event_log.setter
     def event_log(self, value: List[Dict[str, Any]]):
         self.events_history = value
+
+    @property
+    def turn(self) -> int:
+        """向后兼容的回合属性"""
+        return self.current_turn
+
+    @turn.setter
+    def turn(self, value: int):
+        self.current_turn = value
     
     # 角色
     npcs: Dict[str, Dict[str, Any]] = field(default_factory=dict)
