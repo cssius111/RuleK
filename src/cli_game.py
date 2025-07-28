@@ -6,11 +6,11 @@ import os
 
 
 # --- test-friendly pause helper ---
-import os
 def _pause():
-    if os.getenv('PYTEST_RUNNING') == '1':
+    """Utility pause function used in CLI flows."""
+    if os.getenv("PYTEST_RUNNING") == "1":
         return
-    _pause()
+    input("按回车继续...")
 # --- end helper ---
 import sys
 import asyncio

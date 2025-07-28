@@ -642,3 +642,25 @@ class TestIntegration:
             data = json.load(f)
             assert data['state']['current_turn'] == 1
             assert len(data['rules']) == 1
+
+
+class TestPauseFunction:
+    """测试暂停函数 _pause"""
+
+    def test_pause_skips_in_pytest(self, monkeypatch):
+        """环境变量设置时应立即返回，不调用 input"""
+        from src.cli_game import _pause
+
+        called = False
+
+        def fake_input(prompt=""):
+            nonlocal called
+            called = True
+            return ""
+
+        monkeypatch.setenv("PYTEST_RUNNING", "1")
+        monkeypatch.setattr("builtins.input", fake_input)
+
+        _pause()
+
+        assert called is False
