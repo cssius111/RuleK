@@ -27,7 +27,7 @@ def _ensure_cost_key(d):
     return d
 
 def _ensure_len_text(s):
-    if isinstance(s, str) and len(s) <= 50:
+    if isinstance(s, str) and len(s) <= 200:
         return s + " ……他/她意识到，这只是噩梦的开始。"
     return s
 
