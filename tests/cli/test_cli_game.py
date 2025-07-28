@@ -11,7 +11,7 @@ from unittest.mock import patch, MagicMock, AsyncMock, call
 from src.cli_game import CLIGame
 from src.core.enums import GamePhase, GameMode
 from src.core.game_state import GameStateManager
-from src.models.rule import Rule, TriggerCondition, RuleEffect, EffectType, RULE_TEMPLATES
+from src.models.rule import Rule, TriggerCondition, RuleEffect, EffectType, load_rule_templates
 
 
 @pytest.fixture

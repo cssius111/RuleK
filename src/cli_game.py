@@ -22,7 +22,7 @@ from src.core.game_state import GameStateManager
 from src.core.enums import GamePhase, GameMode
 from src.core.rule_executor import RuleExecutor, RuleContext
 from src.core.npc_behavior import NPCBehavior
-from src.models.rule import Rule, RULE_TEMPLATES
+from src.models.rule import Rule, load_rule_templates
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -252,8 +252,9 @@ class CLIGame:
     async def create_rule_from_template(self):
         """从模板创建规则"""
         print("\n可用模板:")
-        templates = list(RULE_TEMPLATES.items())
-        for i, (key, template) in enumerate(templates, 1):
+        templates = load_rule_templates()
+        template_list = list(templates.items())
+        for i, (key, template) in enumerate(template_list, 1):
             print(f"{i}. {template['name']} - 成本: {template['base_cost']}")
             print(f"   {template['description']}")
             
@@ -261,8 +262,8 @@ class CLIGame:
         
         try:
             idx = int(choice) - 1
-            if 0 <= idx < len(templates):
-                template_key, template = templates[idx]
+            if 0 <= idx < len(template_list):
+                template_key, template = template_list[idx]
                 
                 # 创建规则
                 rule = Rule(
