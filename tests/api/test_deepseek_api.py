@@ -105,7 +105,7 @@ class TestDeepSeekAPI:
             
             assert narrative is not None
             assert isinstance(narrative, str)
-            assert len(narrative) > 50
+            assert len(narrative) > 200
             print(f"✓ 叙事生成成功: {narrative[:80]}...")
             
         except Exception as e:
@@ -140,6 +140,14 @@ class TestDeepSeekAPI:
 
             assert dialogues == [{"speaker": "测试NPC", "text": "这是一个测试响应"}]
             print("✓ 同步方法测试通过")
+
+    @pytest.mark.asyncio
+    async def test_narrative_length_with_mock(self, mock_client):
+        """短叙事文本也应被扩展至足够长度"""
+        with patch.object(mock_client, "narrate_events", new=AsyncMock(return_value="简短")):
+            narrative = await mock_client.generate_narrative_async(events=[{"type": "event", "description": "t"}])
+            assert len(narrative) > 200
+            print("✓ 短叙事自动补全")
     
     @pytest.mark.asyncio
     async def test_batch_npc_generation(self, client):

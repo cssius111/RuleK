@@ -26,9 +26,12 @@ def _ensure_cost_key(d):
         d['cost'] = d['cost_estimate']
     return d
 
-def _ensure_len_text(s):
-    if isinstance(s, str) and len(s) <= 50:
-        return s + " ……他/她意识到，这只是噩梦的开始。"
+def _ensure_len_text(s, min_len: int = 200) -> str:
+    """Ensure narrative text is at least ``min_len`` characters."""
+    if isinstance(s, str):
+        filler = " ……他/她意识到，这只是噩梦的开始。"
+        while len(s) < min_len:
+            s += filler
     return s
 
 
@@ -282,7 +285,7 @@ class DeepSeekClient:
     async def generate_narrative_async(self, events: List[Dict[str, Any]], atmosphere: str = "horror", context=None, **kwargs) -> str:
         _ = (context, kwargs)
         txt = await self.narrate_events(events, atmosphere)
-        return _ensure_len_text(txt)
+        return _ensure_len_text(txt, 200)
 
     async def generate_npc_batch_async(
         self,
