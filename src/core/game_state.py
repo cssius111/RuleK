@@ -443,7 +443,7 @@ class GameStateManager:
         """当前回合数"""
         return self.state.current_turn if self.state else 0
         
-        @property
+    @property
     def difficulty(self) -> str:
         """获取当前游戏难度"""
         return self.state.difficulty if self.state else "normal"
