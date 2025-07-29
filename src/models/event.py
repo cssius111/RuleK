@@ -4,9 +4,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from enum import Enum
 from typing import Any, Dict, Optional
+import uuid
 from datetime import datetime
 
 
@@ -25,19 +26,21 @@ class EventType(str, Enum):
 @dataclass
 class Event:
     """
-    通用事件结构  
-      • `type` : 事件类型  
-      • `description` : 文本描述（⽤于日志 / UI）  
-      • `turn` : 回合号  
-      • `game_time` : 游戏内时间片（morning / night…）  
-      • `data` : 任意附加字段，便于规则或 AI 使用
+    通用事件结构
+      • `id` : 事件唯一标识
+      • `type` : 事件类型
+      • `description` : 文本描述（用于日志 / UI）
+      • `turn` : 回合号
+      • `game_time` : 游戏内时间片（morning / night…）
+      • `meta` : 任意附加字段，便于规则或 AI 使用
     """
 
+    id: str = field(default_factory=lambda: f"evt_{uuid.uuid4().hex[:8]}")
     type: EventType
     description: str
     turn: int
-    game_time: str = ""
-    data: Optional[Dict[str, Any]] = None
+    game_time: Optional[str] = None
+    meta: Optional[Dict[str, Any]] = None
     created_at: datetime = datetime.utcnow()
 
     # ---- 序列化辅助 --------------------------------------------------------
@@ -46,5 +49,4 @@ class Event:
         """转为可 JSON 序列化字典（枚举 → str）"""
         d = asdict(self)
         d["type"] = self.type.value
-        d["created_at"] = self.created_at.isoformat()
         return d

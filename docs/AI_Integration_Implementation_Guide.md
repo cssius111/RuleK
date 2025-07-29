@@ -600,7 +600,7 @@ class AITurnPipeline:
             type=EventType.NPC_DIALOGUE,
             description=f"{speaker}: {text}",
             turn=self.game_mgr.state.turn_count,
-            metadata={"speaker": speaker, "text": text}
+            meta={"speaker": speaker, "text": text}
         )
         self.game_mgr.state.events_history.append(event)
     
@@ -671,7 +671,7 @@ class AITurnPipeline:
             type=EventType.NARRATIVE,
             description=narrative,
             turn=self.game_mgr.state.turn_count,
-            metadata={"is_narrative": True}
+            meta={"is_narrative": True}
         )
         self.game_mgr.state.events_history.append(event)
 ```

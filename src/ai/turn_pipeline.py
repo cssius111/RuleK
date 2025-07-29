@@ -286,7 +286,7 @@ class AITurnPipeline:
                 type=EventType.NPC_DIALOGUE,
                 description=f"{turn.speaker}: {turn.text}",
                 turn=self.game_mgr.state.current_turn,
-                metadata={
+                meta={
                     "speaker": turn.speaker,
                     "text": turn.text,
                     "emotion": turn.emotion
@@ -545,10 +545,10 @@ class AITurnPipeline:
             if event_turn == current_turn:
                 # 检查是否包含隐藏事件
                 is_hidden = False
-                if hasattr(event, "metadata"):
-                    is_hidden = event.metadata.get("hidden", False)
+                if hasattr(event, "meta"):
+                    is_hidden = event.meta.get("hidden", False)
                 elif isinstance(event, dict):
-                    is_hidden = event.get("metadata", {}).get("hidden", False)
+                    is_hidden = event.get("meta", {}).get("hidden", False)
                 
                 if not is_hidden or include_hidden:
                     turn_events.append(event)
@@ -563,17 +563,17 @@ class AITurnPipeline:
             type=EventType.NARRATIVE,
             description=narrative,
             turn=self.game_mgr.state.current_turn,
-            metadata={"is_narrative": True}
+            meta={"is_narrative": True}
         )
         self.game_mgr.state.events_history.append(event.to_dict())
     
-    def _create_event(self, event_type: EventType, description: str, metadata: Dict[str, Any] = None):
+    def _create_event(self, event_type: EventType, description: str, meta: Dict[str, Any] = None):
         """创建并记录事件"""
         event = Event(
             type=event_type,
             description=description,
             turn=self.game_mgr.state.current_turn,
-            metadata=metadata or {}
+            meta=meta or {}
         )
         self.game_mgr.state.events_history.append(event.to_dict())
         self.game_mgr.log(description)
