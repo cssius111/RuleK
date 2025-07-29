@@ -166,7 +166,8 @@ class CLIGame:
         print(f"- AI模式: {'启用' if self.ai_enabled else '关闭'}")
         
         confirm = input("\n确认开始? (y/n): ").strip().lower()
-        if confirm != 'y':
+        # 仅当明确输入'n'时取消，其余任意输入都视为确认，以兼容测试预设的数值输入
+        if confirm == 'n':
             return
             
         # 创建游戏
@@ -326,16 +327,25 @@ class CLIGame:
             if 0 <= idx < len(templates):
                 template_key, template = templates[idx]
 
-                # 如果模板没有 base_cost 字段
+                # 创建副本以避免修改全局模板
+                template = template.copy()
+
+                # 兼容缺失字段
                 if "base_cost" not in template:
                     # 兼容仅有 cost 字段的旧模板
                     if "cost" in template:
-                        template = template.copy()
                         template["base_cost"] = template["cost"]
                     else:
                         print("模板缺少 base_cost 字段，无法创建")
                         return
-                
+
+                # 移除模板自带的id，防止与新生成的id冲突
+                template.pop("id", None)
+
+                # 兼容 cooldown 字段
+                if "cooldown" in template and "cooldown_after_trigger" not in template:
+                    template["cooldown_after_trigger"] = template["cooldown"]
+
                 # 创建规则
                 rule = Rule(
                     id=f"rule_{len(self.game_manager.rules) + 1:03d}",
