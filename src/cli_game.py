@@ -325,6 +325,16 @@ class CLIGame:
             idx = int(choice) - 1
             if 0 <= idx < len(templates):
                 template_key, template = templates[idx]
+
+                # 如果模板没有 base_cost 字段
+                if "base_cost" not in template:
+                    # 兼容仅有 cost 字段的旧模板
+                    if "cost" in template:
+                        template = template.copy()
+                        template["base_cost"] = template["cost"]
+                    else:
+                        print("模板缺少 base_cost 字段，无法创建")
+                        return
                 
                 # 创建规则
                 rule = Rule(

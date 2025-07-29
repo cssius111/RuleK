@@ -268,6 +268,45 @@ class TestRuleManagement:
         assert len(initialized_game.game_manager.rules) == 0
         captured = capsys.readouterr()
         assert "无效选择" in captured.out
+
+    @pytest.mark.asyncio
+    async def test_template_cost_only(self, initialized_game, mock_input_sequence):
+        """测试仅含 cost 字段的模板也能创建规则"""
+        template = {
+            "name": "只含成本",
+            "description": "cost only",
+            "trigger": {"action": "test"},
+            "effect": {"type": "fear_gain", "fear_gain": 5},
+            "cost": 80,
+        }
+        with patch.dict("src.cli_game.RULE_TEMPLATES", {"tpl": template}, clear=True):
+            initial = initialized_game.game_manager.state.fear_points
+            mock_input_sequence.add("2", "1", "y")
+            with patch('asyncio.sleep', new_callable=AsyncMock):
+                await initialized_game.manage_rules()
+
+            assert len(initialized_game.game_manager.rules) == 1
+            rule = initialized_game.game_manager.rules[0]
+            assert rule.base_cost == 80
+            assert initialized_game.game_manager.state.fear_points < initial
+
+    @pytest.mark.asyncio
+    async def test_template_missing_costs(self, initialized_game, mock_input_sequence, capsys):
+        """测试模板缺少成本字段时给出提示"""
+        template = {
+            "name": "无成本",
+            "description": "missing cost",
+            "trigger": {"action": "test"},
+            "effect": {"type": "fear_gain", "fear_gain": 1},
+        }
+        with patch.dict("src.cli_game.RULE_TEMPLATES", {"tpl": template}, clear=True):
+            mock_input_sequence.add("2", "1")
+            with patch('asyncio.sleep', new_callable=AsyncMock):
+                await initialized_game.manage_rules()
+
+            assert len(initialized_game.game_manager.rules) == 0
+            captured = capsys.readouterr()
+            assert "模板缺少 base_cost 字段" in captured.out
     
     @pytest.mark.asyncio
     async def test_upgrade_rule_not_implemented(self, initialized_game, mock_input_sequence, capsys):
