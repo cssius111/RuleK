@@ -403,7 +403,11 @@ class DeepSeekClient:
             if not success:
                 logger.error(f"解析规则评估失败: {error}")
                 parsed_data = json.loads(self._extract_json(content))
-            
+
+            # 如果缺少cost但有cost_estimate，则补充cost字段
+            if isinstance(parsed_data, dict) and "cost" not in parsed_data and "cost_estimate" in parsed_data:
+                parsed_data["cost"] = parsed_data["cost_estimate"]
+
             # 验证并返回
             return RuleEvalResult.parse_obj(parsed_data)
             
