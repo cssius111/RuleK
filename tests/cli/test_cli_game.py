@@ -505,7 +505,8 @@ class TestGameOver:
     @pytest.mark.asyncio
     async def test_game_over_display(self, initialized_game, mock_input_sequence, capsys):
         """测试游戏结束显示 - 验证统计信息"""
-        initialized_game.game_manager.state.current_turn = 20
+        # 保持 turn 和 current_turn 同步
+        initialized_game.game_manager.state.turn = 20
         initialized_game.game_manager.state.day = 5
         mock_input_sequence.add("")
         
