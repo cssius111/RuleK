@@ -100,6 +100,11 @@ class CLIGame:
             
         print("\n📋 最近事件:")
         for event in events:
+            if hasattr(event, "to_dict"):
+                event = event.to_dict()
+            elif not isinstance(event, dict):
+                event = {"description": str(event)}
+
             time = event.get("game_time", "")
             type_ = event.get("type", "unknown")
             
