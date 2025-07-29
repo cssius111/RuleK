@@ -314,7 +314,9 @@ class CLIGame:
         print("\n可用模板:")
         templates = list(RULE_TEMPLATES.items())
         for i, (key, template) in enumerate(templates, 1):
-            print(f"{i}. {template['name']} - 成本: {template['base_cost']}")
+            # 兼容处理：base_cost 或 cost
+            cost = template.get('base_cost') or template.get('cost', '未知')
+            print(f"{i}. {template['name']} - 成本: {cost}")
             print(f"   {template['description']}")
             
         choice = input("\n选择模板 (输入编号): ").strip()

@@ -258,9 +258,13 @@ _DEFAULT_RULE_TEMPLATES: Dict[str, Any] = {
             "probability": 0.9,
         },
         "effect": {
-            "type": EffectType.CONDITIONAL,
-            "no_response_effect": {"type": EffectType.INSTANT_DEATH},
-            "response_effect": {"type": EffectType.SPAWN_SPIRIT, "fear_gain": 40},
+            "type": EffectType.TRIGGER_EVENT,
+            "params": {
+                "event_type": "conditional_response",
+                "no_response_effect": "instant_death",
+                "response_effect": "spawn_spirit"
+            },
+            "fear_gain": 60,
         },
         "base_cost": 180,
         "cooldown_after_trigger": 4,
