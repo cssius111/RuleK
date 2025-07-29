@@ -271,28 +271,25 @@ class PromptManager:
     
     def build_rule_eval_prompt(
         self,
-        rule_nl: str,
-        rule_count: int,
-        avg_fear: float,
-        places: List[str],
-        difficulty: str = "normal"
-    ) -> Tuple[str, str]:
-        """
-        构建规则评估的prompt
-        
-        Returns:
-            (system_prompt, user_prompt) 元组
-        """
+        rule_draft: Dict[str, Any],
+        world_ctx: Dict[str, Any],
+        *,
+        difficulty_level: str | None = None,
+    ) -> str:
+        """构建规则评估的用户提示字符串"""
+
         template = self.env.from_string(RULE_EVAL_USER)
         user_prompt = template.render(
-            rule_nl=rule_nl,
-            rule_count=rule_count,
-            avg_fear=round(avg_fear),
-            places=places,
-            difficulty=difficulty
+            rule_nl=rule_draft.get("description", str(rule_draft)),
+            rule_count=world_ctx.get("rule_count", 0),
+            avg_fear=round(world_ctx.get("avg_fear", 50)),
+            places=world_ctx.get("places", []),
+            difficulty=difficulty_level
+            or world_ctx.get("difficulty_level")
+            or world_ctx.get("difficulty", "normal"),
         )
-        
-        return RULE_EVAL_SYSTEM, user_prompt
+
+        return user_prompt
     
     def format_time_chinese(self, time_of_day: str) -> str:
         """将英文时间段转换为中文"""

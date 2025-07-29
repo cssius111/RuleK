@@ -21,7 +21,7 @@ from src.api.schemas import (
     DialogueTurn, PlannedAction, TurnPlan, NarrativeOut, 
     RuleEvalResult, RuleTrigger, RuleEffect, NPCState, SceneContext
 )
-from src.api.prompts import PromptManager
+from src.api.prompts import PromptManager, RULE_EVAL_SYSTEM
 from src.utils.config import config as global_config
 
 logger = logging.getLogger(__name__)
@@ -375,14 +375,13 @@ class DeepSeekClient:
     ) -> RuleEvalResult:
         """评估自然语言规则"""
         # 构建prompt
-        system_prompt, user_prompt = self.prompt_mgr.build_rule_eval_prompt(
-            rule_nl=rule_nl,
-            rule_count=world_ctx.get("rule_count", 0),
-            avg_fear=world_ctx.get("avg_fear", 50),
-            places=world_ctx.get("places", ["客厅", "卧室", "厨房"]),
+        rule_draft = {"description": rule_nl}
+        user_prompt = self.prompt_mgr.build_rule_eval_prompt(
+            rule_draft,
+            world_ctx,
             difficulty_level=world_ctx.get("difficulty_level"),
-            common_items=world_ctx.get("common_items")
         )
+        system_prompt = RULE_EVAL_SYSTEM
         
         data = {
             "model": self.config.model,
