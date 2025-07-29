@@ -1,6 +1,7 @@
-from .rule import Rule
-from .rule_manager import RuleManager
-from .npc import NPC
-from .npc_manager import NPCManager
+"""
+模型子包统一导出
+"""
 
-__all__ = ["Rule", "RuleManager", "NPC", "NPCManager"]
+from .npc import NPC, NPCTrait   # noqa: F401
+from .rule import Rule           # noqa: F401
+from .event import Event, EventType  # 新增导出  # noqa: F401
