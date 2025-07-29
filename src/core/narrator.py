@@ -58,7 +58,8 @@ class Narrator:
                 # 调用AI生成叙事
                 narrative = await self.deepseek_client.generate_narrative_text(
                     events=event_descriptions,
-                    time_of_day=game_state.time_of_day
+                    time_of_day=game_state.time_of_day,
+                    min_len=200,
                 )
                 return narrative
             except Exception as e:

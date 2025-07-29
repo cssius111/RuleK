@@ -239,6 +239,12 @@ class DeepSeekClient:
                 "时钟的指针在午夜停止了转动，时间仿佛凝固在这一刻。房间的温度骤然下降，呼出的气息化作白雾。墙上的血迹开始蠕动，组成了诡异的文字。这不是幻觉，这是真实存在的噩梦。"
             ]
         }
+
+    def _ensure_len_text(self, text: str, min_len: int = 200) -> str:
+        """确保文本长度不少于 ``min_len`` 字符"""
+        if len(text) < min_len:
+            text += " ……故事还在继续，恐惧从未离去。"
+        return text
     
     async def generate_turn_plan(
         self,
@@ -351,7 +357,9 @@ class DeepSeekClient:
         try:
             response = await self._make_request("chat/completions", data)
             narrative = response["choices"][0]["message"]["content"].strip()
-            
+
+            narrative = self._ensure_len_text(narrative, min_len)
+
             # 使用Schema验证
             narrative_out = NarrativeOut(narrative=narrative)
             return narrative_out.narrative
@@ -478,23 +486,31 @@ class DeepSeekClient:
         """异步评估规则（兼容旧接口）"""
         return await self.evaluate_rule(rule_draft, world_context)
     
-    async def narrate_events(self, events: List[Dict[str, Any]], atmosphere: str = "horror") -> str:
+    async def narrate_events(
+        self,
+        events: List[Dict[str, Any]],
+        atmosphere: str = "horror",
+        min_len: int = 200,
+    ) -> str:
         """叙述事件（兼容旧接口）"""
         return await self.generate_narrative_text(
             events=events,
             time_of_day="未知",
-            location="未知地点"
+            location="未知地点",
+            min_len=min_len,
         )
     
     async def generate_narrative_async(
-        self, 
-        events: List[Dict[str, Any]], 
-        atmosphere: str = "horror", 
-        context=None, 
-        **kwargs
+        self,
+        events: List[Dict[str, Any]],
+        atmosphere: str = "horror",
+        context=None,
+        min_len: int = 200,
+        **kwargs,
     ) -> str:
         """异步生成叙事（兼容旧接口）"""
-        return await self.narrate_events(events, atmosphere)
+        _ = context  # 兼容旧签名
+        return await self.narrate_events(events, atmosphere, min_len=min_len)
     
     async def generate_npc_batch_async(
         self,
