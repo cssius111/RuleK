@@ -8,7 +8,7 @@ from dataclasses import dataclass, asdict, field
 from enum import Enum
 from typing import Any, Dict, Optional
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 class EventType(str, Enum):
@@ -21,6 +21,7 @@ class EventType(str, Enum):
     NPC_DEATH    = "npc_death"             # NPC 死亡
     SYSTEM       = "system"                # 系统提示、存档等
     NARRATION    = "narration"             # AI 生成叙事
+    NARRATIVE    = "narrative"             # AI 生成叙事（别名）
 
 
 @dataclass
@@ -35,13 +36,16 @@ class Event:
       • `meta` : 任意附加字段，便于规则或 AI 使用
     """
 
-    id: str = field(default_factory=lambda: f"evt_{uuid.uuid4().hex[:8]}")
+    # 必需字段（无默认值）
     type: EventType
     description: str
     turn: int
+    
+    # 可选字段（有默认值）
+    id: str = field(default_factory=lambda: f"evt_{uuid.uuid4().hex[:8]}")
     game_time: Optional[str] = None
     meta: Optional[Dict[str, Any]] = None
-    created_at: datetime = datetime.utcnow()
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     # ---- 序列化辅助 --------------------------------------------------------
 
@@ -49,4 +53,5 @@ class Event:
         """转为可 JSON 序列化字典（枚举 → str）"""
         d = asdict(self)
         d["type"] = self.type.value
+        d["created_at"] = self.created_at.isoformat()
         return d

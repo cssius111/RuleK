@@ -40,7 +40,7 @@ class TestMainMenu:
     @pytest.mark.asyncio
     async def test_new_game_creation_success(self, cli_game, mock_input_sequence):
         """测试成功创建新游戏 - 验证游戏状态正确初始化"""
-        mock_input_sequence.add("n", "6")  # 选择不启用AI  # 确认创建，然后返回主菜单
+        mock_input_sequence.add("y", "6")  # 确认创建，然后返回主菜单
         
         with patch.object(cli_game, "game_loop", new_callable=AsyncMock) as mock_loop:
             await cli_game.new_game()
@@ -648,8 +648,6 @@ class TestIntegration:
     """集成测试 - 测试完整流程"""
     
     @pytest.mark.asyncio
-    @pytest.mark.timeout(30)  # 30秒超时
-    @pytest.mark.skip(reason="测试耗时过长，使用quick_cli_test.py跳过")
     async def test_complete_game_flow(self, cli_game, mock_input_sequence, temp_save_dir):
         """测试完整游戏流程 - 新建/规则/回合/保存/加载"""
         cli_game.game_manager.save_dir = temp_save_dir
@@ -662,8 +660,11 @@ class TestIntegration:
             "2",        # 规则管理 - 使用模板
             "1",        # 选择第一个模板
             "y",        # 确认创建
-            "4",        # 返回
-            "5",        # 保存游戏
+            "4",        # 返回规则管理
+            "4",        # 准备阶段 - 开始回合
+            "",         # 行动阶段 - 按回车
+            "",         # 结算阶段 - 按回车
+            "5",        # 准备阶段 - 保存游戏
             "integration_test",  # 存档名
             "",         # 按回车继续
             "6"         # 返回主菜单
