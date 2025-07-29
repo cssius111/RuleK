@@ -2,13 +2,16 @@
 命令行游戏界面
 提供简单的CLI界面来玩游戏
 """
-import os
-
-
 # --- test-friendly pause helper ---
 import os
+
 def _pause():
-    if os.getenv('PYTEST_RUNNING') == '1':
+    """Pause execution until the user presses Enter.
+
+    If running under pytest (``PYTEST_RUNNING=1``), this returns immediately
+    without waiting for input.
+    """
+    if os.getenv("PYTEST_RUNNING") == "1":
         return
     input("\n按回车继续...")
 # --- end helper ---
