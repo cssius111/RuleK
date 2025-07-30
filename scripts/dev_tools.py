@@ -72,13 +72,23 @@ def run_tests(test_type="all"):
     elif test_type == "integration":
         cmd.append("tests/integration/")
     elif test_type == "coverage":
+        # 如果未安装 pytest-cov，则提示并返回 False
+        import importlib.util
+
+        if importlib.util.find_spec("pytest_cov") is None:
+            print("⚠️  未安装 pytest-cov 插件，无法生成覆盖率报告")
+            return False
+
         cmd.extend(["--cov=src", "--cov-report=html"])
     
     try:
-        subprocess.run(cmd, check=True)
-        print("✅ 测试通过")
-        return True
-    except subprocess.CalledProcessError:
+        result = subprocess.run(cmd)
+        if result.returncode == 0:
+            print("✅ 测试通过")
+            return True
+        if result.returncode == 5:
+            print("⚠️  未发现任何测试")
+            return True
         print("❌ 测试失败")
         return False
     except FileNotFoundError:
