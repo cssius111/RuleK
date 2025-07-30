@@ -84,11 +84,7 @@ quick_test_cli.py → scripts/test/quick_test_cli.py
 simple_test.py → scripts/test/simple_test.py
 quick_cli_test.py → scripts/test/quick_cli_test.py
 
-# 修复脚本 → scripts/fixes/（完成后可删除）
-fix_syntax.py → scripts/fixes/fix_syntax.py
-quick_fix.py → scripts/fixes/quick_fix.py
-auto_test_fix.py → scripts/fixes/auto_test_fix.py
-optimize_ai.py → scripts/fixes/optimize_ai.py
+# 修复脚本（已删除）
 
 # 部署脚本 → scripts/deploy/
 start.sh → scripts/deploy/start.sh
@@ -175,7 +171,7 @@ rm -rf htmlcov/
 ```
 
 #### 3. 删除过时的修复脚本
-完成重构后，`scripts/fixes/` 目录可以删除
+`scripts/fixes/` 目录已在重构后移除
 
 ## 📝 文件命名规范
 

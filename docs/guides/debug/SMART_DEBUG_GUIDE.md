@@ -14,10 +14,7 @@ python debug_rulek.py
 
 选择选项：
 - **1** - 智能诊断（找出所有问题）
-- **2** - 自动修复测试（修复测试问题）
-- **3** - 优化AI功能（专门处理AI问题）
-- **4** - 快速启动游戏
-- **5** - 运行所有检查（全面诊断）
+- **2** - 快速启动游戏
 
 ### 2. 各工具详细说明
 
@@ -37,40 +34,8 @@ python smart_debug.py
 
 生成报告：`debug_report.md`
 
-#### 🔧 自动测试修复工具 (`auto_test_fix.py`)
 
-功能：
-- 自动修复已知代码问题
-- 运行测试并分析失败原因
-- 提供针对性的修复建议
-- 生成测试报告
-
-```bash
-python auto_test_fix.py
-```
-
-自动修复的问题：
-- `self.game_mgr.state.rules` → `self.game_mgr.rules`
-- `turn_count` → `current_turn`
-- Pydantic v1语法 → v2语法
-- 导入路径错误
-
-生成报告：`test_fix_report.md`
-
-#### 🤖 AI优化工具 (`optimize_ai.py`)
-
-专门优化AI功能：
-- 检查API配置
-- 测试AI连接
-- 创建增强Mock模式
-- 优化AI调用性能
-- 提供降级方案
-
-```bash
-python optimize_ai.py
-```
-
-生成报告：`ai_optimization_report.md`
+<!-- 以下工具已在重构后移除 -->
 
 ## 📋 常见问题快速解决
 
@@ -83,11 +48,8 @@ python optimize_ai.py
 
 **解决**：
 ```bash
-# 运行AI优化
-python optimize_ai.py
-
-# 如果没有API密钥，工具会自动创建Mock模式
-# 让你无需真实API也能测试
+# 运行诊断查看问题
+python smart_debug.py
 ```
 
 ### 2. pytest测试不通过
@@ -99,14 +61,8 @@ python optimize_ai.py
 
 **解决**：
 ```bash
-# 自动修复并运行测试
-python auto_test_fix.py
-
-# 工具会：
-# 1. 扫描并修复已知问题
-# 2. 运行测试
-# 3. 分析失败原因
-# 4. 提供修复建议
+# 运行测试并查看失败原因
+pytest -vv
 ```
 
 ### 3. 不知道哪里有问题
@@ -115,7 +71,7 @@ python auto_test_fix.py
 ```bash
 # 运行完整诊断
 python debug_rulek.py
-# 选择 5 - 运行所有检查
+# 按提示选择 1
 ```
 
 ## 🎯 调试工作流程
@@ -125,7 +81,7 @@ python debug_rulek.py
 1. **首次调试**
    ```bash
    python debug_rulek.py
-   # 选择 5 - 运行所有检查
+   # 按提示选择 1
    ```
 
 2. **查看报告**
@@ -140,9 +96,8 @@ python debug_rulek.py
 
 4. **验证修复**
    ```bash
-   # 重新运行相关工具验证
-   python auto_test_fix.py  # 验证测试
-   python optimize_ai.py    # 验证AI
+   # 再次运行诊断确认问题已解决
+   python smart_debug.py
    ```
 
 ## 💡 最佳实践
@@ -158,7 +113,7 @@ python debug_rulek.py
 
 ```bash
 # 每次修改后运行
-python auto_test_fix.py
+pytest -vv
 
 # 只运行特定测试
 pytest tests/unit/test_specific.py -v
@@ -197,8 +152,7 @@ python smart_debug.py
 | 工具 | 用途 | 何时使用 |
 |------|------|----------|
 | smart_debug.py | 全面诊断 | 首次调试或大问题 |
-| auto_test_fix.py | 测试修复 | pytest失败时 |
-| optimize_ai.py | AI优化 | AI功能异常时 |
+
 | debug_rulek.py | 统一入口 | 不确定用哪个时 |
 
 ## 🎉 总结
@@ -206,9 +160,7 @@ python smart_debug.py
 这套工具可以解决90%以上的常见问题：
 
 1. **智能诊断** - 找出所有问题
-2. **自动修复** - 修复已知问题
-3. **优化建议** - 提供改进方案
-4. **Mock支持** - 无需真实API也能开发
+2. **Mock支持** - 无需真实API也能开发
 
 现在你可以：
 ```bash
