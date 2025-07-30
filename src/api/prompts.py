@@ -3,7 +3,7 @@ AI Prompt 模板管理
 支持中英文切换和动态参数注入
 """
 from jinja2 import Environment, BaseLoader
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 
 
 # ========== System Prompts ==========
@@ -212,8 +212,8 @@ class PromptManager:
         location: str,
         recent_events: List[str],
         available_places: List[str],
-        active_rules: List[str] = None,
-        special_conditions: List[str] = None,
+        active_rules: Optional[List[str]] = None,
+        special_conditions: Optional[List[str]] = None,
         ambient_fear: int = 50
     ) -> Tuple[str, str]:
         """
@@ -250,7 +250,7 @@ class PromptManager:
         time_of_day: str,
         survivor_count: int,
         ambient_fear: int = 50,
-        special_conditions: List[str] = None
+        special_conditions: Optional[List[str]] = None
     ) -> Tuple[str, str]:
         """
         构建叙事生成的prompt
@@ -297,6 +297,14 @@ class PromptManager:
         )
 
         return user_prompt
+
+    def format_event_for_narrative(self, event: Dict[str, Any]) -> str:
+        """简单格式化事件描述"""
+        if isinstance(event, dict):
+            return event.get("description", str(event))
+        if hasattr(event, "description"):
+            return getattr(event, "description")
+        return str(event)
     
     def format_time_chinese(self, time_of_day: str) -> str:
         """将英文时间段转换为中文"""

@@ -3,18 +3,34 @@
 管理游戏场景的地图和区域
 """
 from typing import Dict, List, Optional
+from enum import Enum
+
+
+class AreaProperty(str, Enum):
+    """Basic area property flags"""
+
+    SAFE = "safe"
+    DANGEROUS = "dangerous"
+    DARK = "dark"
 
 
 class Area:
     """区域类"""
-    def __init__(self, id: str, name: str, description: str = "", connected_to: List[str] = None):
-        self.id = id
-        self.name = name
-        self.description = description
-        self.connected_to = connected_to or []
-        self.items = []
-        self.npcs = []
-        self.rules = []
+    def __init__(
+        self,
+        id: str,
+        name: str,
+        description: str = "",
+        connected_to: Optional[List[str]] = None,
+    ) -> None:
+        self.id: str = id
+        self.name: str = name
+        self.description: str = description
+        self.connected_to: List[str] = connected_to or []
+        self.items: List[str] = []
+        self.npcs: List[str] = []
+        self.rules: List[str] = []
+        self.properties: List[AreaProperty] = []
     
     def to_dict(self) -> dict:
         return {
@@ -24,7 +40,8 @@ class Area:
             "connected_to": self.connected_to,
             "items": self.items,
             "npcs": self.npcs,
-            "rules": self.rules
+            "rules": self.rules,
+            "properties": [p.value for p in self.properties]
         }
 
 
@@ -127,6 +144,7 @@ class MapManager:
             area.items = area_data.get("items", [])
             area.npcs = area_data.get("npcs", [])
             area.rules = area_data.get("rules", [])
+            area.properties = [AreaProperty(p) for p in area_data.get("properties", [])]
             self.areas[area_id] = area
         
         self.current_area = data.get("current_area")

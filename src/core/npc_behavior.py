@@ -3,7 +3,7 @@ NPC行为系统
 实现NPC的AI行为逻辑
 """
 import random
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from enum import Enum
 from dataclasses import dataclass
 
@@ -43,7 +43,7 @@ class NPCBehavior:
     
     def __init__(self, game_manager: GameStateManager):
         self.game_manager = game_manager
-        self.action_history = {}  # NPC行动历史
+        self.action_history: Dict[str, List[Dict[str, Any]]] = {}
         
     def decide_action(self, npc: Dict) -> ActionDecision:
         """决定NPC的下一个行动"""
@@ -74,11 +74,10 @@ class NPCBehavior:
         # 保存到历史
         if npc["id"] not in self.action_history:
             self.action_history[npc["id"]] = []
-        self.action_history[npc["id"]].append({
-            "turn": self.game_manager.state.turn,
-            "action": action.value,
-            "target": target
-        })
+        turn = self.game_manager.state.turn if self.game_manager.state else 0
+        self.action_history[npc["id"]].append(
+            {"turn": turn, "action": action.value, "target": target}
+        )
         
         logger.debug(f"{npc['name']} 决定: {action.value} (原因: {decision.reason})")
         
@@ -184,11 +183,11 @@ class NPCBehavior:
         """确定行动目标"""
         if action == NPCAction.MOVE:
             # 选择相邻房间
-            return self._get_adjacent_room(npc.get("location"))
+            return self._get_adjacent_room(npc.get("location", ""))
             
         elif action == NPCAction.TALK:
             # 选择同房间的其他NPC
-            others = self.game_manager.get_npcs_in_location(npc.get("location"))
+            others = self.game_manager.get_npcs_in_location(npc.get("location", ""))
             others = [o for o in others if o["id"] != npc["id"] and o.get("alive", True)]
             if others:
                 return random.choice(others)["id"]
@@ -201,7 +200,7 @@ class NPCBehavior:
                 
         elif action == NPCAction.INVESTIGATE:
             # 选择房间中的可疑对象
-            return self._get_investigation_target(npc.get("location"))
+            return self._get_investigation_target(npc.get("location", ""))
             
         return None
         
@@ -261,7 +260,7 @@ class NPCBehavior:
         
     def execute_action(self, npc: Dict, decision: ActionDecision) -> Dict:
         """执行NPC行动"""
-        result = {
+        result: Dict[str, Any] = {
             "success": True,
             "action": decision.action.value,
             "messages": []
@@ -275,15 +274,20 @@ class NPCBehavior:
                 result["messages"].append(f"{npc['name']} 从 {old_location} 移动到 {decision.target}")
                 
         elif decision.action == NPCAction.TALK:
-            if decision.target:
+            if decision.target and self.game_manager.state:
                 target_npc = self.game_manager.state.npcs.get(decision.target)
                 if target_npc:
-                    result["messages"].append(f"{npc['name']} 与 {target_npc['name']} 交谈")
+                    result["messages"].append(
+                        f"{npc['name']} 与 {target_npc['name']} 交谈"
+                    )
                     # 降低双方的恐惧和怀疑
-                    self.game_manager.update_npc(npc["id"], {
-                        "fear": max(0, npc.get("fear", 0) - 5),
-                        "suspicion": max(0, npc.get("suspicion", 0) - 3)
-                    })
+                    self.game_manager.update_npc(
+                        npc["id"],
+                        {
+                            "fear": max(0, npc.get("fear", 0) - 5),
+                            "suspicion": max(0, npc.get("suspicion", 0) - 3),
+                        },
+                    )
                     
         elif decision.action == NPCAction.REST:
             # 恢复体力
@@ -319,6 +323,8 @@ class NPCBehavior:
         
     def update_npc_relationships(self, npc1_id: str, npc2_id: str, change: int):
         """更新NPC之间的关系"""
+        if not self.game_manager.state:
+            return
         npc1 = self.game_manager.state.npcs.get(npc1_id)
         if npc1:
             relationships = npc1.get("relationships", {})
@@ -329,16 +335,21 @@ class NPCBehavior:
             
     def get_behavior_stats(self) -> Dict:
         """获取行为统计"""
-        stats = {
+        stats: Dict[str, Any] = {
             "total_actions": sum(len(history) for history in self.action_history.values()),
-            "active_npcs": len([npc for npc in self.game_manager.state.npcs.values() 
-                               if npc.get("alive", True)]),
+            "active_npcs": len(
+                [
+                    npc
+                    for npc in (self.game_manager.state.npcs.values() if self.game_manager.state else [])
+                    if npc.get("alive", True)
+                ]
+            ),
             "most_common_action": None,
             "location_distribution": {}
         }
         
         # 统计最常见的行动
-        action_counts = {}
+        action_counts: Dict[str, int] = {}
         for history in self.action_history.values():
             for record in history:
                 action = record["action"]
@@ -349,10 +360,11 @@ class NPCBehavior:
             stats["most_common_action"] = {"action": most_common[0], "count": most_common[1]}
             
         # 统计位置分布
-        for npc in self.game_manager.state.npcs.values():
-            if npc.get("alive", True):
-                loc = npc.get("location", "unknown")
-                stats["location_distribution"][loc] = stats["location_distribution"].get(loc, 0) + 1
+        if self.game_manager.state:
+            for npc in self.game_manager.state.npcs.values():
+                if npc.get("alive", True):
+                    loc = npc.get("location", "unknown")
+                    stats["location_distribution"][loc] = stats["location_distribution"].get(loc, 0) + 1
                 
         return stats
 

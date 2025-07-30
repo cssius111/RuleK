@@ -168,7 +168,7 @@ class NPC(BaseModel):
         """是否可以行动"""
         return self.status not in [NPCStatus.DEAD, NPCStatus.INSANE] and self.stamina > 0
         
-    def decide_action(self, context: Dict[str, Any]) -> NPCAction:
+    def decide_action(self, context: Dict[str, Any]) -> Optional[NPCAction]:
         """根据当前状态决定行动"""
         if not self.can_act():
             return None
@@ -224,8 +224,9 @@ class NPC(BaseModel):
                 
         # 应用行为修正
         for action, modifier in self.action_modifiers.items():
-            if action in weights:
-                weights[action] *= modifier
+            act_enum = NPCAction(action) if isinstance(action, str) else action
+            if act_enum in weights:
+                weights[act_enum] *= modifier
                 
         # 根据权重随机选择
         actions = list(weights.keys())
@@ -328,7 +329,7 @@ class NPC(BaseModel):
             if not area:
                 continue
                 
-            score = 50  # 基础分数
+            score = 50.0  # 基础分数
             
             # 根据区域属性调整
             if AreaProperty.SAFE in area.properties:
@@ -383,7 +384,7 @@ class NPC(BaseModel):
         
     def perform_move(self, distance: int = 1):
         """执行移动，消耗体力"""
-        stamina_cost = 5 * distance
+        stamina_cost: float = 5.0 * distance
         if self.status == NPCStatus.PANICKED:
             stamina_cost *= 1.5  # 恐慌时消耗更多
         elif self.status == NPCStatus.FRIGHTENED:

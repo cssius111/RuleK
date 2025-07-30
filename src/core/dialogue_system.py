@@ -2,7 +2,7 @@
 对话系统
 生成NPC之间的对话
 """
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import random
 from enum import Enum
 from dataclasses import dataclass
@@ -24,9 +24,9 @@ class DialogueContext:
     location: str
     time: str
     participants: List[str]
-    recent_events: List[str] = None
+    recent_events: Optional[List[str]] = None
     mood: str = "normal"
-    discovered_clues: List[str] = None
+    discovered_clues: Optional[List[str]] = None
     
     def __post_init__(self):
         if self.recent_events is None:
@@ -40,7 +40,7 @@ class DialogueEntry:
     def __init__(self, turn: int, dialogue_type: DialogueType):
         self.turn = turn
         self.dialogue_type = dialogue_type
-        self.dialogues = []
+        self.dialogues: List[str] = []
 
 
 class DialogueSystem:
