@@ -631,7 +631,6 @@ class CLIGame:
         
     async def load_game_menu(self):
         """加载游戏菜单"""
-        from pathlib import Path
         
         self.clear_screen()
         print("📂 加载游戏\n")

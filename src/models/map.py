@@ -3,7 +3,6 @@
 管理游戏场景的地图和区域
 """
 from typing import Dict, List, Optional
-import json
 
 
 class Area:

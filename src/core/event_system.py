@@ -11,7 +11,7 @@ try:
 except ImportError:
     # 极端 fallback：定义极简版本保证 import，不破坏主流程
     from enum import Enum
-    from dataclasses import dataclass, asdict
+    from dataclasses import dataclass
     
     class EventType(str, Enum):
         """事件类型枚举（兼容版本）"""

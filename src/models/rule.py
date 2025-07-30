@@ -3,7 +3,7 @@
 定义游戏中所有规则相关的数据结构
 """
 
-from pydantic import BaseModel, ConfigDict, field_validator, Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Dict, List, Optional, Any
 from enum import Enum
 from datetime import datetime

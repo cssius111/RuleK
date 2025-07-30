@@ -11,15 +11,15 @@ import logging
 import hashlib
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 import re
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from src.api.schemas import (
-    DialogueTurn, PlannedAction, TurnPlan, NarrativeOut, 
-    RuleEvalResult, RuleTrigger, RuleEffect, NPCState, SceneContext
+    DialogueTurn, TurnPlan, NarrativeOut, 
+    RuleEvalResult, RuleTrigger, RuleEffect
 )
 from src.api.prompts import PromptManager, RULE_EVAL_SYSTEM
 from src.utils.config import config as global_config
