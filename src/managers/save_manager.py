@@ -10,7 +10,6 @@ import shutil
 
 from ..core.game_state import GameState, GameStateManager
 from ..models.rule import Rule
-from ..models.npc import NPC
 from ..models.map import MapManager
 from ..utils.logger import get_logger
 
@@ -52,6 +51,9 @@ class SaveManager:
         Returns:
             str: 存档文件名
         """
+        if game_state_manager.state is None:
+            raise ValueError("Game state is not initialized")
+
         # 生成存档文件名
         if not save_name:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -154,7 +156,7 @@ class SaveManager:
         
         # 恢复规则
         rules_data = save_data.get("managers", {}).get("rules", {})
-        game_manager.rules = self._deserialize_rules(rules_data)
+        game_manager.rules = list(self._deserialize_rules(rules_data).values())
         
         # 恢复NPC
         npcs_data = save_data.get("managers", {}).get("npcs", {})
@@ -246,6 +248,9 @@ class SaveManager:
             Optional[str]: 存档文件名，失败返回None
         """
         try:
+            if game_state_manager.state is None:
+                raise ValueError("Game state is not initialized")
+
             # 自动存档使用特殊前缀
             save_name = f"autosave_{game_state_manager.state.game_id}"
             description = f"自动存档 - 回合 {game_state_manager.state.turn}"
@@ -285,26 +290,26 @@ class SaveManager:
             }
         }
     
-    def _serialize_rules(self, rules: Dict[str, Rule]) -> Dict[str, Dict]:
+    def _serialize_rules(self, rules: List[Rule]) -> Dict[str, Dict]:
         """序列化规则"""
-        serialized = {}
-        for rule_id, rule in rules.items():
-            serialized[rule_id] = rule.to_dict() if hasattr(rule, 'to_dict') else {
+        serialized: Dict[str, Dict] = {}
+        for rule in rules:
+            serialized[rule.id] = rule.to_dict() if hasattr(rule, "to_dict") else {
                 "id": rule.id,
                 "name": rule.name,
                 "description": rule.description,
-                "trigger": rule.trigger.__dict__ if hasattr(rule.trigger, '__dict__') else {},
-                "effect": rule.effect.__dict__ if hasattr(rule.effect, '__dict__') else {},
+                "trigger": rule.trigger.__dict__ if hasattr(rule.trigger, "__dict__") else {},
+                "effect": rule.effect.__dict__ if hasattr(rule.effect, "__dict__") else {},
                 "requirements": rule.requirements,
-                "cost": rule.cost,
+                "cost": getattr(rule, "base_cost", 0),
                 "level": rule.level,
                 "times_triggered": rule.times_triggered,
-                "loopholes": [lh.__dict__ for lh in rule.loopholes] if hasattr(rule, 'loopholes') else [],
-                "active": rule.active
+                "loopholes": [lh.__dict__ for lh in getattr(rule, "loopholes", [])],
+                "active": rule.active,
             }
         return serialized
     
-    def _serialize_npcs(self, npcs: Dict[str, NPC]) -> Dict[str, Dict]:
+    def _serialize_npcs(self, npcs: Dict[str, Any]) -> Dict[str, Any]:
         """序列化NPC"""
         serialized = {}
         for npc_id, npc in npcs.items():
@@ -324,7 +329,7 @@ class SaveManager:
                     "memory": npc.memory,
                     "relationships": npc.relationships,
                     "personality": npc.personality.__dict__ if hasattr(npc.personality, '__dict__') else {},
-                    "alive": npc.alive,
+                    "alive": getattr(npc, "is_alive", False),
                     "death_cause": getattr(npc, 'death_cause', None),
                     "death_turn": getattr(npc, 'death_turn', None)
                 }
@@ -354,7 +359,7 @@ class SaveManager:
         state.current_turn = state.turn
         
         # 恢复集合类型
-        state.active_rules = set(data.get("active_rules", []))
+        state.active_rules = list(data.get("active_rules", []))
         events = data.get("events_history", data.get("event_log", []))
         state.events_history = events
         
@@ -371,15 +376,13 @@ class SaveManager:
         rules = {}
         for rule_id, rule_data in data.items():
             try:
-                # 这里需要根据实际的Rule类构造方法来创建对象
-                # 简化处理，假设Rule类可以从字典创建
-                rule = Rule(**rule_data) if 'trigger' in rule_data else Rule.from_dict(rule_data)
+                rule = Rule(**rule_data)
                 rules[rule_id] = rule
             except Exception as e:
                 logger.error(f"反序列化规则失败: {rule_id} - {e}")
         return rules
     
-    def _deserialize_npcs(self, data: Dict[str, Dict]) -> Dict[str, NPC]:
+    def _deserialize_npcs(self, data: Dict[str, Dict]) -> Dict[str, Any]:
         """反序列化NPC"""
         # 由于GameState中的npcs可能直接存储字典，这里返回原始数据
         return data
@@ -442,6 +445,7 @@ if __name__ == "__main__":
     print("\n测试加载游戏...")
     save_data = save_manager.load_game(filename)
     restored_manager = save_manager.restore_game_state(save_data)
+    assert restored_manager.state is not None
     print(f"加载成功，当前回合: {restored_manager.state.turn}")
     
     # 测试自动存档

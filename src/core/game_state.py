@@ -2,7 +2,7 @@
 游戏状态管理器
 负责管理整个游戏的状态，包括积分、规则、NPC等
 """
-from typing import Dict, List, Optional, Any, Literal
+from typing import Dict, List, Optional, Any
 from datetime import datetime
 from dataclasses import dataclass, field
 import json
@@ -29,7 +29,8 @@ class GameState:
     
     # 游戏阶段
     phase: GamePhase = GamePhase.SETUP
-    time_of_day: Literal["morning", "afternoon", "evening", "night"] = "morning"  # daytime
+    # 时间段，例如"morning"、"afternoon"等
+    time_of_day: str = "morning"
     mode: GameMode = GameMode.BACKSTAGE
     
     # 统计
@@ -372,7 +373,8 @@ class GameStateManager:
         """添加NPC"""
         self.npcs.append(npc)
         if self.state:
-            self.state.npcs[npc.get("id")] = npc
+            nid = str(npc.get("id", ""))
+            self.state.npcs[nid] = npc
         self.log(f"NPC [{npc['name']}] 加入游戏")
         
     def update_npc(self, npc_id: str, updates: Dict[str, Any]):
