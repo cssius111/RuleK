@@ -418,8 +418,8 @@ class DeepSeekClient:
             # 返回默认评估
             return RuleEvalResult(
                 name="未知规则",
-                trigger=RuleTrigger(type="unknown", conditions=[]),
-                effect=RuleEffect(type="unknown", params={}),
+                trigger=RuleTrigger(type="event", conditions=[]),
+                effect=RuleEffect(type="custom", params={}),
                 cost=100,
                 difficulty=5,
                 loopholes=["规则解析失败"],
