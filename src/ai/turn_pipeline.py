@@ -370,7 +370,6 @@ class AITurnPipeline:
     
     async def _handle_move(self, npc: Dict[str, Any], action: PlannedAction):
         """处理移动行动"""
-        old_location = npc.get("location", "未知位置")
         npc["location"] = action.target
         
         # 更新游戏状态

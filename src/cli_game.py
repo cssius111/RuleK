@@ -2,21 +2,11 @@
 命令行游戏界面
 提供简单的CLI界面来玩游戏
 """
-# --- test-friendly pause helper ---
 import os
-
-def _pause():
-    """Pause execution until the user presses Enter.
-
-    If running under pytest (``PYTEST_RUNNING=1``), this returns immediately
-    without waiting for input.
-    """
-    if os.getenv("PYTEST_RUNNING") == "1":
-        return
-    input("\n按回车继续...")
-# --- end helper ---
 import sys
 import asyncio
+import random
+from src.custom_rule_creator import create_custom_rule_enhanced
 
 # 添加项目根目录到Python路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -30,6 +20,18 @@ from src.utils.logger import get_logger
 from src.utils.config import config as global_config
 
 logger = get_logger(__name__)
+# --- test-friendly pause helper ---
+def _pause():
+    """Pause execution until the user presses Enter.
+
+    If running under pytest (``PYTEST_RUNNING=1``), this returns immediately
+    without waiting for input.
+    """
+    if os.getenv("PYTEST_RUNNING") == "1":
+        return
+    input("\n按回车继续...")
+# --- end helper ---
+
 
 
 class CLIGame:
@@ -285,8 +287,6 @@ class CLIGame:
     async def create_custom_rule(self):
         """创建自定义规则"""
         try:
-            from src.custom_rule_creator import create_custom_rule_enhanced
-            
             rule = await create_custom_rule_enhanced()
             if rule:
                 # 检查积分
@@ -509,7 +509,7 @@ class CLIGame:
             triggered_rules = self.rule_executor.check_all_rules(context)
             
             for rule, probability in triggered_rules:
-                import random
+
                 if random.random() < probability:
                     print(f"\n⚡ {npc['name']} 触发了规则 [{rule.name}]!")
                     exec_result = self.rule_executor.execute_rule(rule, context)
@@ -591,7 +591,7 @@ class CLIGame:
         """备用对话生成"""
         npcs = self.game_manager.get_alive_npcs()
         if len(npcs) >= 2:
-            import random
+
             npc1, npc2 = random.sample(npcs, 2)
             
             dialogues = [

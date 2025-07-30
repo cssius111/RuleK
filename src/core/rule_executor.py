@@ -193,7 +193,7 @@ class RuleExecutor:
         """检查额外条件"""
         # 这里可以实现各种特殊条件
         condition_checks = {
-            "lights_off": lambda: context.game_state.get("lights_on", True) == False,
+            "lights_off": lambda: not context.game_state.get("lights_on", True),
             "alone": lambda: len(self.game_manager.get_npcs_in_location(context.actor_location)) == 1,
             "multiple_people": lambda: len(self.game_manager.get_npcs_in_location(context.actor_location)) > 1,
             "low_sanity": lambda: context.actor.get("sanity", 100) < 50,
