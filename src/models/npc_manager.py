@@ -26,7 +26,8 @@ class NPCManager:
                 self.name_index += 1
             else:
                 name = f"NPC_{len(self.npcs) + 1}"
-        
+
+        assert name is not None
         npc = NPC(name=name, **kwargs)
         self.npcs[npc.id] = npc
         return npc

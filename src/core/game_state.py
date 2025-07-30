@@ -2,7 +2,7 @@
 游戏状态管理器
 负责管理整个游戏的状态，包括积分、规则、NPC等
 """
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Literal
 from datetime import datetime
 from dataclasses import dataclass, field
 import json
@@ -29,7 +29,7 @@ class GameState:
     
     # 游戏阶段
     phase: GamePhase = GamePhase.SETUP
-    time_of_day: str = "morning"  # morning, afternoon, evening, night
+    time_of_day: Literal["morning", "afternoon", "evening", "night"] = "morning"  # daytime
     mode: GameMode = GameMode.BACKSTAGE
     
     # 统计
@@ -101,7 +101,7 @@ class GameState:
 class GameStateManager:
     """游戏状态管理器"""
     
-    def __init__(self, save_dir: str = "data/saves", config: Dict[str, Any] = None):
+    def __init__(self, save_dir: str = "data/saves", config: Optional[Dict[str, Any]] = None):
         self.save_dir = Path(save_dir)
         self.save_dir.mkdir(parents=True, exist_ok=True)
         
@@ -117,7 +117,7 @@ class GameStateManager:
         self.ai_pipeline: Optional['AITurnPipeline'] = None
         
         # 事件监听器
-        self.event_listeners = {
+        self.event_listeners: Dict[str, List[Any]] = {
             "turn_start": [],
             "turn_end": [],
             "rule_triggered": [],
@@ -125,7 +125,7 @@ class GameStateManager:
             "fear_gained": []
         }
         
-    def new_game(self, game_id: Optional[str] = None, config: Dict[str, Any] = None) -> GameState:
+    def new_game(self, game_id: Optional[str] = None, config: Optional[Dict[str, Any]] = None) -> GameState:
         """开始新游戏
 
         Args:
@@ -208,7 +208,7 @@ class GameStateManager:
                     result[key] = value
             return result
         else:
-            return str(rule)  # 最后的选择：转换为字符串
+            return {"raw": str(rule)}  # 最后的选择：转换为字符串
         
     def load_game(self, game_id: str) -> bool:
         """加载游戏存档"""

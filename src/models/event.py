@@ -22,6 +22,8 @@ class EventType(str, Enum):
     SYSTEM       = "system"                # 系统提示、存档等
     NARRATION    = "narration"             # AI 生成叙事
     NARRATIVE    = "narrative"             # AI 生成叙事（别名）
+    ITEM_FOUND   = "item_found"            # 发现物品
+    CLUE_FOUND   = "clue_found"            # 发现线索
 
 
 @dataclass

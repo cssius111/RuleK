@@ -224,7 +224,10 @@ class BatchRequest(BaseModel):
 # ========== 工具函数 ==========
 
 
-def create_error_response(error_msg: str, error_type: str = "unknown") -> AIError:
+ErrorType = Literal["parse", "validation", "api", "timeout", "unknown"]
+
+
+def create_error_response(error_msg: str, error_type: ErrorType = "unknown") -> AIError:
     """创建标准错误响应"""
     suggestions = {
         "parse": "请检查输入格式是否正确",
