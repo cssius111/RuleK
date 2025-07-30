@@ -53,6 +53,14 @@ python rulek.py web
 cd web/frontend && npm run dev
 ```
 
+### 安装前端依赖
+
+如需单独调试或构建前端，请在 `web/frontend` 目录执行：
+
+```bash
+npm install
+```
+
 访问 http://localhost:5173 开始游戏！
 
 ### 方式三：Docker
