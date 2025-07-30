@@ -3,14 +3,45 @@
 生成恐怖氛围的游戏叙事
 """
 from typing import List, Dict, Any
+from enum import Enum
+from dataclasses import dataclass
 import random
+
+
+class EventSeverity(str, Enum):
+    """Severity levels for narrative events."""
+
+    MINOR = "minor"
+    MODERATE = "moderate"
+    MAJOR = "major"
+    CRITICAL = "critical"
+
+
+class NarrativeStyle(str, Enum):
+    """Narrative tone presets."""
+
+    DEFAULT = "default"
+    HORROR = "horror"
+    COMEDY = "comedy"
+
+
+@dataclass
+class GameEvent:
+    """Simple structure describing a narrative event."""
+
+    event_type: str
+    severity: EventSeverity
+    actors: List[str]
+    location: str
+    details: Dict[str, Any]
 
 
 class Narrator:
     """叙事生成器"""
-    
+
     def __init__(self, deepseek_client=None):
         self.deepseek_client = deepseek_client
+        self.style: NarrativeStyle = NarrativeStyle.DEFAULT
         self.narrative_templates = {
             "npc_action": [
                 "{npc}小心翼翼地{action}，空气中弥漫着不祥的气息。",
@@ -34,6 +65,10 @@ class Narrator:
                 "night": "深夜的寂静被诡异的声响打破，恐惧在每个角落蔓延。"
             }
         }
+
+    def set_style(self, style: NarrativeStyle) -> None:
+        """Set narrative style (currently unused)."""
+        self.style = style
     
     async def generate_narrative(self, events: List[Dict[str, Any]], game_state: Any) -> str:
         """生成叙事文本"""
@@ -110,5 +145,11 @@ class Narrator:
         # 添加氛围描述
         if game_state.fear_points > 500:
             narrative += " 恐惧已经达到了临界点，整个空间都在颤抖。"
-        
+
         return narrative
+
+    async def narrate_turn(self, events: List[GameEvent], game_state: Dict[str, Any]):
+        """Generate a simple chapter object for a turn."""
+        text = await self.generate_narrative([e.__dict__ for e in events], game_state)
+        title = f"Turn {game_state.get('current_turn', 0)}" if game_state else "Narrative"
+        return type("Chapter", (), {"title": title, "content": text})()

@@ -273,7 +273,6 @@ class DeepSeekClient:
             recent_events=scene_context.get("recent_events", []),
             available_places=available_places,
             active_rules=scene_context.get("active_rules", []),
-            weather=scene_context.get("weather"),
             ambient_fear=scene_context.get("ambient_fear_level", 50),
             special_conditions=scene_context.get("special_conditions", [])
         )
@@ -312,11 +311,15 @@ class DeepSeekClient:
             
         except Exception as e:
             logger.error(f"生成回合计划失败: {str(e)}")
-            # 返回降级方案
+            speaker = npc_states[0]["name"] if npc_states else "系统"
+            text = locals().get("content", "").strip()
+            if "：" in text:
+                speaker, text = text.split("：", 1)
+            elif ":" in text:
+                speaker, text = text.split(":", 1)
+
             return TurnPlan(
-                dialogue=[
-                    DialogueTurn(speaker="系统", text="[AI生成失败，使用默认对话]")
-                ],
+                dialogue=[DialogueTurn(speaker=speaker.strip(), text=text.strip() or "[AI生成失败，使用默认对话]")],
                 actions=[],
                 atmosphere="error"
             )
