@@ -19,8 +19,7 @@ class ProjectRestructure:
         """创建标准目录结构"""
         dirs = [
             "scripts/dev",
-            "scripts/test", 
-            "scripts/fixes",
+            "scripts/test",
             "scripts/deploy",
             "scripts/utils",
             "docs/api",
@@ -54,12 +53,6 @@ class ProjectRestructure:
             "simple_test.py": "scripts/test/simple_test.py",
             "quick_cli_test.py": "scripts/test/quick_cli_test.py",
             "run_cli_tests.sh": "scripts/test/run_cli_tests.sh",
-            
-            # 修复脚本
-            "fix_syntax.py": "scripts/fixes/fix_syntax.py",
-            "quick_fix.py": "scripts/fixes/quick_fix.py",
-            "auto_test_fix.py": "scripts/fixes/auto_test_fix.py",
-            "optimize_ai.py": "scripts/fixes/optimize_ai.py",
             
             # 部署脚本
             "start.sh": "scripts/deploy/start.sh",
