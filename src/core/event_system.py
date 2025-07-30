@@ -5,49 +5,51 @@ TODO: 在完全迁移到 src/models/event.py 后删除此文件
 """
 from typing import Any, Dict, TYPE_CHECKING
 
-try:
-    # 尝试从新位置导入已迁移的定义
-    from src.models.event import Event as GameEvent, EventType as _EventType
-    EventType = _EventType
-except Exception:
-    # 极端 fallback：定义极简版本保证 import，不破坏主流程
-    from enum import Enum
-    from dataclasses import dataclass
-    
-    class EventType(str, Enum):
-        """事件类型枚举（兼容版本）"""
-        GENERIC = "generic"
-        NPC_ACTION = "npc_action"
-        NPC_DIALOGUE = "npc_dialogue"
-        RULE_TRIGGERED = "rule_triggered"
-        RULE_CREATED = "rule_created"
-        NPC_DEATH = "npc_death"
-        FEAR_GAINED = "fear_gained"
-        GAME_START = "game_start"
-        GAME_OVER = "game_over"
-        PHASE_CHANGE = "phase_change"
-        NARRATIVE = "narrative"
-    
-    @dataclass
-    class GameEvent:
-        """游戏事件（兼容版本）"""
-        type: EventType = EventType.GENERIC
-        description: str = ""
-        turn: int = 0
-        metadata: Dict[str, Any] | None = None
-        
-        def __post_init__(self) -> None:
-            if self.metadata is None:
-                self.metadata = {}
-        
-        def to_dict(self) -> Dict[str, Any]:
-            """转换为字典"""
-            return {
-                "type": self.type.value if hasattr(self.type, 'value') else str(self.type),
-                "description": self.description,
-                "turn": self.turn,
-                "metadata": self.metadata
-            }
+if TYPE_CHECKING:  # 供类型检查使用
+    from src.models.event import Event as GameEvent, EventType
+else:
+    try:  # pragma: no cover - compatibility import
+        from src.models.event import Event as GameEvent, EventType
+    except Exception:  # noqa: BLE001 - fallback to minimal definitions
+        from enum import Enum
+        from dataclasses import dataclass
+
+        class EventType(str, Enum):
+            """事件类型枚举（兼容版本）"""
+
+            GENERIC = "generic"
+            NPC_ACTION = "npc_action"
+            NPC_DIALOGUE = "npc_dialogue"
+            RULE_TRIGGERED = "rule_triggered"
+            RULE_CREATED = "rule_created"
+            NPC_DEATH = "npc_death"
+            FEAR_GAINED = "fear_gained"
+            GAME_START = "game_start"
+            GAME_OVER = "game_over"
+            PHASE_CHANGE = "phase_change"
+            NARRATIVE = "narrative"
+
+        @dataclass
+        class GameEvent:
+            """游戏事件（兼容版本）"""
+
+            type: EventType = EventType.GENERIC
+            description: str = ""
+            turn: int = 0
+            metadata: Dict[str, Any] | None = None
+
+            def __post_init__(self) -> None:
+                if self.metadata is None:
+                    self.metadata = {}
+
+            def to_dict(self) -> Dict[str, Any]:
+                """转换为字典"""
+                return {
+                    "type": self.type.value if hasattr(self.type, "value") else str(self.type),
+                    "description": self.description,
+                    "turn": self.turn,
+                    "metadata": self.metadata,
+                }
 
 
 # 为了兼容性，也导出 Event 作为 GameEvent 的别名
