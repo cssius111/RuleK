@@ -112,7 +112,7 @@ class Rule(BaseModel):
     def calculate_total_cost(self) -> int:
         """计算规则总成本"""
         level_modifier = self.level * 50
-        loophole_discount = len([l for l in self.loopholes if not l.patched]) * 20
+        loophole_discount = len([loophole for loophole in self.loopholes if not loophole.patched]) * 20
         complexity_cost = (
             len(self.requirements.items) * 10 + len(self.requirements.areas) * 15
         )
