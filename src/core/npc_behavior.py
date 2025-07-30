@@ -376,6 +376,8 @@ if __name__ == "__main__":
     # 创建游戏管理器
     game_manager = GameStateManager()
     game_manager.new_game()
+
+    assert game_manager.state is not None
     
     # 创建行为控制器
     behavior = NPCBehavior(game_manager)
