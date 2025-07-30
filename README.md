@@ -127,6 +127,15 @@ RuleK/
 
 ## 🧪 测试
 
+在运行测试前，请先安装依赖并准备 Playwright：
+
+```bash
+pip install -r requirements.txt
+python -m playwright install  # 可选：安装浏览器
+```
+
+完成以上步骤后即可执行测试：
+
 ```bash
 # 运行所有测试
 python rulek.py test
