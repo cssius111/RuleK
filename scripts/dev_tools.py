@@ -183,6 +183,17 @@ def check_dependencies():
     else:
         print("❌ Python依赖有问题:")
         print(result.stdout)
+
+    # 检查关键依赖是否存在
+    import importlib.util
+
+    required_packages = ["pydantic", "httpx"]
+    missing = [pkg for pkg in required_packages if importlib.util.find_spec(pkg) is None]
+    if missing:
+        print(f"⚠️  缺少必要依赖: {', '.join(missing)}")
+        print("   请运行: pip install -r requirements.txt")
+    else:
+        print("✅ 关键依赖已安装")
     
     # 检查前端依赖
     print("\n前端依赖:")

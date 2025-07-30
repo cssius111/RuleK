@@ -142,6 +142,8 @@ pip install -r requirements.txt
 python -m playwright install  # 可选：安装浏览器
 ```
 
+`scripts/dev_tools.py check` 命令同样依赖上述包，请在运行该脚本前先执行 `pip install -r requirements.txt`。
+
 完成以上步骤后即可执行测试：
 
 ```bash
