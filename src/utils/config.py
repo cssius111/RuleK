@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class Config:
+model_config = ConfigDict(
     """配置管理类"""
     
     def __init__(self):

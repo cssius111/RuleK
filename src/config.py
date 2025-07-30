@@ -26,7 +26,7 @@ class APIConfig:
             self.max_retries = config_dict.get("max_retries", 3)
 
 
-class Config:
+model_config = ConfigDict(
     """Config类，用于兼容旧代码"""
     
     def __init__(self):

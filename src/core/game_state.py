@@ -167,7 +167,7 @@ class GameStateManager:
             result = {}
             for key, value in npc.items():
                 if hasattr(value, 'dict'):  # Pydantic模型
-                    result[key] = value.dict()
+                    result[key] = value.model_dump()
                 elif hasattr(value, '__dict__') and not isinstance(value, (str, int, float, bool, list, dict, type(None))):
                     # 其他对象
                     result[key] = value.__dict__
@@ -177,7 +177,7 @@ class GameStateManager:
         elif hasattr(npc, "model_dump"):
             return npc.model_dump()
         elif hasattr(npc, "dict"):
-            return npc.dict()
+            return npc.model_dump()
         elif hasattr(npc, "__dict__"):
             # 递归处理嵌套对象
             return self._serialize_npc(npc.__dict__)
@@ -191,7 +191,7 @@ class GameStateManager:
         elif hasattr(rule, "model_dump"):
             return rule.model_dump()
         elif hasattr(rule, "dict"):
-            return rule.dict()
+            return rule.model_dump()
         elif hasattr(rule, "__dict__"):
             # 处理自定义类对象
             result = {}
@@ -201,7 +201,7 @@ class GameStateManager:
                 if hasattr(value, "value"):  # 处理枚举
                     result[key] = value.value
                 elif hasattr(value, "dict"):  # 处理嵌套的 Pydantic 模型
-                    result[key] = value.dict()
+                    result[key] = value.model_dump()
                 elif hasattr(value, "__dict__") and not isinstance(value, (str, int, float, bool, list, dict, type(None))):
                     result[key] = self._serialize_rule(value)
                 else:

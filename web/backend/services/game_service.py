@@ -218,7 +218,7 @@ class GameService:
         # 广播更新
         await self.broadcast_update({
             "update_type": "state",
-            "data": self.get_state_response().dict()
+            "data": self.get_state_response().model_dump()
         })
         
         return TurnResult(
@@ -405,7 +405,7 @@ class GameService:
         async with self._ws_lock:
             for conn_id, ws in self.websockets.items():
                 try:
-                    await ws.send_json(message.dict())
+                    await ws.send_json(message.model_dump())
                 except Exception as e:
                     logger.error(f"Failed to send to {conn_id}: {e}")
                     disconnected.append(conn_id)
@@ -422,7 +422,7 @@ class GameService:
         
         if action_type == "advance_turn":
             result = await self.advance_turn()
-            return result.dict()
+            return result.model_dump()
         elif action_type == "create_rule":
             rule_id = await self.create_rule(action_data.get("rule_data", {}))
             return {"rule_id": rule_id}
@@ -526,10 +526,10 @@ class GameService:
             # 广播AI生成的内容
             await self.broadcast_update({
                 "update_type": "ai_turn",
-                "data": response.dict()
+                "data": response.model_dump()
             })
             
-            return response.dict()
+            return response.model_dump()
             
         except Exception as e:
             logger.error(f"AI turn execution failed: {e}")
@@ -554,7 +554,7 @@ class GameService:
                 parsed_rule=result["parsed_rule"]
             )
             
-            return response.dict()
+            return response.model_dump()
             
         except Exception as e:
             logger.error(f"Rule evaluation failed: {e}")

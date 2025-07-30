@@ -39,7 +39,7 @@ class RuleCreateRequest(BaseModel):
     cost: int = Field(..., ge=50, le=1000, description="消耗积分")
     
     model_config = {
-        "json_schema_extra": {
+        "json_json_schema_extra": {
             "example": {
                 "name": "午夜照镜死",
                 "description": "午夜时分照镜子会导致死亡",
@@ -88,7 +88,7 @@ class NPCStatus(BaseModel):
     status_effects: List[str]
     is_alive: bool
     
-    class Config:
+    model_config = ConfigDict(
         from_attributes = True
 
 
@@ -119,7 +119,7 @@ class GameStateResponse(BaseModel):
     npcs_died: int
     
     model_config = {
-        "json_schema_extra": {
+        "json_json_schema_extra": {
             "example": {
                 "game_id": "game_123",
                 "started_at": "2024-01-01T00:00:00",
@@ -225,7 +225,7 @@ class AIRuleEvaluationRequest(BaseModel):
     rule_description: str = Field(..., min_length=5, max_length=500, description="规则的自然语言描述")
     
     model_config = {
-        "json_schema_extra": {
+        "json_json_schema_extra": {
             "example": {
                 "rule_description": "晚上10点后不能开灯，否则会吸引怪物"
             }

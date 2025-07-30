@@ -21,7 +21,7 @@ class CLITestRunner:
         self.test_results = []
         self.failed_tests = []
         self.error_patterns = {
-            "AttributeError.*turn_count": "使用了错误的属性名 turn_count（应该是 current_turn）",
+            "AttributeError.*current_turn": "使用了错误的属性名 current_turn（应该是 current_turn）",
             "AttributeError.*state.rules": "使用了 state.rules（应该是 game_manager.rules）",
             "ModuleNotFoundError": "模块导入错误，检查路径设置",
             "TypeError.*missing.*argument": "函数调用缺少必要参数",
@@ -167,12 +167,12 @@ class CLITestRunner:
         # 收集所有需要的修复
         for item in analysis:
             error = item['error']
-            if 'turn_count' in error:
+            if 'current_turn' in error:
                 fixes.append({
                     'file': 'src/cli_game.py',
-                    'pattern': r'\.turn_count\b',
+                    'pattern': r'\.current_turn\b',
                     'replacement': '.current_turn',
-                    'description': '修复 turn_count -> current_turn'
+                    'description': '修复 current_turn -> current_turn'
                 })
             if 'state.rules' in error:
                 fixes.append({

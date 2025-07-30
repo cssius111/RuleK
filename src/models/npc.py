@@ -2,7 +2,7 @@
 NPC系统数据模型
 定义NPC的属性、行为和状态
 """
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, field_validator, Field
 from typing import Dict, List, Optional, Any
 from enum import Enum
 import random
@@ -409,9 +409,9 @@ class NPC(BaseModel):
         if "safe" in area_properties:
             self.reduce_fear(5)
             
-    class Config:
-        """Pydantic配置"""
-        use_enum_values = True
+    model_config = ConfigDict(
+        use_enum_values=True
+    )
 
     def to_dict(self) -> Dict[str, Any]:
         """Return a dictionary representation of the NPC."""

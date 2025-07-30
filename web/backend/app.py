@@ -139,7 +139,7 @@ async def create_rule(game_id: str, request: RuleCreateRequest):
         raise HTTPException(status_code=404, detail="Game not found")
     
     try:
-        rule_id = await game_service.create_rule(request.dict())
+        rule_id = await game_service.create_rule(request.model_dump())
         return {"rule_id": rule_id, "cost": request.cost}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

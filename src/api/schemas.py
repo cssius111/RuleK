@@ -2,7 +2,7 @@
 AI API 数据模型定义
 使用 Pydantic 进行数据验证和序列化
 """
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator, Field, field_validator, ConfigDict
 from typing import List, Optional, Literal, Dict, Any, TypedDict
 from datetime import datetime
 
