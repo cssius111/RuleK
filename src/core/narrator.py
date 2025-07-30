@@ -3,6 +3,8 @@
 生成恐怖氛围的游戏叙事
 """
 from typing import List, Dict, Any
+
+from src.api.deepseek_client import APIConfig, DeepSeekClient
 from enum import Enum
 from dataclasses import dataclass
 import random
@@ -40,7 +42,11 @@ class Narrator:
     """叙事生成器"""
 
     def __init__(self, deepseek_client=None):
-        self.deepseek_client = deepseek_client
+        """Initialize the narrator with an optional DeepSeek client."""
+        self.deepseek_client = deepseek_client or DeepSeekClient(
+            APIConfig(mock_mode=True)
+        )
+        self.api_client = self.deepseek_client
         self.style: NarrativeStyle = NarrativeStyle.DEFAULT
         self.narrative_templates = {
             "npc_action": [

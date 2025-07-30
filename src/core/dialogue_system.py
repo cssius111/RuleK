@@ -3,6 +3,8 @@
 生成NPC之间的对话
 """
 from typing import List, Dict, Any, Optional
+
+from src.api.deepseek_client import APIConfig, DeepSeekClient
 import random
 from enum import Enum
 from dataclasses import dataclass
@@ -47,8 +49,11 @@ class DialogueSystem:
     """对话系统"""
     
     def __init__(self, deepseek_client=None):
-        self.deepseek_client = deepseek_client
-        self.api_client = deepseek_client  # 兼容旧代码
+        """Initialize dialogue system with an optional DeepSeek client."""
+        self.deepseek_client = deepseek_client or DeepSeekClient(
+            APIConfig(mock_mode=True)
+        )
+        self.api_client = self.deepseek_client  # backward compatibility
         self.dialogue_templates = {
             "fear": [
                 "{npc1}: 你有没有感觉到...这里不太对劲？",
