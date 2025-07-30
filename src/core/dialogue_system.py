@@ -42,7 +42,7 @@ class DialogueEntry:
     def __init__(self, turn: int, dialogue_type: DialogueType):
         self.turn = turn
         self.dialogue_type = dialogue_type
-        self.dialogues: List[str] = []
+        self.dialogues: List[dict[str, str]] = []
 
 
 class DialogueSystem:

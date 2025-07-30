@@ -119,6 +119,11 @@ class NPC(BaseModel):
     
     # 行为修正
     action_modifiers: Dict[str, float] = Field(default_factory=dict)
+
+    @property
+    def is_alive(self) -> bool:
+        """NPC是否存活"""
+        return self.status != NPCStatus.DEAD
     
     def update_status(self):
         """根据当前状态更新NPC状态"""

@@ -309,9 +309,10 @@ class AITurnPipeline:
                 "calm": "😐",
                 "panic": "😱",
                 "suspicious": "🤨",
-                "angry": "😠"
+                "angry": "😠",
             }
-            emoji = emotion_emoji.get(turn.emotion, "💬")
+            key = turn.emotion or "calm"
+            emoji = emotion_emoji.get(key, "💬")
             self.game_mgr.log(f"{emoji} {turn.speaker}: {turn.text}")
     
     async def _process_actions(self, actions: List[PlannedAction]):
@@ -582,7 +583,9 @@ class AITurnPipeline:
         )
         state.events_history.append(event.to_dict())
     
-    def _create_event(self, event_type: EventType, description: str, meta: Dict[str, Any] = None):
+    def _create_event(
+        self, event_type: EventType, description: str, meta: Optional[Dict[str, Any]] = None
+    ):
         """创建并记录事件"""
         if self.game_mgr.state is None:
             raise RuntimeError("游戏状态未初始化")
