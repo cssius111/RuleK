@@ -18,6 +18,8 @@
 - [AI集成实施指南](AI_Integration_Implementation_Guide.md) - AI功能集成详细步骤
 - [AI集成计划](AI_Integration_Plan.md) - AI集成架构设计
 - [CLI测试和开发](CLI_Testing_and_Development.md) - CLI开发指南
+- [项目重构计划](PROJECT_RESTRUCTURE_PLAN.md) - 通用项目重构规范
+- [重构实施指南](RESTRUCTURE_GUIDE.md) - RuleK重构具体步骤
 
 ### 部署
 - [部署指南](DEPLOYMENT.md) - 生产环境部署
@@ -60,6 +62,15 @@ python rulek.py test integration
 ### 环境验证
 ```bash
 python rulek.py verify
+```
+
+### 项目重构
+```bash
+# 分析项目状态
+python analyze_project.py
+
+# 执行重构
+./restructure.sh
 ```
 
 ---
