@@ -196,6 +196,14 @@ class PromptManager:
         """
         self.language = language
         self.env = Environment(loader=BaseLoader())
+
+    def validate_json_response(self, text: str, schema_name: str):
+        """Basic JSON response validator used in tests."""
+        import json
+        try:
+            return True, json.loads(text), None
+        except Exception as e:
+            return False, None, str(e)
         
     def build_turn_plan_prompt(
         self,

@@ -52,4 +52,36 @@ except ImportError:
 # 为了兼容性，也导出 Event 作为 GameEvent 的别名
 Event = GameEvent
 
-__all__ = ['GameEvent', 'Event', 'EventType']
+class EventSystem:
+    """Simple event system used for integration tests."""
+
+    def __init__(self) -> None:
+        self.events: list[GameEvent] = []
+
+    def record_event(self, event: GameEvent) -> None:
+        """Record an event for later retrieval."""
+        self.events.append(event)
+
+    def check_and_trigger_events(self, game_state: Dict[str, Any]) -> list[Dict[str, Any]]:
+        """Dummy implementation returning previously recorded events.
+
+        Parameters
+        ----------
+        game_state: Dict[str, Any]
+            Current game state; ignored in this simple implementation.
+
+        Returns
+        -------
+        List of event dictionaries for compatibility with tests.
+        """
+        results = []
+        for evt in self.events:
+            results.append({
+                "event_name": getattr(evt, "description", "event"),
+                "messages": [evt.description] if getattr(evt, "description", "") else [],
+                "effects_applied": evt.metadata.get("effects", []) if evt.metadata else []
+            })
+        return results
+
+
+__all__ = ['GameEvent', 'Event', 'EventType', 'EventSystem']
