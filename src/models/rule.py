@@ -159,7 +159,7 @@ class Rule(BaseModel):
 
     def apply_effect(self, target: Dict[str, Any]) -> Dict[str, Any]:
         """应用规则效果"""
-        result = {
+        result: Dict[str, Any] = {
             "success": True,
             "effect_type": self.effect.type,
             "fear_gained": self.effect.fear_gain,

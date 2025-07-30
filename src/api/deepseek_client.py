@@ -328,9 +328,11 @@ class DeepSeekClient:
         self,
         events: List[Dict[str, Any]],
         time_of_day: str,
+        survivor_count: int,
+        ambient_fear: int = 50,
         location: str = "未知地点",
         npc_states: Optional[List[Dict[str, Any]]] = None,
-        min_len: int = 200
+        min_len: int = 200,
     ) -> str:
         """生成叙事文本"""
         # 格式化事件
@@ -342,9 +344,9 @@ class DeepSeekClient:
         system_prompt, user_prompt = self.prompt_mgr.build_narrative_prompt(
             events=formatted_events,
             time_of_day=time_of_day,
-            location=location,
-            atmosphere="恐怖压抑",
-            npc_states=npc_states or []
+            survivor_count=survivor_count,
+            ambient_fear=ambient_fear,
+            special_conditions=None,
         )
         
         data = {
@@ -502,7 +504,10 @@ class DeepSeekClient:
         return await self.generate_narrative_text(
             events=events,
             time_of_day="未知",
+            survivor_count=len(events),
+            ambient_fear=50,
             location="未知地点",
+            npc_states=None,
             min_len=min_len,
         )
     

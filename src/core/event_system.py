@@ -3,12 +3,13 @@
 为了保持向后兼容，提供旧测试期望的接口
 TODO: 在完全迁移到 src/models/event.py 后删除此文件
 """
-from typing import Any, Dict
+from typing import Any, Dict, TYPE_CHECKING
 
 try:
     # 尝试从新位置导入已迁移的定义
-    from src.models.event import Event as GameEvent, EventType
-except ImportError:
+    from src.models.event import Event as GameEvent, EventType as _EventType
+    EventType = _EventType
+except Exception:
     # 极端 fallback：定义极简版本保证 import，不破坏主流程
     from enum import Enum
     from dataclasses import dataclass
@@ -33,9 +34,9 @@ except ImportError:
         type: EventType = EventType.GENERIC
         description: str = ""
         turn: int = 0
-        metadata: Dict[str, Any] = None
+        metadata: Dict[str, Any] | None = None
         
-        def __post_init__(self):
+        def __post_init__(self) -> None:
             if self.metadata is None:
                 self.metadata = {}
         
@@ -76,10 +77,11 @@ class EventSystem:
         """
         results = []
         for evt in self.events:
+            meta = getattr(evt, "metadata", getattr(evt, "meta", {})) or {}
             results.append({
                 "event_name": getattr(evt, "description", "event"),
                 "messages": [evt.description] if getattr(evt, "description", "") else [],
-                "effects_applied": evt.metadata.get("effects", []) if evt.metadata else []
+                "effects_applied": meta.get("effects", [])
             })
         return results
 

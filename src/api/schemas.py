@@ -263,16 +263,14 @@ def validate_turn_plan(plan: TurnPlan) -> List[str]:
 # === 兼容性垫片 (Compatibility Shims) ===
 # 为了保持向后兼容，在这里添加旧测试期望的类型定义
 
-try:
-    from src.models.npc import NPCState  # 尝试从新位置导入
-except ImportError:
-    # 简易回退定义，保证字段存在，供测试用
-    from typing import TypedDict
+from typing import TypedDict
 
-    class NPCState(TypedDict):
-        name: str
-        fear: int
-        sanity: int
-        location: str
-        status: Literal["normal", "frightened", "dead"]
-        traits: Optional[List[str]]
+
+class NPCState(TypedDict):
+    """Simplified NPC state for API compatibility"""
+    name: str
+    fear: int
+    sanity: int
+    location: str
+    status: Literal["normal", "frightened", "dead"]
+    traits: Optional[List[str]]
