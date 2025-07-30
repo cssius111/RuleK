@@ -4,7 +4,6 @@ AI Prompt 模板管理
 """
 from jinja2 import Environment, BaseLoader
 from typing import List, Dict, Any, Tuple
-from datetime import datetime
 
 
 # ========== System Prompts ==========

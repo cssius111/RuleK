@@ -1,7 +1,7 @@
 """
 实现简单的自定义规则创建功能
 """
-from src.models.rule import Rule, TriggerCondition, RuleEffect, EffectType, LocationType
+from src.models.rule import Rule, TriggerCondition, RuleEffect, EffectType
 import uuid
 
 async def create_custom_rule_enhanced():

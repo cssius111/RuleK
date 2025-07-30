@@ -2,7 +2,7 @@
 叙事生成器
 生成恐怖氛围的游戏叙事
 """
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 import random
 
 
@@ -62,7 +62,7 @@ class Narrator:
                     min_len=200,
                 )
                 return narrative
-            except Exception as e:
+            except Exception:
                 # 如果AI失败，使用模板生成
                 pass
         

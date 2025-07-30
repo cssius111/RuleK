@@ -2,7 +2,7 @@
 对话系统
 生成NPC之间的对话
 """
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 import random
 from enum import Enum
 from dataclasses import dataclass
@@ -112,7 +112,7 @@ class DialogueSystem:
                         "text": turn.text
                     })
                 return result
-            except Exception as e:
+            except Exception:
                 # 如果AI失败，使用模板生成
                 pass
         

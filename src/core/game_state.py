@@ -642,7 +642,7 @@ class GameStateManager:
                 npc = generate_random_npc(name)
                 npc_dict = npc.__dict__ if hasattr(npc, '__dict__') else npc
                 self.add_npc(npc_dict)
-        except ImportError as e:
+        except ImportError:
             # 如果无法导入NPC模块，创建简单的NPC
             for i, name in enumerate(["张三", "李四", "王五"]):
                 simple_npc = {

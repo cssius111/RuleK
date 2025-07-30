@@ -2,7 +2,7 @@
 NPC系统数据模型
 定义NPC的属性、行为和状态
 """
-from pydantic import BaseModel, ConfigDict, field_validator, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Dict, List, Optional, Any
 from enum import Enum
 import random
