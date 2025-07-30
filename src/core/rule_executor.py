@@ -48,12 +48,14 @@ class RuleExecutor:
     
     def __init__(self, game_manager: GameStateManager):
         self.game_manager = game_manager
-        self.execution_history = defaultdict(list)  # 规则执行历史
-        self.cooldowns = {}  # 规则冷却时间
+        self.execution_history: Dict[str, List[Any]] = defaultdict(list)
+        self.cooldowns: Dict[str, int] = {}
         self.side_effect_manager = SideEffectManager()  # 副作用管理器
         
     def check_all_rules(self, context: RuleContext) -> List[Tuple[Rule, float]]:
         """检查所有可能触发的规则"""
+        if self.game_manager.state is None:
+            return []
         triggered_rules = []
         
         for rule_id in self.game_manager.state.active_rules:
@@ -194,8 +196,8 @@ class RuleExecutor:
         # 这里可以实现各种特殊条件
         condition_checks = {
             "lights_off": lambda: not context.game_state.get("lights_on", True),
-            "alone": lambda: len(self.game_manager.get_npcs_in_location(context.actor_location)) == 1,
-            "multiple_people": lambda: len(self.game_manager.get_npcs_in_location(context.actor_location)) > 1,
+            "alone": lambda: len(self.game_manager.get_npcs_in_location(context.actor_location or "")) == 1,
+            "multiple_people": lambda: len(self.game_manager.get_npcs_in_location(context.actor_location or "")) > 1,
             "low_sanity": lambda: context.actor.get("sanity", 100) < 50,
             "high_fear": lambda: context.actor.get("fear", 0) > 50,
         }
@@ -279,31 +281,40 @@ class RuleExecutor:
             )
             
         # 处理死亡
-        if result.get("target_died"):
-            self.game_manager.update_npc(context.actor_id, {
-                "alive": False,
-                "hp": 0,
-                "death_cause": rule.name,
-                "death_turn": self.game_manager.state.turn
-            })
+        if result.get("target_died") and context.actor_id:
+            if self.game_manager.state:
+                self.game_manager.update_npc(
+                    context.actor_id,
+                    {
+                        "alive": False,
+                        "hp": 0,
+                        "death_cause": rule.name,
+                        "death_turn": self.game_manager.state.turn,
+                    },
+                )
             
         # 处理理智损失
         if result.get("sanity_loss"):
             new_sanity = max(0, context.actor.get("sanity", 100) - result["sanity_loss"])
-            self.game_manager.update_npc(context.actor_id, {"sanity": new_sanity})
+            if context.actor_id:
+                self.game_manager.update_npc(context.actor_id, {"sanity": new_sanity})
             
             # 理智归零处理
-            if new_sanity <= 0:
-                self.game_manager.update_npc(context.actor_id, {
-                    "alive": False,
-                    "death_cause": "精神崩溃",
-                    "death_turn": self.game_manager.state.turn
-                })
+                if new_sanity <= 0 and context.actor_id and self.game_manager.state:
+                    self.game_manager.update_npc(
+                        context.actor_id,
+                        {
+                            "alive": False,
+                            "death_cause": "精神崩溃",
+                            "death_turn": self.game_manager.state.turn,
+                        },
+                    )
                 
         # 处理传送效果
         if rule.effect.type == EffectType.TELEPORT:
             target_location = rule.effect.params.get("target_location", "living_room")
-            self.game_manager.update_npc(context.actor_id, {"location": target_location})
+            if context.actor_id:
+                self.game_manager.update_npc(context.actor_id, {"location": target_location})
             
         # 处理副作用
         for side_effect in result.get("side_effects", []):
@@ -413,22 +424,30 @@ class RuleExecutor:
         
     def get_execution_stats(self) -> Dict[str, Any]:
         """获取规则执行统计"""
-        stats = {
+        stats: Dict[str, Any] = {
             "total_executions": sum(len(history) for history in self.execution_history.values()),
             "rules_triggered": len(self.execution_history),
             "most_triggered": None,
-            "cooldowns_active": len(self.cooldowns)
+            "cooldowns_active": len(self.cooldowns),
         }
         
         # 找出触发最多的规则
         if self.execution_history:
-            most_triggered_id = max(self.execution_history.keys(), 
-                                   key=lambda k: len(self.execution_history[k]))
-            rule = self.game_manager.rules.get(most_triggered_id)
-            if rule:
+            most_triggered_id = max(
+                self.execution_history.keys(), key=lambda k: len(self.execution_history[k])
+            )
+            rule = next(
+                (
+                    r
+                    for r in self.game_manager.rules
+                    if getattr(r, "id", None) == most_triggered_id
+                ),
+                None,
+            )
+            if rule is not None:
                 stats["most_triggered"] = {
                     "name": rule.name,
-                    "count": len(self.execution_history[most_triggered_id])
+                    "count": len(self.execution_history[most_triggered_id]),
                 }
                 
         return stats
@@ -442,6 +461,8 @@ if __name__ == "__main__":
     # 创建游戏管理器
     game_manager = GameStateManager()
     game_manager.new_game()
+
+    assert game_manager.state is not None
     
     # 创建测试规则
     test_rule = Rule(

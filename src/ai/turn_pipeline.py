@@ -3,7 +3,7 @@ AI 驱动的回合管线
 处理对话生成、行动规划、规则评估等核心 AI 功能
 """
 import logging
-from typing import Dict, Any, List, Optional, TYPE_CHECKING
+from typing import Dict, Any, List, Optional, TYPE_CHECKING, Literal, cast
 import random
 
 from src.api.schemas import (
@@ -259,7 +259,10 @@ class AITurnPipeline:
         
         context = SceneContext(
             current_location="恐怖空间",  # TODO: 实现具体位置系统
-            time_of_day=state.time_of_day,
+            time_of_day=cast(
+                Literal["morning", "afternoon", "evening", "night"],
+                state.time_of_day,
+            ),
             recent_events=recent_events,
             active_rules=active_rule_names,
             ambient_fear_level=self._calculate_ambient_fear(),
