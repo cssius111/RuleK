@@ -329,21 +329,30 @@ class GameStateManager:
         
     def change_phase(self, new_phase: GamePhase):
         """改变游戏阶段"""
-        old_phase = self.state.phase
-        self.state.phase = new_phase
+        if self.state is None:
+            raise RuntimeError("游戏未初始化")
+        state: GameState = self.state
+        old_phase = state.phase
+        state.phase = new_phase
         self.log(f"阶段转换: {old_phase.value} → {new_phase.value}")
         
     def add_fear_points(self, amount: int, source: str = "unknown"):
         """增加恐惧点数"""
-        self.state.fear_points += amount
-        self.state.total_fear_gained += amount
+        if self.state is None:
+            raise RuntimeError("游戏未初始化")
+        state: GameState = self.state
+        state.fear_points += amount
+        state.total_fear_gained += amount
         self.log(f"获得 {amount} 恐惧点数 (来源: {source})")
         self._trigger_event("fear_gained", {"amount": amount, "source": source})
         
     def spend_fear_points(self, amount: int) -> bool:
         """消耗恐惧点数"""
-        if self.state.fear_points >= amount:
-            self.state.fear_points -= amount
+        if self.state is None:
+            raise RuntimeError("游戏未初始化")
+        state: GameState = self.state
+        if state.fear_points >= amount:
+            state.fear_points -= amount
             return True
         return False
         
@@ -377,12 +386,14 @@ class GameStateManager:
                 
     def remove_npc(self, npc_id: str):
         """移除NPC（死亡）"""
+        if self.state is None:
+            raise RuntimeError("游戏未初始化")
+        state: GameState = self.state
         for i, npc in enumerate(self.npcs):
             if npc.get("id") == npc_id:
                 dead_npc = self.npcs.pop(i)
-                if self.state:
-                    self.state.npcs.pop(npc_id, None)
-                self.state.npcs_died += 1
+                state.npcs.pop(npc_id, None)
+                state.npcs_died += 1
                 self.log(f"NPC [{dead_npc['name']}] 已死亡")
                 self._trigger_event("npc_died", {"npc": dead_npc})
                 break
@@ -416,6 +427,8 @@ class GameStateManager:
         
     def get_time_display(self) -> str:
         """获取时间显示文本"""
+        if self.state is None:
+            return "未知"
         time_map = {
             "morning": "早晨 ☀️",
             "afternoon": "下午 🌤️",
@@ -466,13 +479,16 @@ class GameStateManager:
         
     def get_summary(self) -> Dict[str, Any]:
         """获取游戏总结"""
+        if self.state is None:
+            raise RuntimeError("游戏未初始化")
+        state: GameState = self.state
         return {
             "turns_played": self.current_turn,
-            "fear_points_final": self.state.fear_points,
-            "total_fear_gained": self.state.total_fear_gained,
-            "npcs_died": self.state.npcs_died,
+            "fear_points_final": state.fear_points,
+            "total_fear_gained": state.total_fear_gained,
+            "npcs_died": state.npcs_died,
             "rules_created": len(self.rules),
-            "rules_triggered": self.state.rules_triggered,
+            "rules_triggered": state.rules_triggered,
             "survival_rate": f"{len(self.get_active_npcs())}/{len(self.npcs)}"
         }
     

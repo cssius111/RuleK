@@ -15,7 +15,7 @@ from src.models.event import Event, EventType
 
 if TYPE_CHECKING:
     from src.api.deepseek_client import DeepSeekClient
-    from src.core.game_state import GameStateManager
+    from src.core.game_state import GameStateManager, GameState
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +110,10 @@ class AITurnPipeline:
             str: 叙事文本
         """
         try:
-            current_turn = self.game_mgr.state.current_turn
+            if self.game_mgr.state is None:
+                raise RuntimeError("游戏状态未初始化")
+            state: GameState = self.game_mgr.state
+            current_turn = state.current_turn
             
             # 检查缓存
             if current_turn in self.narrative_cache and not include_hidden_events:
@@ -140,7 +143,7 @@ class AITurnPipeline:
             
             narrative = await self.ds_client.generate_narrative_text(
                 events=event_descriptions,
-                time_of_day=self.game_mgr.state.time_of_day,
+                time_of_day=state.time_of_day,
                 survivor_count=survivor_count,
                 ambient_fear=self._calculate_ambient_fear(),
                 min_len=200
@@ -229,7 +232,9 @@ class AITurnPipeline:
     
     def _prepare_scene_context(self) -> Dict[str, Any]:
         """准备场景上下文"""
-        state = self.game_mgr.state
+        if self.game_mgr.state is None:
+            raise RuntimeError("游戏状态未初始化")
+        state: GameState = self.game_mgr.state
         
         # 获取最近事件描述
         recent_events = []
@@ -279,12 +284,15 @@ class AITurnPipeline:
     
     async def _process_dialogue(self, dialogue_turns: List[DialogueTurn]):
         """处理对话回合"""
+        if self.game_mgr.state is None:
+            raise RuntimeError("游戏状态未初始化")
+        state: GameState = self.game_mgr.state
         for turn in dialogue_turns:
             # 创建对话事件
             event = Event(
                 type=EventType.NPC_DIALOGUE,
                 description=f"{turn.speaker}: {turn.text}",
-                turn=self.game_mgr.state.current_turn,
+                turn=state.current_turn,
                 meta={
                     "speaker": turn.speaker,
                     "text": turn.text,
@@ -293,7 +301,7 @@ class AITurnPipeline:
             )
             
             # 添加到事件历史（转换为dict格式）
-            self.game_mgr.state.events_history.append(event.to_dict())
+            state.events_history.append(event.to_dict())
             
             # 记录日志
             emotion_emoji = {
@@ -370,13 +378,16 @@ class AITurnPipeline:
     
     async def _handle_move(self, npc: Dict[str, Any], action: PlannedAction):
         """处理移动行动"""
+        if self.game_mgr.state is None:
+            raise RuntimeError("游戏状态未初始化")
         npc["location"] = action.target
-        
+
         # 更新游戏状态
         self.game_mgr.update_npc(npc["id"], {"location": action.target})
-        
+
         # 可能触发位置相关事件
-        if action.target == "地下室" and self.game_mgr.state.time_of_day == "night":
+        state: GameState = self.game_mgr.state
+        if action.target == "地下室" and state.time_of_day == "night":
             npc["fear"] = min(100, npc.get("fear", 0) + 10)
             self.game_mgr.update_npc(npc["id"], {"fear": npc["fear"]})
     
@@ -528,10 +539,13 @@ class AITurnPipeline:
     
     def _collect_turn_events(self, include_hidden: bool) -> List[Any]:
         """收集本回合的事件"""
-        current_turn = self.game_mgr.state.current_turn
+        if self.game_mgr.state is None:
+            raise RuntimeError("游戏状态未初始化")
+        state: GameState = self.game_mgr.state
+        current_turn = state.current_turn
         turn_events = []
-        
-        for event in reversed(self.game_mgr.state.events_history):
+
+        for event in reversed(state.events_history):
             # 判断事件的回合
             if hasattr(event, "turn"):
                 event_turn = event.turn
@@ -557,23 +571,29 @@ class AITurnPipeline:
     
     def _save_narrative(self, narrative: str):
         """保存叙事文本"""
+        if self.game_mgr.state is None:
+            raise RuntimeError("游戏状态未初始化")
+        state: GameState = self.game_mgr.state
         event = Event(
             type=EventType.NARRATIVE,
             description=narrative,
-            turn=self.game_mgr.state.current_turn,
+            turn=state.current_turn,
             meta={"is_narrative": True}
         )
-        self.game_mgr.state.events_history.append(event.to_dict())
+        state.events_history.append(event.to_dict())
     
     def _create_event(self, event_type: EventType, description: str, meta: Dict[str, Any] = None):
         """创建并记录事件"""
+        if self.game_mgr.state is None:
+            raise RuntimeError("游戏状态未初始化")
+        state: GameState = self.game_mgr.state
         event = Event(
             type=event_type,
             description=description,
-            turn=self.game_mgr.state.current_turn,
+            turn=state.current_turn,
             meta=meta or {}
         )
-        self.game_mgr.state.events_history.append(event.to_dict())
+        state.events_history.append(event.to_dict())
         self.game_mgr.log(description)
     
     def _log_action_event(self, npc: Dict[str, Any], action: PlannedAction):
@@ -612,7 +632,9 @@ class AITurnPipeline:
     
     def _prepare_world_context(self) -> Dict[str, Any]:
         """为规则评估准备世界上下文"""
-        state = self.game_mgr.state
+        if self.game_mgr.state is None:
+            raise RuntimeError("游戏状态未初始化")
+        state: GameState = self.game_mgr.state
         
         # 计算平均恐惧值
         alive_npcs = self.game_mgr.get_alive_npcs()

@@ -263,7 +263,6 @@ def validate_turn_plan(plan: TurnPlan) -> List[str]:
 # === 兼容性垫片 (Compatibility Shims) ===
 # 为了保持向后兼容，在这里添加旧测试期望的类型定义
 
-from typing import TypedDict
 
 
 class NPCState(TypedDict):
