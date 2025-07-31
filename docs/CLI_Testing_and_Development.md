@@ -131,8 +131,8 @@ tests/cli/
 
 ### 执行测试命令
 ```bash
-# 运行CLI特定测试
-pytest tests/cli/test_cli_game.py -v
+# 运行CLI测试套件
+pytest tests/cli -v
 
 # 预期输出（模拟）：
 # tests/cli/test_cli_game.py::TestMainMenu::test_new_game_creation_success PASSED
@@ -144,7 +144,7 @@ pytest tests/cli/test_cli_game.py -v
 pytest tests -v
 
 # 生成覆盖率报告
-pytest tests/cli/test_cli_game.py --cov=src.cli_game --cov-report=html
+pytest tests/cli --cov=src.cli_game --cov-report=html
 # 预期覆盖率: 90%+
 
 # 手动测试CLI
@@ -212,7 +212,7 @@ python src/cli_game.py
 
 ## 🚀 下一步骤
 
-1. **运行测试**: `pytest tests/cli/test_cli_game.py -v`
+1. **运行测试**: `pytest tests/cli -v`
 2. **手动测试CLI**: `python src/cli_game.py`
 3. **检查Web兼容性**: `./start.sh`
 
