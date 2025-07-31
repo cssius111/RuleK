@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 
 from .enums import GamePhase, GameMode
+from .environment import EnvironmentService
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -112,6 +113,7 @@ class GameStateManager:
         self.npcs: List[Dict[str, Any]] = []
         self.spirits: List[Dict[str, Any]] = []
         self.game_log: List[str] = []
+        self.environment = EnvironmentService()
         
         # 配置
         self.config = config or {}

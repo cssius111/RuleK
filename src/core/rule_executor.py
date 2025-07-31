@@ -359,9 +359,12 @@ class RuleExecutor:
             
     def _add_scene_effect(self, location: str, effect: str) -> bool:
         """添加场景效果"""
-        # TODO: 接入真实场景系统
+        if hasattr(self.game_manager, "environment"):
+            result = self.game_manager.environment.add_scene_effect(location, effect)
+        else:
+            result = False
         logger.info(f"场景效果: {location} - {effect}")
-        return True
+        return result
         
     def _alert_nearby_npcs(self, location: str):
         """警告附近的NPC"""
@@ -374,16 +377,20 @@ class RuleExecutor:
             
     def _change_room_temp(self, location: str, change: int) -> bool:
         """改变房间温度"""
-        # TODO: 接入真实环境系统
+        if hasattr(self.game_manager, "environment"):
+            result = self.game_manager.environment.change_room_temp(location, change)
+        else:
+            result = False
         logger.info(f"温度变化: {location} {change:+d}°C")
-        return True
-        
+        return result
     def _trigger_light_event(self, location: str) -> bool:
         """触发灯光事件"""
-        # TODO: 接入真实灯光系统
+        if hasattr(self.game_manager, "environment"):
+            result = self.game_manager.environment.trigger_light_event(location)
+        else:
+            result = False
         logger.info(f"灯光闪烁: {location}")
-        return True
-        
+        return result
     def update_cooldowns(self):
         """更新所有规则的冷却时间"""
         for rule_id in list(self.cooldowns.keys()):
