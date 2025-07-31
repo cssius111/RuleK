@@ -27,6 +27,9 @@ fastapi==0.104.1
 uvicorn[standard]==0.24.0
 websockets==12.0
 
+# 数据库迁移
+alembic==1.16.4
+
 # 注意事项：
 # 1. Python 3.7+ 必需（使用了asyncio）
 # 2. 大部分功能使用Python标准库
