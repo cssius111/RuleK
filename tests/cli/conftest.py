@@ -5,6 +5,9 @@ import pytest
 import asyncio
 from pathlib import Path
 import shutil
+from src.cli_game import CLIGame
+from src.core.rule_executor import RuleExecutor
+from src.core.npc_behavior import NPCBehavior
 
 
 @pytest.fixture
@@ -59,6 +62,23 @@ def mock_input_sequence(monkeypatch):
     sequence = InputSequence()
     monkeypatch.setattr("builtins.input", sequence)
     return sequence
+
+
+@pytest.fixture
+def cli_game():
+    """创建CLI游戏实例，测试模式下运行"""
+    game = CLIGame()
+    game.clear_screen = lambda: None
+    return game
+
+
+@pytest.fixture
+def initialized_game(cli_game):
+    """创建已初始化的游戏实例"""
+    cli_game.game_manager.new_game("test_game")
+    cli_game.rule_executor = RuleExecutor(cli_game.game_manager)
+    cli_game.npc_behavior = NPCBehavior(cli_game.game_manager)
+    return cli_game
 
 
 # 确保测试时不清屏
