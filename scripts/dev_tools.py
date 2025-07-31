@@ -139,9 +139,32 @@ def generate_api_docs():
 def create_migration():
     """创建数据迁移脚本"""
     print("🔄 创建数据迁移...")
-    
-    # TODO: 实现数据迁移功能
-    print("⚠️  数据迁移功能开发中...")
+
+    import importlib.util
+
+    if importlib.util.find_spec("alembic") is None:
+        print("❌ 未安装 Alembic，请运行: pip install alembic")
+        return False
+
+    alembic_ini = project_root / "alembic.ini"
+    try:
+        if not alembic_ini.exists():
+            subprocess.run(["alembic", "init", "migrations"], check=True, cwd=project_root)
+            print("✅ Alembic 已初始化")
+
+        message = input("迁移描述: ").strip() or "auto migration"
+
+        subprocess.run(
+            ["alembic", "revision", "--autogenerate", "-m", message],
+            check=True,
+            cwd=project_root,
+        )
+        subprocess.run(["alembic", "upgrade", "head"], check=True, cwd=project_root)
+        print("✅ 迁移脚本已创建并应用")
+    except subprocess.CalledProcessError:
+        print("❌ 数据迁移失败")
+        return False
+
     return True
 
 

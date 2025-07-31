@@ -157,6 +157,15 @@ python rulek.py test unit
 python rulek.py test integration
 ```
 
+### 数据库迁移
+
+安装 Alembic 后可执行：
+
+```bash
+pip install alembic              # 如未安装
+python scripts/dev_tools.py migrate
+```
+
 ## 🔧 配置
 
 ### 环境变量
