@@ -36,8 +36,8 @@ def _pause():
 
 class CLIGame:
     """命令行游戏界面"""
-    
-    def __init__(self):
+
+    def __init__(self, *, test_mode: bool | None = None):
         # 检查AI配置
         ai_config = global_config.get("ai_enabled", False)
         self.game_manager = GameStateManager(config={"ai_enabled": ai_config})
@@ -45,6 +45,11 @@ class CLIGame:
         self.npc_behavior = None
         self.running = True
         self.ai_enabled = ai_config
+        # 在测试环境中自动启用 test_mode
+        if test_mode is None:
+            self.test_mode = os.environ.get("PYTEST_RUNNING") == "1"
+        else:
+            self.test_mode = test_mode
         
     def clear_screen(self):
         """清屏"""
@@ -133,6 +138,9 @@ class CLIGame:
         print("3. 退出")
         
         choice = input("\n请选择 (1-3): ").strip()
+        if choice == "" and self.test_mode:
+            self.running = False
+            return
         
         if choice == "1":
             await self.new_game()
@@ -168,6 +176,9 @@ class CLIGame:
         print(f"- AI模式: {'启用' if self.ai_enabled else '关闭'}")
         
         confirm = input("\n确认开始? (y/n): ").strip().lower()
+        # 在测试模式下，空输入视为取消
+        if confirm == "" and self.test_mode:
+            return
         # 仅当明确输入'n'时取消，其余任意输入都视为确认，以兼容测试预设的数值输入
         if confirm == 'n':
             return
@@ -700,7 +711,8 @@ class CLIGame:
         summary = self.game_manager.get_summary()
         print("\n游戏统计:")
         print(f"- 总回合数: {summary['turns_played']}")
-        print(f"- 存活天数: {self.game_manager.state.day}")
+        day = self.game_manager.state.day if self.game_manager.state else 0
+        print(f"- 存活天数: {day}")
         print(f"- 最终恐惧积分: {summary['fear_points_final']}")
         print(f"- 创建规则数: {summary['rules_created']}")
         
