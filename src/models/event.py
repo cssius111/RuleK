@@ -14,16 +14,16 @@ from datetime import datetime, UTC
 class EventType(str, Enum):
     """游戏内支持的事件类型"""
 
-    NPC_DIALOGUE = "npc_dialogue"          # NPC 说话
-    NPC_ACTION   = "npc_action"            # NPC 行动
-    RULE_TRIGGER = "rule_triggered"        # 规则触发
-    FEAR_GAIN    = "fear_gained"           # 恐惧积分变化
-    NPC_DEATH    = "npc_death"             # NPC 死亡
-    SYSTEM       = "system"                # 系统提示、存档等
-    NARRATION    = "narration"             # AI 生成叙事
-    NARRATIVE    = "narrative"             # AI 生成叙事（别名）
-    ITEM_FOUND   = "item_found"            # 发现物品
-    CLUE_FOUND   = "clue_found"            # 发现线索
+    NPC_DIALOGUE = "npc_dialogue"  # NPC 说话
+    NPC_ACTION = "npc_action"  # NPC 行动
+    RULE_TRIGGER = "rule_triggered"  # 规则触发
+    FEAR_GAIN = "fear_gained"  # 恐惧积分变化
+    NPC_DEATH = "npc_death"  # NPC 死亡
+    SYSTEM = "system"  # 系统提示、存档等
+    NARRATION = "narration"  # AI 生成叙事
+    NARRATIVE = "narrative"  # AI 生成叙事（别名）
+    ITEM_FOUND = "item_found"  # 发现物品
+    CLUE_FOUND = "clue_found"  # 发现线索
 
 
 @dataclass
@@ -42,7 +42,7 @@ class Event:
     type: EventType
     description: str
     turn: int
-    
+
     # 可选字段（有默认值）
     id: str = field(default_factory=lambda: f"evt_{uuid.uuid4().hex[:8]}")
     game_time: Optional[str] = None

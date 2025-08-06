@@ -47,9 +47,9 @@ python rulek.py test
 
 ### 代码风格
 
-- Python: 遵循 PEP 8，使用 `ruff` 进行格式化
+- Python: 遵循 PEP 8，使用 `ruff` 和 `black` 进行格式化
 - TypeScript/Vue: 使用项目配置的 ESLint 规则
-- 提交前运行: `python scripts/dev_tools.py check`
+- 提交前运行: `pre-commit run --all-files` 和 `python scripts/dev_tools.py check`
 
 ### 提交信息格式
 
@@ -99,6 +99,7 @@ Closes #123
 
 1. **确保代码质量**
    ```bash
+   pre-commit run --all-files
    python scripts/dev_tools.py check
    ```
 

@@ -1,6 +1,7 @@
 from collections import defaultdict
 from typing import Dict, List
 
+
 class EnvironmentService:
     """管理游戏世界环境状态"""
 

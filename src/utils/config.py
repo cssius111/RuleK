@@ -141,7 +141,9 @@ def load_config(path: str | None = None) -> Config:
                     config._config.update(data)
                     logger.info("Loaded custom config from %s", path)
                 else:
-                    logger.warning("Config file %s does not contain a JSON object", path)
+                    logger.warning(
+                        "Config file %s does not contain a JSON object", path
+                    )
             except Exception as exc:  # pragma: no cover - file reading errors
                 logger.error("Failed to load custom config: %s", exc)
         else:

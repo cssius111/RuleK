@@ -184,13 +184,14 @@ RULE_EVAL_USER = """【玩家提出的规则】
 
 # ========== Prompt Manager ==========
 
+
 class PromptManager:
     """Prompt模板管理器"""
-    
+
     def __init__(self, language: str = "zh"):
         """
         初始化Prompt管理器
-        
+
         Args:
             language: 语言设置，目前支持 "zh"（中文）
         """
@@ -200,11 +201,12 @@ class PromptManager:
     def validate_json_response(self, text: str, schema_name: str):
         """Basic JSON response validator used in tests."""
         import json
+
         try:
             return True, json.loads(text), None
         except Exception as e:
             return False, None, str(e)
-        
+
     def build_turn_plan_prompt(
         self,
         npcs: List[Dict[str, Any]],
@@ -214,22 +216,17 @@ class PromptManager:
         available_places: List[str],
         active_rules: Optional[List[str]] = None,
         special_conditions: Optional[List[str]] = None,
-        ambient_fear: int = 50
+        ambient_fear: int = 50,
     ) -> Tuple[str, str]:
         """
         构建回合计划的prompt
-        
+
         Returns:
             (system_prompt, user_prompt) 元组
         """
         # 时间映射
-        time_map = {
-            "morning": "清晨",
-            "afternoon": "下午", 
-            "evening": "傍晚",
-            "night": "深夜"
-        }
-        
+        time_map = {"morning": "清晨", "afternoon": "下午", "evening": "傍晚", "night": "深夜"}
+
         template = self.env.from_string(TURN_PLAN_USER)
         user_prompt = template.render(
             npcs=npcs,
@@ -239,43 +236,38 @@ class PromptManager:
             available_places=available_places,
             active_rules=active_rules or [],
             special_conditions=special_conditions or [],
-            ambient_fear=ambient_fear
+            ambient_fear=ambient_fear,
         )
-        
+
         return TURN_PLAN_SYSTEM, user_prompt
-    
+
     def build_narrative_prompt(
         self,
         events: List[str],
         time_of_day: str,
         survivor_count: int,
         ambient_fear: int = 50,
-        special_conditions: Optional[List[str]] = None
+        special_conditions: Optional[List[str]] = None,
     ) -> Tuple[str, str]:
         """
         构建叙事生成的prompt
-        
+
         Returns:
             (system_prompt, user_prompt) 元组
         """
-        time_map = {
-            "morning": "清晨",
-            "afternoon": "下午",
-            "evening": "傍晚", 
-            "night": "深夜"
-        }
-        
+        time_map = {"morning": "清晨", "afternoon": "下午", "evening": "傍晚", "night": "深夜"}
+
         template = self.env.from_string(NARRATIVE_USER)
         user_prompt = template.render(
             events=events,
             time_of_day=time_map.get(time_of_day, time_of_day),
             survivor_count=survivor_count,
             ambient_fear=ambient_fear,
-            special_conditions=special_conditions or []
+            special_conditions=special_conditions or [],
         )
-        
+
         return NARRATIVE_SYSTEM, user_prompt
-    
+
     def build_rule_eval_prompt(
         self,
         rule_draft: Dict[str, Any],
@@ -305,34 +297,22 @@ class PromptManager:
         if hasattr(event, "description"):
             return getattr(event, "description")
         return str(event)
-    
+
     def format_time_chinese(self, time_of_day: str) -> str:
         """将英文时间段转换为中文"""
-        time_map = {
-            "morning": "清晨",
-            "afternoon": "下午",
-            "evening": "傍晚",
-            "night": "深夜"
-        }
+        time_map = {"morning": "清晨", "afternoon": "下午", "evening": "傍晚", "night": "深夜"}
         return time_map.get(time_of_day, time_of_day)
 
 
 # ========== 工具函数 ==========
 
+
 def create_mock_turn_plan() -> Dict[str, Any]:
     """创建模拟的回合计划（用于测试或降级）"""
     return {
         "dialogue": [
-            {
-                "speaker": "张三",
-                "text": "这地方越来越诡异了，我们得想办法离开。",
-                "emotion": "fear"
-            },
-            {
-                "speaker": "李四",
-                "text": "先别慌，我们分头找找有没有其他出路。",
-                "emotion": "calm"
-            }
+            {"speaker": "张三", "text": "这地方越来越诡异了，我们得想办法离开。", "emotion": "fear"},
+            {"speaker": "李四", "text": "先别慌，我们分头找找有没有其他出路。", "emotion": "calm"},
         ],
         "actions": [
             {
@@ -340,7 +320,7 @@ def create_mock_turn_plan() -> Dict[str, Any]:
                 "action": "search",
                 "target": "客厅的柜子",
                 "reason": "寻找可能的线索或工具",
-                "priority": "high"
+                "priority": "high",
             },
             {
                 "npc": "李四",
@@ -348,10 +328,10 @@ def create_mock_turn_plan() -> Dict[str, Any]:
                 "target": "奇怪的声音来源",
                 "reason": "确认潜在威胁",
                 "risk": "可能遭遇危险",
-                "priority": "medium"
-            }
+                "priority": "medium",
+            },
         ],
-        "atmosphere": "空气中弥漫着不安的气息，每个人都能感受到潜伏的危险。"
+        "atmosphere": "空气中弥漫着不安的气息，每个人都能感受到潜伏的危险。",
     }
 
 
@@ -372,20 +352,16 @@ def create_mock_rule_eval() -> Dict[str, Any]:
         "trigger": {
             "type": "compound",
             "conditions": ["时间是午夜", "照镜子超过3秒"],
-            "probability": 0.7
+            "probability": 0.7,
         },
         "effect": {
             "type": "custom",
-            "params": {
-                "sanity_loss": 30,
-                "fear_gain": 50,
-                "special": "镜像替换"
-            },
-            "description": "被镜中的邪恶分身替换"
+            "params": {"sanity_loss": 30, "fear_gain": 50, "special": "镜像替换"},
+            "description": "被镜中的邪恶分身替换",
         },
         "cooldown": 3,
         "cost": 150,
         "difficulty": 6,
         "loopholes": ["闭着眼睛经过镜子", "用布遮住所有镜子"],
-        "suggestion": "可以增加更多触发条件，比如需要说出特定词语，增加规则的策略深度"
+        "suggestion": "可以增加更多触发条件，比如需要说出特定词语，增加规则的策略深度",
     }

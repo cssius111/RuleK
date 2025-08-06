@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 
 from .rule import Rule
 
+
 class RuleManager:
     """Minimal rule manager for handling rules"""
 

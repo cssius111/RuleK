@@ -34,17 +34,11 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install ruff mypy pytest-cov
-    
-    - name: Lint with ruff
+        pip install pre-commit pytest-cov
+
+    - name: Run pre-commit
       run: |
-        # 检查代码风格
-        ruff check src/ --fix --exit-non-zero-on-fix
-    
-    - name: Type check with mypy
-      run: |
-        # 类型检查
-        mypy src/ --ignore-missing-imports || true
+        pre-commit run --all-files
     
     - name: Test with pytest
       env:
