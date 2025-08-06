@@ -427,8 +427,22 @@ class CLIGame:
             if self.game_manager.state.fear_points >= result['cost']:
                 confirm = input("\n确认创建此规则? (y/n): ").strip().lower()
                 if confirm == 'y':
-                    # TODO: 实现规则创建逻辑
-                    print("✅ 规则创建功能即将实现！")
+                    rule_data = {
+                        "name": result["name"],
+                        "description": rule_description,
+                        "level": result.get("difficulty", 1),
+                        "trigger": {"action": "custom"},
+                        "effect": {
+                            "type": "fear_gain",
+                            "fear_gain": result.get("estimated_fear_gain", 0)
+                        },
+                        "base_cost": result["cost"],
+                    }
+                    rule_id = self.game_manager.create_rule(rule_data)
+                    if rule_id:
+                        print("✅ 规则创建成功！")
+                    else:
+                        print("❌ 规则创建失败！")
             else:
                 print(f"\n❌ 恐惧积分不足！需要 {result['cost']}，当前只有 {self.game_manager.state.fear_points}")
                 
