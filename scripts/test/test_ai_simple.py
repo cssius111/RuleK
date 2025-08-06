@@ -37,7 +37,7 @@ async def test_basic_imports():
         # 4. 导入其他必要组件
         from src.core.narrator import Narrator
         from src.core.dialogue_system import DialogueSystem
-        from src.core.event_system import EventSystem
+        from src.models.event import Event
         from src.core.npc_behavior import NPCBehavior
         from src.core.rule_executor import RuleExecutor
         logger.info("✅ 所有核心组件导入成功")

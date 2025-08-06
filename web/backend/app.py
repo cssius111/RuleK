@@ -21,7 +21,6 @@ from src.models.rule import Rule
 from src.models.npc import NPC
 from src.core.narrator import Narrator
 from src.core.dialogue_system import DialogueSystem
-from src.core.event_system import EventSystem
 from src.models.map import MapManager
 from src.core.npc_behavior import NPCBehavior
 from src.core.rule_executor import RuleExecutor

@@ -26,13 +26,13 @@ except ImportError:
     print("❌ Narrator 缺失")
     missing_modules.append("Narrator")
 
-# 3. 检查EventSystem
+# 3. 检查事件模型
 try:
-    from src.core.event_system import EventSystem
-    print("✅ EventSystem 存在")
+    from src.models.event import Event
+    print("✅ Event 模型存在")
 except ImportError:
-    print("❌ EventSystem 缺失")
-    missing_modules.append("EventSystem")
+    print("❌ Event 模型缺失")
+    missing_modules.append("Event")
 
 # 4. 检查MapManager
 try:

@@ -14,7 +14,7 @@ from src.models.map import create_default_map
 from src.models.npc import generate_random_npc
 from src.core.dialogue_system import DialogueSystem, DialogueType, DialogueContext
 from src.core.narrator import Narrator, GameEvent, EventSeverity, NarrativeStyle
-from src.core.event_system import EventSystem
+from src.models.event import Event, EventType
 
 
 async def demo():
@@ -81,25 +81,22 @@ async def demo():
     for dialogue in dialogue_entry.dialogues:
         print(f"  {dialogue['speaker']}: {dialogue['text']}")
     
-    # 5. 事件系统演示
-    print("\n⚡ 随机事件系统演示...")
-    event_system = EventSystem()
-    
+    # 5. 事件记录演示
+    print("\n⚡ 事件记录演示...")
     game_state = {
         "current_turn": 5,
         "average_fear": 40,
         "alive_npcs": 3,
         "time_of_day": "night"
     }
-    
-    triggered_events = event_system.check_and_trigger_events(game_state)
-    if triggered_events:
-        for event in triggered_events:
-            print(f"触发事件: {event['event_name']}")
-            if event['messages']:
-                print(f"  描述: {event['messages'][0]}")
-    else:
-        print("  (本回合没有触发事件)")
+    demo_event = Event(
+        type=EventType.SYSTEM,
+        description="一阵冷风吹过，门自行关闭",
+        turn=game_state["current_turn"],
+    )
+    events_log = [demo_event]
+    for evt in events_log:
+        print(f"触发事件: {evt.description}")
     
     # 6. 叙事生成演示
     print("\n📖 叙事生成演示...")
