@@ -8,6 +8,7 @@ import asyncio
 from pathlib import Path
 import json
 from unittest.mock import patch, MagicMock, AsyncMock, call
+from pydantic import ValidationError
 
 from src.cli_game import CLIGame
 from src.core.enums import GamePhase, GameMode
@@ -166,16 +167,26 @@ class TestCustomRuleCreation:
     @pytest.mark.asyncio
     async def test_rule_validation_errors(self, cli_game_with_ai, mock_input_sequence, capsys):
         """测试规则验证错误处理"""
-        # 测试各种无效规则输入
+        # 测试各种无效规则输入及期望的错误类型和信息
         invalid_rules = [
-            {"name": ""},  # 空名称
-            {"name": "测试", "cost": -100},  # 负成本
-            {"name": "测试", "trigger": {}},  # 空触发器
+            # 空名称
+            ({"name": ""}, ValidationError, "at least 1 character"),
+            # 负成本
+            ({"name": "测试", "cost": -100}, ValidationError, "greater than or equal to 0"),
+            # 缺少触发动作
+            ({"name": "测试", "trigger": {}}, ValidationError, "Field required"),
+            # 概率超出范围
+            ({"name": "测试", "trigger": {"action": "do", "probability": 2}}, ValidationError, "less than or equal to 1"),
+            # 无效的效果类型
+            ({"name": "测试", "trigger": {"action": "do"}, "effect": {"type": "unknown"}}, ValidationError, "Input should be"),
+            # 效果字段类型错误
+            ({"name": "测试", "trigger": {"action": "do"}, "effect": "invalid"}, TypeError, "mapping"),
         ]
-        
-        for rule_data in invalid_rules:
-            # 测试验证逻辑
-            pass  # TODO: 实现验证测试
+
+        for rule_data, err_type, msg in invalid_rules:
+            with pytest.raises(err_type) as exc_info:
+                cli_game_with_ai.game_manager.create_rule(rule_data)
+            assert msg in str(exc_info.value)
 
 
 class TestPerformance:
