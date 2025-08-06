@@ -52,9 +52,7 @@ class TurnPlan(BaseModel):
     """回合计划：包含对话和行动"""
 
     dialogue: List[DialogueTurn] = Field(default_factory=list, description="对话列表")
-    actions: List[PlannedAction] = Field(
-        default_factory=list, description="行动计划列表"
-    )
+    actions: List[PlannedAction] = Field(default_factory=list, description="行动计划列表")
     atmosphere: Optional[str] = Field(default=None, description="氛围描述")
 
     model_config = ConfigDict(extra="allow")
@@ -88,9 +86,9 @@ class NarrativeOut(BaseModel):
 class RuleTrigger(BaseModel):
     """规则触发器"""
 
-    type: Literal["action", "time", "location", "dialogue", "event", "compound"] = (
-        Field(description="触发类型")
-    )
+    type: Literal[
+        "action", "time", "location", "dialogue", "event", "compound"
+    ] = Field(description="触发类型")
     conditions: List[str] = Field(default_factory=list, description="触发条件列表")
     probability: float = Field(default=0.8, ge=0.0, le=1.0, description="触发概率")
 
@@ -267,9 +265,9 @@ def validate_turn_plan(plan: TurnPlan) -> List[str]:
 # 为了保持向后兼容，在这里添加旧测试期望的类型定义
 
 
-
 class NPCState(TypedDict):
     """Simplified NPC state for API compatibility"""
+
     name: str
     fear: int
     sanity: int

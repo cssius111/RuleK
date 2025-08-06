@@ -46,9 +46,7 @@ class RuleRequirement(BaseModel):
     items: List[str] = Field(default_factory=list, description="需要的物品")
     areas: List[str] = Field(default_factory=list, description="限定区域")
     min_fear_level: int = Field(0, ge=0, description="最小恐惧等级要求")
-    actor_traits: Dict[str, Any] = Field(
-        default_factory=dict, description="触发者特质要求"
-    )
+    actor_traits: Dict[str, Any] = Field(default_factory=dict, description="触发者特质要求")
 
 
 class RuleEffect(BaseModel):
@@ -112,7 +110,9 @@ class Rule(BaseModel):
     def calculate_total_cost(self) -> int:
         """计算规则总成本"""
         level_modifier = self.level * 50
-        loophole_discount = len([loophole for loophole in self.loopholes if not loophole.patched]) * 20
+        loophole_discount = (
+            len([loophole for loophole in self.loopholes if not loophole.patched]) * 20
+        )
         complexity_cost = (
             len(self.requirements.items) * 10 + len(self.requirements.areas) * 15
         )
@@ -169,9 +169,7 @@ class Rule(BaseModel):
         # 根据效果类型处理
         if self.effect.type == EffectType.INSTANT_DEATH:
             result["target_died"] = True
-            result["messages"].append(
-                f"{target.get('name', '某人')}触发了{self.name}，当场死亡！"
-            )
+            result["messages"].append(f"{target.get('name', '某人')}触发了{self.name}，当场死亡！")
 
         elif self.effect.type == EffectType.SANITY_LOSS:
             loss = self.effect.params.get("amount", 20)
@@ -262,7 +260,7 @@ _DEFAULT_RULE_TEMPLATES: Dict[str, Any] = {
             "params": {
                 "event_type": "conditional_response",
                 "no_response_effect": "instant_death",
-                "response_effect": "spawn_spirit"
+                "response_effect": "spawn_spirit",
             },
             "fear_gain": 60,
         },

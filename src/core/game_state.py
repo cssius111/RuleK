@@ -20,20 +20,23 @@ if TYPE_CHECKING:
 @dataclass
 class GameState:
     """游戏状态数据类"""
+
     # 基础信息
     game_id: str
     started_at: datetime = field(default_factory=datetime.now)
     current_turn: int = 0
     day: int = 1
-    
+
     # 资源
     fear_points: int = 1000
-    
+
     # 游戏阶段
     phase: GamePhase = GamePhase.SETUP
-    time_of_day: Literal["morning", "afternoon", "evening", "night"] = "morning"  # daytime
+    time_of_day: Literal[
+        "morning", "afternoon", "evening", "night"
+    ] = "morning"  # daytime
     mode: GameMode = GameMode.BACKSTAGE
-    
+
     # 统计
     total_fear_gained: int = 0
     npcs_died: int = 0
@@ -72,13 +75,13 @@ class GameState:
     @turn.setter
     def turn(self, value: int):
         self.current_turn = value
-    
+
     # 角色
     npcs: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    
+
     # 游戏设置
     difficulty: str = "normal"  # easy, normal, hard
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典格式"""
         return {
@@ -98,39 +101,43 @@ class GameState:
             "npcs_died": self.npcs_died,
             "rules_triggered": self.rules_triggered,
             "difficulty": self.difficulty,
-            "npcs": self.npcs
+            "npcs": self.npcs,
         }
 
 
 class GameStateManager:
     """游戏状态管理器"""
-    
-    def __init__(self, save_dir: str = "data/saves", config: Optional[Dict[str, Any]] = None):
+
+    def __init__(
+        self, save_dir: str = "data/saves", config: Optional[Dict[str, Any]] = None
+    ):
         self.save_dir = Path(save_dir)
         self.save_dir.mkdir(parents=True, exist_ok=True)
-        
+
         self.state: Optional[GameState] = None
         self.rules: List[Any] = []  # 将存储Rule对象
         self.npcs: List[Dict[str, Any]] = []
         self.spirits: List[Dict[str, Any]] = []
         self.game_log: List[str] = []
         self.environment = EnvironmentService()
-        
+
         # 配置
         self.config = config or {}
         self.ai_enabled = self.config.get("ai_enabled", False)
-        self.ai_pipeline: Optional['AITurnPipeline'] = None
-        
+        self.ai_pipeline: Optional["AITurnPipeline"] = None
+
         # 事件监听器
         self.event_listeners: Dict[str, List[Any]] = {
             "turn_start": [],
             "turn_end": [],
             "rule_triggered": [],
             "npc_died": [],
-            "fear_gained": []
+            "fear_gained": [],
         }
-        
-    def new_game(self, game_id: Optional[str] = None, config: Optional[Dict[str, Any]] = None) -> GameState:
+
+    def new_game(
+        self, game_id: Optional[str] = None, config: Optional[Dict[str, Any]] = None
+    ) -> GameState:
         """开始新游戏
 
         Args:
@@ -140,7 +147,7 @@ class GameStateManager:
         if game_id is None:
             game_id = f"game_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         config = config or {}
-        
+
         self.state = GameState(
             game_id=game_id,
             fear_points=config.get("initial_fear_points", 1000),
@@ -151,29 +158,31 @@ class GameStateManager:
         self.state.turn = self.state.current_turn
         self.state.day = 1
         self.state.npcs = {}
-        
+
         self.rules = []
         self.npcs = []
         self.spirits = []
         self.game_log = []
-        
+
         self.log(f"新游戏开始 - ID: {game_id}")
         self._trigger_event("game_start", {"state": self.state})
-        
+
         # 创建默认NPC
         self._create_default_npcs()
-        
+
         return self.state
-    
+
     def _serialize_npc(self, npc: Any) -> Dict[str, Any]:
         """序列化NPC对象为可保存的字典格式"""
         if isinstance(npc, dict):
             # 处理字典中的嵌套对象
             result = {}
             for key, value in npc.items():
-                if hasattr(value, 'dict'):  # Pydantic模型
+                if hasattr(value, "dict"):  # Pydantic模型
                     result[key] = value.model_dump()
-                elif hasattr(value, '__dict__') and not isinstance(value, (str, int, float, bool, list, dict, type(None))):
+                elif hasattr(value, "__dict__") and not isinstance(
+                    value, (str, int, float, bool, list, dict, type(None))
+                ):
                     # 其他对象
                     result[key] = value.__dict__
                 else:
@@ -188,7 +197,7 @@ class GameStateManager:
             return self._serialize_npc(npc.__dict__)
         else:
             return npc
-    
+
     def _serialize_rule(self, rule: Any) -> Dict[str, Any]:
         """序列化规则对象为可保存的字典格式"""
         if isinstance(rule, dict):
@@ -207,25 +216,27 @@ class GameStateManager:
                     result[key] = value.value
                 elif hasattr(value, "dict"):  # 处理嵌套的 Pydantic 模型
                     result[key] = value.model_dump()
-                elif hasattr(value, "__dict__") and not isinstance(value, (str, int, float, bool, list, dict, type(None))):
+                elif hasattr(value, "__dict__") and not isinstance(
+                    value, (str, int, float, bool, list, dict, type(None))
+                ):
                     result[key] = self._serialize_rule(value)
                 else:
                     result[key] = value
             return result
         else:
             return {"raw": str(rule)}  # 最后的选择：转换为字符串
-        
+
     def load_game(self, game_id: str) -> bool:
         """加载游戏存档"""
         save_file = self.save_dir / f"{game_id}.json"
-        
+
         if not save_file.exists():
             return False
-            
+
         try:
             with open(save_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                
+
             # 恢复游戏状态
             self.state = GameState(
                 game_id=data["state"]["game_id"],
@@ -238,26 +249,26 @@ class GameStateManager:
                 total_fear_gained=data["state"]["total_fear_gained"],
                 npcs_died=data["state"]["npcs_died"],
                 rules_triggered=data["state"]["rules_triggered"],
-                difficulty=data["state"]["difficulty"]
+                difficulty=data["state"]["difficulty"],
             )
             self.state.turn = self.state.current_turn
             self.state.day = data["state"].get("day", 1)
             self.state.active_rules = data["state"].get("active_rules", [])
             self.state.events_history = data["state"].get("events_history", [])
-            
+
             self.rules = data.get("rules", [])
             self.npcs = list(data.get("state", {}).get("npcs", {}).values())
             self.state.npcs = data.get("state", {}).get("npcs", {})
             self.spirits = data.get("spirits", [])
             self.game_log = data.get("game_log", [])
-            
+
             self.log(f"游戏读取成功 - 第{self.current_turn}回合")
             return True
-            
+
         except Exception as e:
             print(f"读取存档失败: {e}")
             return False
-            
+
     def save_game(self, filename: Optional[str] = None) -> Optional[str]:
         """保存游戏
 
@@ -265,16 +276,16 @@ class GameStateManager:
         """
         if not self.state:
             return None
-            
+
         if filename:
             # 检查文件名是否已经包含.json扩展名
-            if not filename.endswith('.json'):
+            if not filename.endswith(".json"):
                 save_file = self.save_dir / f"{filename}.json"
             else:
                 save_file = self.save_dir / filename
         else:
             save_file = self.save_dir / f"{self.state.game_id}.json"
-        
+
         try:
             # 转换NPC对象为纯字典
             serialized_state_npcs = {}
@@ -299,19 +310,19 @@ class GameStateManager:
                 "npcs": serialized_npcs,
                 "spirits": self.spirits,
                 "game_log": self.game_log[-100:],  # 只保存最近100条日志
-                "saved_at": datetime.now().isoformat()
+                "saved_at": datetime.now().isoformat(),
             }
-            
+
             with open(save_file, "w", encoding="utf-8") as f:
                 json.dump(save_data, f, indent=2, ensure_ascii=False, default=str)
-                
+
             self.log("游戏已保存")
             return str(save_file)
-            
+
         except Exception as e:
             print(f"保存游戏失败: {e}")
             return None
-            
+
     def advance_turn(self):
         """推进回合"""
         if not self.state:
@@ -327,11 +338,11 @@ class GameStateManager:
         self.state.time_of_day = time_progression[(current_index + 1) % 4]
         if current_index == len(time_progression) - 1:
             self.state.day += 1
-        
+
         self.log(f"\n{'='*50}")
         self.log(f"第 {self.state.current_turn} 回合 - {self.get_time_display()}")
         self.log(f"当前恐惧点数: {self.state.fear_points}")
-        
+
     def change_phase(self, new_phase: GamePhase):
         """改变游戏阶段"""
         if self.state is None:
@@ -340,7 +351,7 @@ class GameStateManager:
         old_phase = state.phase
         state.phase = new_phase
         self.log(f"阶段转换: {old_phase.value} → {new_phase.value}")
-        
+
     def add_fear_points(self, amount: int, source: str = "unknown"):
         """增加恐惧点数"""
         if self.state is None:
@@ -350,7 +361,7 @@ class GameStateManager:
         state.total_fear_gained += amount
         self.log(f"获得 {amount} 恐惧点数 (来源: {source})")
         self._trigger_event("fear_gained", {"amount": amount, "source": source})
-        
+
     def spend_fear_points(self, amount: int) -> bool:
         """消耗恐惧点数"""
         if self.state is None:
@@ -398,7 +409,7 @@ class GameStateManager:
             self.state.active_rules.append(rule.id)
         self.log(f"规则 [{rule.name}] 已添加到游戏中")
         return True
-        
+
     def add_npc(self, npc: Dict[str, Any]):
         """添加NPC"""
         self.npcs.append(npc)
@@ -406,7 +417,7 @@ class GameStateManager:
             npc_id = cast(str, npc.get("id"))
             self.state.npcs[npc_id] = npc
         self.log(f"NPC [{npc['name']}] 加入游戏")
-        
+
     def update_npc(self, npc_id: str, updates: Dict[str, Any]):
         """更新NPC状态"""
         for npc in self.npcs:
@@ -415,7 +426,7 @@ class GameStateManager:
                 break
         if self.state and npc_id in self.state.npcs:
             self.state.npcs[npc_id].update(updates)
-                
+
     def remove_npc(self, npc_id: str):
         """移除NPC（死亡）"""
         if self.state is None:
@@ -429,34 +440,34 @@ class GameStateManager:
                 self.log(f"NPC [{dead_npc['name']}] 已死亡")
                 self._trigger_event("npc_died", {"npc": dead_npc})
                 break
-                
+
     def get_active_npcs(self) -> List[Dict[str, Any]]:
         """获取存活的NPC列表"""
         return [npc for npc in self.npcs if npc.get("hp", 0) > 0]
 
     def get_npcs_in_location(self, location: str) -> List[Dict[str, Any]]:
         """获取指定位置的NPC"""
-        return [npc for npc in self.npcs
-                if npc.get("location") == location]
+        return [npc for npc in self.npcs if npc.get("location") == location]
 
     def get_alive_npcs(self) -> List[Dict[str, Any]]:
         """获取仍然存活且未被标记为死亡的NPC"""
         return [
-            npc for npc in self.npcs
+            npc
+            for npc in self.npcs
             if npc.get("hp", 0) > 0 and npc.get("alive", True) is not False
         ]
-        
+
     def get_active_rules(self) -> List[Any]:
         """获取激活的规则列表"""
-        return [rule for rule in self.rules if getattr(rule, 'active', True)]
-        
+        return [rule for rule in self.rules if getattr(rule, "active", True)]
+
     def log(self, message: str):
         """添加游戏日志"""
         timestamp = datetime.now().strftime("%H:%M:%S")
         log_entry = f"[{timestamp}] {message}"
         self.game_log.append(log_entry)
         print(log_entry)  # 同时输出到控制台
-        
+
     def get_time_display(self) -> str:
         """获取时间显示文本"""
         if self.state is None:
@@ -465,15 +476,15 @@ class GameStateManager:
             "morning": "早晨 ☀️",
             "afternoon": "下午 🌤️",
             "evening": "傍晚 🌅",
-            "night": "深夜 🌙"
+            "night": "深夜 🌙",
         }
         return time_map.get(self.state.time_of_day, "未知")
-        
+
     def register_event_listener(self, event: str, callback):
         """注册事件监听器"""
         if event in self.event_listeners:
             self.event_listeners[event].append(callback)
-            
+
     def _trigger_event(self, event: str, data: Dict[str, Any]):
         """触发事件"""
         if event in self.event_listeners:
@@ -482,33 +493,33 @@ class GameStateManager:
                     callback(data)
                 except Exception as e:
                     print(f"事件处理出错 {event}: {e}")
-                    
+
     @property
     def current_turn(self) -> int:
         """当前回合数"""
         return self.state.current_turn if self.state else 0
-        
+
     @property
     def difficulty(self) -> str:
         """获取当前游戏难度"""
         return self.state.difficulty if self.state else "normal"
-        
+
     @property
     def is_game_over(self) -> bool:
         """检查游戏是否结束"""
         if not self.state:
             return True
-            
+
         # 所有NPC死亡
         if len(self.get_active_npcs()) == 0:
             return True
-            
+
         # 回合数超过限制（可配置）
         if self.current_turn >= 50:
             return True
-            
+
         return False
-        
+
     def get_summary(self) -> Dict[str, Any]:
         """获取游戏总结"""
         if self.state is None:
@@ -521,22 +532,22 @@ class GameStateManager:
             "npcs_died": state.npcs_died,
             "rules_created": len(self.rules),
             "rules_triggered": state.rules_triggered,
-            "survival_rate": f"{len(self.get_active_npcs())}/{len(self.npcs)}"
+            "survival_rate": f"{len(self.get_active_npcs())}/{len(self.npcs)}",
         }
-    
+
     # ========== AI集成方法 ==========
-    
+
     async def init_ai_pipeline(self):
         """初始化AI管线"""
         if self.ai_enabled:
             try:
                 from src.api.deepseek_client import DeepSeekClient, APIConfig
                 from src.ai.turn_pipeline import AITurnPipeline
-                
+
                 # 创建DeepSeek客户端
                 api_config = APIConfig()
                 ds_client = DeepSeekClient(api_config)
-                
+
                 # 创建AI管线
                 self.ai_pipeline = AITurnPipeline(self, ds_client)
                 self.log("AI管线初始化成功")
@@ -546,13 +557,13 @@ class GameStateManager:
                 self.ai_enabled = False
                 return False
         return False
-    
+
     async def run_ai_turn(self, force_dialogue: bool = True):
         """运行AI驱动的回合"""
         if not self.ai_pipeline:
             self.log("AI未启用或未初始化")
             return None
-        
+
         try:
             # 执行AI回合
             plan = await self.ai_pipeline.run_turn_ai(force_dialogue=force_dialogue)
@@ -561,12 +572,12 @@ class GameStateManager:
         except Exception as e:
             self.log(f"AI回合执行失败: {str(e)}")
             return None
-    
+
     async def generate_narrative(self, include_hidden: bool = False) -> str:
         """生成回合叙事"""
         if not self.ai_pipeline:
             return "AI叙事生成未启用"
-        
+
         try:
             narrative = await self.ai_pipeline.generate_turn_narrative(
                 include_hidden_events=include_hidden
@@ -575,25 +586,19 @@ class GameStateManager:
         except Exception as e:
             self.log(f"叙事生成失败: {str(e)}")
             return "叙事生成失败，请查看日志"
-    
+
     async def evaluate_rule_nl(self, rule_description: str) -> Dict[str, Any]:
         """评估自然语言规则"""
         if not self.ai_pipeline:
-            return {
-                "error": "AI未启用",
-                "suggestion": "请先启用AI功能"
-            }
-        
+            return {"error": "AI未启用", "suggestion": "请先启用AI功能"}
+
         try:
             result = await self.ai_pipeline.evaluate_player_rule(rule_description)
             return result
         except Exception as e:
             self.log(f"规则评估失败: {str(e)}")
-            return {
-                "error": str(e),
-                "suggestion": "请尝试更清晰地描述规则"
-            }
-    
+            return {"error": str(e), "suggestion": "请尝试更清晰地描述规则"}
+
     def get_npc_states_for_ai(self) -> List[Dict[str, Any]]:
         """为AI准备NPC状态数据"""
         npc_states = []
@@ -605,18 +610,20 @@ class GameStateManager:
                 "traits": npc.get("traits", []),
                 "status": npc.get("status", "正常"),
                 "location": npc.get("location", "未知位置"),
-                "inventory": npc.get("inventory", [])
+                "inventory": npc.get("inventory", []),
             }
             npc_states.append(npc_state)
         return npc_states
-    
+
     def get_scene_context_for_ai(self) -> Dict[str, Any]:
         """为AI准备场景上下文"""
         if not self.state:
             return {}
-        
+
         # 获取最近事件
-        recent_events = self.state.events_history[-5:] if self.state.events_history else []
+        recent_events = (
+            self.state.events_history[-5:] if self.state.events_history else []
+        )
         recent_event_descriptions = []
         for event in recent_events:
             if isinstance(event, dict):
@@ -624,59 +631,61 @@ class GameStateManager:
             else:
                 desc = str(event)
             recent_event_descriptions.append(desc)
-        
+
         # 构建上下文
         context = {
             "current_location": "游戏世界",  # TODO: 实现具体位置追踪
             "recent_events": recent_event_descriptions,
             "active_rules": self.state.active_rules,
             "ambient_fear_level": self._calculate_ambient_fear(),
-            "special_conditions": self._get_special_conditions()
+            "special_conditions": self._get_special_conditions(),
         }
-        
+
         return context
-    
+
     def _calculate_ambient_fear(self) -> int:
         """计算环境恐惧等级"""
         base_fear = 30
-        
+
         # 时间因素
         if self.state and self.state.time_of_day == "night":
             base_fear += 20
-        
+
         # 死亡事件影响
         if self.state:
             base_fear += self.state.npcs_died * 10
-        
+
         # 规则数量影响
         base_fear += len(self.rules) * 5
-        
+
         return min(100, base_fear)
-    
+
     def _get_special_conditions(self) -> List[str]:
         """获取特殊条件"""
         conditions = []
-        
+
         if self.state:
             # 时间条件
             if self.state.time_of_day == "night":
                 conditions.append("深夜时分")
-            
+
             # 生存状况
             alive_count = len(self.get_active_npcs())
             if alive_count <= 2:
                 conditions.append("仅剩少数幸存者")
-            
+
             # 恐惧等级
-            avg_fear = sum(npc.get("fear", 0) for npc in self.get_active_npcs()) / max(alive_count, 1)
+            avg_fear = sum(npc.get("fear", 0) for npc in self.get_active_npcs()) / max(
+                alive_count, 1
+            )
             if avg_fear > 70:
                 conditions.append("集体恐慌")
-        
+
         return conditions
-    
+
     async def close_ai(self):
         """关闭AI客户端"""
-        if self.ai_pipeline and hasattr(self.ai_pipeline, 'ds_client'):
+        if self.ai_pipeline and hasattr(self.ai_pipeline, "ds_client"):
             await self.ai_pipeline.ds_client.close()
             self.log("AI客户端已关闭")
 
@@ -684,11 +693,11 @@ class GameStateManager:
         """创建默认NPC"""
         try:
             from ..models.npc import generate_random_npc
-            
+
             default_npc_names = ["张三", "李四", "王五"]
             for name in default_npc_names:
                 npc = generate_random_npc(name)
-                npc_dict = npc.__dict__ if hasattr(npc, '__dict__') else npc
+                npc_dict = npc.__dict__ if hasattr(npc, "__dict__") else npc
                 self.add_npc(npc_dict)
         except ImportError:
             # 如果无法导入NPC模块，创建简单的NPC
@@ -700,7 +709,7 @@ class GameStateManager:
                     "sanity": 100,
                     "fear": 0,
                     "location": "living_room",
-                    "alive": True
+                    "alive": True,
                 }
                 self.add_npc(simple_npc)
 
@@ -709,23 +718,23 @@ class GameStateManager:
 if __name__ == "__main__":
     # 测试游戏状态管理器
     gsm = GameStateManager()
-    
+
     # 创建新游戏
     state = gsm.new_game("test_game_001")
     print(f"游戏创建成功: {state.game_id}")
-    
+
     # 添加NPC
     gsm.add_npc({"id": "npc_1", "name": "测试员1", "hp": 100})
     gsm.add_npc({"id": "npc_2", "name": "测试员2", "hp": 100})
-    
+
     # 推进几个回合
     for i in range(3):
         gsm.advance_turn()
         gsm.add_fear_points(50, "测试触发")
-        
+
     # 保存游戏
     gsm.save_game()
-    
+
     # 显示总结
     summary = gsm.get_summary()
     print(f"\n游戏总结: {summary}")
