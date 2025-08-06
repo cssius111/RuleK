@@ -12,6 +12,7 @@ from src.api.schemas import (
 )
 from src.api.prompts import create_mock_turn_plan, create_mock_narrative, create_mock_rule_eval
 from src.models.event import Event, EventType
+from src.core.rule_executor import RuleContext
 
 if TYPE_CHECKING:
     from src.api.deepseek_client import DeepSeekClient
@@ -214,7 +215,13 @@ class AITurnPipeline:
         for npc in self.game_mgr.get_alive_npcs():
             # 计算NPC之间的关系
             relationships = self._calculate_npc_relationships(npc)
-            
+
+            location = npc.get("location", "未知位置")
+            if hasattr(self.game_mgr, "map_manager"):
+                area = self.game_mgr.map_manager.get_area(location)
+                if area:
+                    location = area.name
+
             npc_state = NPCStateForAI(
                 name=npc.get("name", "未知"),
                 fear=npc.get("fear", 0),
@@ -222,7 +229,7 @@ class AITurnPipeline:
                 hp=npc.get("hp", 100),
                 traits=npc.get("traits", []),
                 status=npc.get("status", "正常"),
-                location=npc.get("location", "未知位置"),
+                location=location,
                 inventory=npc.get("inventory", []),
                 relationships=relationships
             )
@@ -257,8 +264,16 @@ class AITurnPipeline:
             if rule:
                 active_rule_names.append(getattr(rule, "name", f"规则{rule_id}"))
         
+        current_location = "未知位置"
+        if hasattr(self.game_mgr, "map_manager"):
+            map_mgr = self.game_mgr.map_manager
+            current_id = getattr(map_mgr, "current_area", None)
+            area = map_mgr.get_area(current_id) if current_id else None
+            if area:
+                current_location = area.name
+
         context = SceneContext(
-            current_location="恐怖空间",  # TODO: 实现具体位置系统
+            current_location=current_location,
             time_of_day=state.time_of_day,
             recent_events=recent_events,
             active_rules=active_rule_names,
@@ -270,17 +285,25 @@ class AITurnPipeline:
     
     def _get_available_places(self) -> List[str]:
         """获取可用地点列表"""
-        # TODO: 从地图系统获取
+        if hasattr(self.game_mgr, "map_manager"):
+            return [area.name for area in self.game_mgr.map_manager.areas.values()]
+
         default_places = [
-            "客厅", "厨房", "卧室", "浴室", 
+            "客厅", "厨房", "卧室", "浴室",
             "走廊", "阁楼", "地下室", "花园"
         ]
-        
-        # 如果有地图系统，从中获取
-        if hasattr(self.game_mgr, "map_system"):
-            return list(self.game_mgr.map_system.locations.keys())
-        
         return default_places
+
+    def _resolve_area_id(self, place: str) -> str:
+        """将地点名称解析为地图区域ID"""
+        if hasattr(self.game_mgr, "map_manager"):
+            map_mgr = self.game_mgr.map_manager
+            if place in map_mgr.areas:
+                return place
+            for area_id, area in map_mgr.areas.items():
+                if area.name == place:
+                    return area_id
+        return place
     
     async def _process_dialogue(self, dialogue_turns: List[DialogueTurn]):
         """处理对话回合"""
@@ -342,6 +365,13 @@ class AITurnPipeline:
             available_places = self._get_available_places()
             if action.target not in available_places:
                 return False
+
+            if hasattr(self.game_mgr, "map_manager"):
+                target_id = self._resolve_area_id(action.target)
+                current_id = npc.get("location")
+                area = self.game_mgr.map_manager.get_area(current_id)
+                if not area or target_id not in area.connected_to:
+                    return False
         
         # 检查NPC状态是否允许行动
         if npc.get("status") == "昏迷" or npc.get("hp", 0) <= 0:
@@ -381,14 +411,28 @@ class AITurnPipeline:
         """处理移动行动"""
         if self.game_mgr.state is None:
             raise RuntimeError("游戏状态未初始化")
-        npc["location"] = action.target
+        prev_location = npc.get("location")
+        target_id = self._resolve_area_id(action.target)
+        npc["location"] = target_id
 
         # 更新游戏状态
-        self.game_mgr.update_npc(npc["id"], {"location": action.target})
+        self.game_mgr.update_npc(npc["id"], {"location": target_id})
+
+        # 更新地图信息
+        if hasattr(self.game_mgr, "map_manager"):
+            map_mgr = self.game_mgr.map_manager
+            if prev_location:
+                old_area = map_mgr.get_area(prev_location)
+                if old_area and npc["id"] in old_area.npcs:
+                    old_area.npcs.remove(npc["id"])
+            new_area = map_mgr.get_area(target_id)
+            if new_area and npc["id"] not in new_area.npcs:
+                new_area.npcs.append(npc["id"])
+            map_mgr.current_area = target_id
 
         # 可能触发位置相关事件
         state: GameState = self.game_mgr.state
-        if action.target == "地下室" and state.time_of_day == "night":
+        if target_id == "basement" and state.time_of_day == "night":
             npc["fear"] = min(100, npc.get("fear", 0) + 10)
             self.game_mgr.update_npc(npc["id"], {"fear": npc["fear"]})
     
@@ -471,12 +515,25 @@ class AITurnPipeline:
         """处理逃跑行动"""
         # 快速移动但增加恐惧
         if action.target:
-            npc["location"] = action.target
+            prev_location = npc.get("location")
+            target_id = self._resolve_area_id(action.target)
+            npc["location"] = target_id
             npc["fear"] = min(100, npc.get("fear", 0) + 20)
             self.game_mgr.update_npc(npc["id"], {
                 "location": npc["location"],
                 "fear": npc["fear"]
             })
+
+            if hasattr(self.game_mgr, "map_manager"):
+                map_mgr = self.game_mgr.map_manager
+                if prev_location:
+                    old_area = map_mgr.get_area(prev_location)
+                    if old_area and npc["id"] in old_area.npcs:
+                        old_area.npcs.remove(npc["id"])
+                new_area = map_mgr.get_area(target_id)
+                if new_area and npc["id"] not in new_area.npcs:
+                    new_area.npcs.append(npc["id"])
+                map_mgr.current_area = target_id
     
     async def _handle_custom(self, npc: Dict[str, Any], action: PlannedAction):
         """处理自定义行动"""
@@ -489,8 +546,27 @@ class AITurnPipeline:
     
     async def _check_rule_triggers(self, action: PlannedAction):
         """检查行动是否触发规则"""
-        # TODO: 与规则执行器集成
-        pass
+        if self.game_mgr.state is None:
+            raise RuntimeError("游戏状态未初始化")
+
+        rule_executor = getattr(self.game_mgr, "rule_executor", None)
+        if not rule_executor:
+            return
+
+        npc = self._find_npc_by_name(action.npc)
+        if not npc:
+            return
+
+        context = RuleContext(npc, action.action, self.game_mgr.state.to_dict())
+        triggered = rule_executor.check_all_rules(context)
+        for rule, probability in triggered:
+            if random.random() <= probability:
+                result = rule_executor.execute_rule(rule, context)
+                self._create_event(
+                    EventType.RULE_TRIGGER,
+                    f"规则触发: {rule.name}",
+                    {"rule_id": rule.id, "actor": npc.get("name"), "result": result}
+                )
     
     async def _post_turn_processing(self):
         """回合后处理"""
@@ -522,12 +598,44 @@ class AITurnPipeline:
     
     def _calculate_npc_relationships(self, npc: Dict[str, Any]) -> Dict[str, int]:
         """计算NPC之间的关系值"""
-        relationships = {}
-        # TODO: 实现基于历史互动的关系系统
-        for other_npc in self.game_mgr.get_alive_npcs():
-            if other_npc.get("id") != npc.get("id"):
-                # 暂时使用随机值
-                relationships[other_npc.get("name", "未知")] = random.randint(30, 80)
+        if self.game_mgr.state is None:
+            return {}
+
+        state: GameState = self.game_mgr.state
+        npc_name = npc.get("name")
+
+        relationships: Dict[str, int] = {}
+        base_score = 50
+
+        alive_npcs = self.game_mgr.get_alive_npcs()
+        for other in alive_npcs:
+            if other.get("id") == npc.get("id"):
+                continue
+            relationships[other.get("name", "未知")] = base_score
+
+        # 根据事件历史调整关系
+        for event in state.events_history:
+            evt_type = event.get("type") if isinstance(event, dict) else getattr(event, "type", None)
+            meta = event.get("meta", {}) if isinstance(event, dict) else getattr(event, "meta", {}) or {}
+
+            if evt_type == EventType.NPC_ACTION.value and meta.get("action") == "talk":
+                actor = meta.get("actor")
+                target = meta.get("target")
+                if actor == npc_name and target in relationships:
+                    relationships[target] = min(100, relationships[target] + 5)
+                elif target == npc_name and actor in relationships:
+                    relationships[actor] = min(100, relationships[actor] + 5)
+
+        # 更新NPC的关系图（使用ID存储）
+        id_relationships: Dict[str, int] = {}
+        for other in alive_npcs:
+            if other.get("id") == npc.get("id"):
+                continue
+            name = other.get("name", "未知")
+            id_relationships[other.get("id")] = relationships.get(name, base_score)
+
+        self.game_mgr.update_npc(npc.get("id"), {"relationships": id_relationships})
+
         return relationships
     
     def _calculate_ambient_fear(self) -> int:
