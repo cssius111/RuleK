@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from src.models.map import MapManager, Area
 from src.models.npc import NPC, generate_random_npc, NPCAction
 from src.models.rule import Rule, RULE_TEMPLATES, TriggerCondition, RuleEffect, EffectType
-from src.core.event_system import EventSystem, GameEvent, EventType
+from src.models.event import Event, EventType
 from src.core.dialogue_system import DialogueSystem
 from src.core.narrator import Narrator, GameEvent as NarrativeEvent, EventSeverity, NarrativeStyle
 
@@ -26,7 +26,7 @@ class Sprint2IntegrationTest:
         self.map_manager = None
         self.npcs = []
         self.rules = []
-        self.event_system = None
+        self.events: List[Event] = []
         self.dialogue_system = None
         self.narrator = None
         self.current_turn = 0
@@ -63,9 +63,9 @@ class Sprint2IntegrationTest:
             self.rules.append(rule)
         print(f"✓ 规则系统: {len(self.rules)} 条规则")
         
-        # 初始化事件系统
-        self.event_system = EventSystem()
-        print(f"✓ 事件系统: {len(self.event_system.events)} 个事件")
+        # 初始化事件列表
+        self.events = []
+        print(f"✓ 事件系统: {len(self.events)} 个事件")
         
         # 初始化AI系统
         self.dialogue_system = DialogueSystem()
@@ -175,38 +175,29 @@ class Sprint2IntegrationTest:
         print("\n✅ 对话系统测试完成\n")
         
     async def test_event_system(self):
-        """测试事件系统"""
-        print("【测试3: 随机事件系统】")
-        
-        # 准备游戏状态
-        game_state = {
-            "current_turn": 8,
-            "average_fear": sum(npc.fear for npc in self.npcs) / len(self.npcs),
-            "alive_npcs": len([npc for npc in self.npcs if npc.hp > 0]),
-            "time_of_day": "night"
-        }
-        
-        print(f"当前游戏状态:")
-        print(f"- 回合: {game_state['current_turn']}")
-        print(f"- 平均恐惧: {game_state['average_fear']:.1f}")
-        print(f"- 存活NPC: {game_state['alive_npcs']}")
-        
-        # 触发事件
-        print("\n检查可能触发的事件...")
-        triggered_events = self.event_system.check_and_trigger_events(game_state)
-        
+        """测试事件记录与检索"""
+        print("【测试3: 事件记录与检索】")
+
+        # 记录一个事件
+        event = Event(
+            type=EventType.SYSTEM,
+            description="测试事件：系统初始化",
+            turn=self.current_turn,
+            meta={"effects": []}
+        )
+        self.events.append(event)
+
+        # 检索事件
+        triggered_events = [evt.to_dict() for evt in self.events]
+
         if triggered_events:
-            print(f"\n触发了 {len(triggered_events)} 个事件:")
-            for event_result in triggered_events:
-                print(f"\n事件: {event_result['event_name']}")
-                if event_result['messages']:
-                    print(f"描述: {event_result['messages'][0]}")
-                print("效果:")
-                for effect in event_result['effects_applied']:
-                    print(f"  - {effect.get('description', effect['type'])}")
+            print(f"\n记录了 {len(triggered_events)} 个事件:")
+            for evt in triggered_events:
+                print(f"\n事件: {evt['description']}")
+                print(f"类型: {evt['type']}")
         else:
-            print("\n没有事件被触发")
-        
+            print("\n没有事件被记录")
+
         print("\n✅ 事件系统测试完成\n")
         
     async def test_narrator(self):
@@ -363,10 +354,10 @@ class Sprint2IntegrationTest:
             "time_of_day": "night" if self.current_turn % 4 == 0 else "day"
         }
         
-        triggered_events = self.event_system.check_and_trigger_events(game_state)
+        triggered_events = [evt.to_dict() for evt in self.events]
         if triggered_events:
             for event in triggered_events:
-                print(f"! 触发事件: {event['event_name']}")
+                print(f"! 触发事件: {event['description']}")
         
         # 3. 对话阶段（如果是固定时间）
         if self.current_turn % 4 in [1, 3]:  # 早晚对话

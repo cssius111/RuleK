@@ -16,7 +16,6 @@ from src.ai.turn_pipeline import AITurnPipeline
 from src.models import NPC, NPCManager, Rule, RuleManager, MapManager
 from src.core.narrator import Narrator
 from src.core.dialogue_system import DialogueSystem
-from src.core.event_system import EventSystem
 
 from src.core.npc_behavior import NPCBehavior
 from src.core.rule_executor import RuleExecutor
@@ -83,7 +82,6 @@ class GameService:
         # 初始化管理器
         self.rule_manager = RuleManager()
         self.npc_manager = NPCManager()
-        self.event_system = EventSystem()
         self.npc_behavior = NPCBehavior(self.game_state_manager)
         self.rule_executor = RuleExecutor(self.game_state_manager)
         
@@ -193,13 +191,8 @@ class GameService:
                     "result": result
                 })
         
-        # 4. 随机事件
-        random_event = self.event_system.trigger_random_event(
-            self.game_state.current_turn,
-            self.game_state.fear_points
-        )
-        if random_event:
-            events.append(random_event)
+        # 4. 随机事件（占位）
+        # TODO: 实现基于新的事件模型的随机事件逻辑
         
         # 5. 生成叙事
         narrative = None
