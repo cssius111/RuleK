@@ -10,6 +10,7 @@ from pathlib import Path
 
 from .enums import GamePhase, GameMode
 from .environment import EnvironmentService
+from ..models.rule import Rule, TriggerCondition, RuleEffect
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -359,10 +360,36 @@ class GameStateManager:
             state.fear_points -= amount
             return True
         return False
-        
+
+    def create_rule(self, rule_data: Dict[str, Any]) -> Optional[str]:
+        """创建新规则并扣除相应恐惧积分"""
+        if self.state is None:
+            raise RuntimeError("游戏未初始化")
+
+        cost = rule_data.get("base_cost") or rule_data.get("cost", 0)
+        if self.state.fear_points < cost:
+            self.log(f"恐惧积分不足，无法创建规则 {rule_data.get('name', '')}")
+            return None
+
+        rule_id = rule_data.get("id") or f"rule_{len(self.rules) + 1:03d}"
+        rule = Rule(
+            id=rule_id,
+            name=rule_data.get("name", "未命名规则"),
+            description=rule_data.get("description", ""),
+            level=rule_data.get("level", 1),
+            trigger=TriggerCondition(**rule_data.get("trigger", {"action": "custom"})),
+            effect=RuleEffect(**rule_data.get("effect", {"type": "fear_gain"})),
+            base_cost=cost,
+        )
+
+        self.add_rule(rule)
+        self.spend_fear_points(cost)
+        self.log(f"创建规则 [{rule.name}] - 消耗 {cost} 恐惧积分")
+        return rule.id
+
     def add_rule(self, rule: Any):
         """添加规则
-        
+
         Returns:
             bool: 是否添加成功
         """

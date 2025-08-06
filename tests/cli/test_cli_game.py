@@ -303,6 +303,42 @@ class TestRuleManagement:
         assert "升级功能尚未实现" in captured.out
 
 
+class TestAIRuleCreation:
+    """AI规则创建测试"""
+
+    @pytest.mark.asyncio
+    async def test_ai_create_rule_success(self, initialized_game, mock_input_sequence, capsys):
+        initialized_game.ai_enabled = True
+        initialized_game.game_manager.ai_enabled = True
+        initial_points = initialized_game.game_manager.state.fear_points
+
+        mock_input_sequence.add("3", "晚上不能开灯", "y")
+
+        mock_result = {
+            "name": "黑暗禁令",
+            "cost": 150,
+            "difficulty": 5,
+            "loopholes": [],
+            "suggestion": "添加更多细节",
+            "estimated_fear_gain": 30,
+        }
+
+        with patch.object(initialized_game.game_manager, 'evaluate_rule_nl', new_callable=AsyncMock, return_value=mock_result):
+            with patch('asyncio.sleep', new_callable=AsyncMock):
+                with patch.object(initialized_game.game_manager, 'create_rule', wraps=initialized_game.game_manager.create_rule) as mock_create:
+                    await initialized_game.manage_rules()
+
+        captured = capsys.readouterr()
+
+        mock_create.assert_called_once()
+        assert len(initialized_game.game_manager.rules) == 1
+        rule = initialized_game.game_manager.rules[0]
+        assert rule.name == "黑暗禁令"
+        assert rule.id in initialized_game.game_manager.state.active_rules
+        assert initialized_game.game_manager.state.fear_points == initial_points - mock_result["cost"]
+        assert "规则创建成功" in captured.out
+        assert any("黑暗禁令" in log for log in initialized_game.game_manager.game_log)
+
 class TestActionPhase:
     """行动阶段测试"""
     
