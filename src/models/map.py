@@ -45,6 +45,19 @@ class Area:
         }
 
 
+class Map:
+    """地图类（为了兼容性）"""
+    def __init__(self):
+        self.locations = {}
+        self.current_location = "living_room"
+    
+    def add_location(self, location_id: str, location_data: dict):
+        self.locations[location_id] = location_data
+    
+    def get_location(self, location_id: str):
+        return self.locations.get(location_id)
+
+
 class MapManager:
     """地图管理器"""
     

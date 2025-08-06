@@ -17,7 +17,7 @@ class NPCManager:
         ]
         self.name_index = 0
     
-    def create_npc(self, name: Optional[str] = None, **kwargs) -> NPC:
+    def create_npc(self, name: Optional[str] = None, template: Optional[str] = None, **kwargs) -> NPC:
         """创建NPC"""
         if not name:
             # 使用默认名字
@@ -27,8 +27,31 @@ class NPCManager:
             else:
                 name = f"NPC_{len(self.npcs) + 1}"
 
-        assert name is not None
-        npc = NPC(name=name, **kwargs)
+        # 设置默认值
+        npc_data = {
+            'name': name,
+            'hp': kwargs.get('hp', 100),
+            'sanity': kwargs.get('sanity', 100),
+            'fear': kwargs.get('fear', 0),
+            'location': kwargs.get('location', 'living_room'),
+            'traits': kwargs.get('traits', ['普通']),
+            'alive': kwargs.get('alive', True),
+            'inventory': kwargs.get('inventory', [])
+        }
+        
+        # 如果有模板，应用模板设置
+        if template:
+            if template == 'brave':
+                npc_data['traits'] = ['勇敢', '冲动']
+                npc_data['fear'] = 30
+            elif template == 'clever':
+                npc_data['traits'] = ['聪明', '谨慎']
+                npc_data['fear'] = 40
+            elif template == 'timid':
+                npc_data['traits'] = ['胆小', '敏感']
+                npc_data['fear'] = 60
+        
+        npc = NPC(**npc_data)
         self.npcs[npc.id] = npc
         return npc
     
@@ -43,6 +66,11 @@ class NPCManager:
     def get_alive_npcs(self) -> List[NPC]:
         """获取所有存活的NPC"""
         return [npc for npc in self.npcs.values() if npc.is_alive]
+    
+    def clear(self):
+        """清空所有NPC"""
+        self.npcs.clear()
+        self.name_index = 0
     
     def remove_npc(self, npc_id: str) -> bool:
         """移除NPC"""

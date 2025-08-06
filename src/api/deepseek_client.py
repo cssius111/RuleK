@@ -153,14 +153,16 @@ class DeepSeekClient:
         
         headers = {
             "Authorization": f"Bearer {self.config.api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json; charset=utf-8"
         }
         
         try:
+            # 修复中文编码问题：手动序列化JSON
+            json_data = json.dumps(data, ensure_ascii=False).encode('utf-8')
             response = await self.client.post(
                 f"{self.config.base_url}/{endpoint}",
                 headers=headers,
-                json=data
+                content=json_data
             )
             response.raise_for_status()
             return response.json()

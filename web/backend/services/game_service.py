@@ -13,13 +13,11 @@ from pathlib import Path
 
 from src.core.game_state import GameState, GameStateManager
 from src.ai.turn_pipeline import AITurnPipeline
-from src.models.rule import Rule
-from src.models.rule_manager import RuleManager
-from src.models import NPC, NPCManager
+from src.models import NPC, NPCManager, Rule, RuleManager, MapManager
 from src.core.narrator import Narrator
 from src.core.dialogue_system import DialogueSystem
 from src.core.event_system import EventSystem
-from src.models.map import MapManager
+
 from src.core.npc_behavior import NPCBehavior
 from src.core.rule_executor import RuleExecutor
 from src.api.deepseek_client import DeepSeekClient

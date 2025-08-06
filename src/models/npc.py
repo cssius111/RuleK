@@ -97,6 +97,10 @@ class NPC(BaseModel):
     sanity: int = Field(100, ge=0, le=100)
     stamina: int = Field(100, ge=0, le=100)
     
+    # 兼容性字段
+    traits: List[str] = Field(default_factory=list, description="性格特征（兼容旧版）")
+    alive: bool = Field(True, description="是否存活（兼容旧版）")
+    
     # 状态值
     fear: int = Field(0, ge=0, le=100)
     suspicion: int = Field(0, ge=0, le=100)

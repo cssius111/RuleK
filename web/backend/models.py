@@ -2,7 +2,7 @@
 API 数据模型定义
 使用 Pydantic 进行数据验证
 """
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Dict, List, Optional, Any, Literal
 from datetime import datetime
 
@@ -89,7 +89,8 @@ class NPCStatus(BaseModel):
     is_alive: bool
     
     model_config = ConfigDict(
-        from_attributes = True
+        from_attributes=True
+    )
 
 
 class RuleInfo(BaseModel):

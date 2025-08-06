@@ -1,71 +1,67 @@
-# 忽略Python编译文件
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-
-# 虚拟环境
-venv/
+.Python
 env/
+venv/
 ENV/
-.venv
+env.bak/
+venv.bak/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+*.egg
 
-# IDE配置
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
 .vscode/
 .idea/
-*.sublime-project
-*.sublime-workspace
-
-# 系统文件
+*.swp
+*.swo
+*~
 .DS_Store
-Thumbs.db
 
-# 日志文件
-*.log
+# Logs
 logs/
+*.log
 
-# 测试覆盖率
+# Data
+data/saves/*.json
+data/cache/
+
+# Backups
+.backups/
+.archive/
+*.backup
+*.bak
+
+# Test
+test_results/
 htmlcov/
 .coverage
 .coverage.*
 coverage.xml
 *.cover
 
-# 构建产物
-dist/
-build/
-*.egg-info/
-.eggs/
-
-# 环境配置
-.env
-.env.local
-.env.*.local
-
-# 依赖
+# Node (for frontend)
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# 前端构建
-web/frontend/dist/
-web/frontend/.vite/
+# Build
+dist/
+build/
+*.spec
 
-# 数据文件
-data/saves/*.json
-data/cache/
-
-# 临时文件
+# Temporary files
 *.tmp
-*.swp
-*.swo
-*~
-
-# pytest
-.pytest_cache/
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+*.temp
+.~*
