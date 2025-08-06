@@ -31,6 +31,6 @@ websockets==12.0
 alembic==1.16.4
 
 # 注意事项：
-# 1. Python 3.7+ 必需（使用了asyncio）
+# 1. Python 3.10+ 必需
 # 2. 大部分功能使用Python标准库
 # 3. Mock模式下不需要API密钥
