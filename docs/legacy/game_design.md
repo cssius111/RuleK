@@ -96,10 +96,8 @@ pytest tests/ --cov=src --cov-report=term
 
 ## 📖 文档
 
-- [快速开始指南](docs/guides/Quick_Start_Guide.md)
-- [游戏演示指南](docs/guides/GAME_DEMO_GUIDE.md)
-- [Sprint 2 功能总结](docs/sprints/SPRINT_2_SUMMARY.md)
-- [Web UI 开发计划](docs/sprints/SPRINT_3_PLAN.md)
+- [快速开始指南](../guides/Quick_Start_Guide.md)
+- [游戏演示指南](../guides/GAME_DEMO_GUIDE.md)
 
 ## 🛠️ 开发
 
@@ -143,3 +141,5 @@ pytest tests/ --cov=src --cov-report=term
 **当前版本**: Sprint 2 完成 | **下一步**: Web UI 开发中
 
 享受你的恐怖管理之旅！ 👻
+
+*最后更新：2025-08-07*
