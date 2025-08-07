@@ -74,6 +74,11 @@ RuleK/
 pytest tests/
 ```
 
+
+### 预提交钩子
+
+项目根目录包含唯一的预提交配置文件 `.pre-commit-config.yaml`，可使用 `pre-commit run --files <file>` 运行检查。
+
 ### Docker部署
 ```bash
 docker-compose up -d
