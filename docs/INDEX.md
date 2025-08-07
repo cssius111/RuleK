@@ -2,39 +2,36 @@
 
 ## 📚 文档分类
 
-### 快速开始
-- [README](../README.md) - 项目概述和快速开始
-- [快速开始指南](guides/Quick_Start_Guide.md) - 详细的快速开始教程
+### 指南
+- [快速开始指南](guides/Quick_Start_Guide.md)
+- [CLI 测试与开发](guides/CLI_Testing_and_Development.md)
+- [快速命令集](guides/quick_start.md)
+- [重构实施指南](guides/RESTRUCTURE_GUIDE.md)
+- [清理指南](guides/cleanup_guide.md)
+- [游戏演示指南](guides/GAME_DEMO_GUIDE.md)
 
-### 游戏设计
-- [游戏设计文档](game_design/game_design_v0.2.md) - 完整的游戏设计
-- [MCP开发计划](MCP_Development_Plan.md) - 开发路线图
+### 架构
+- [AI 核心实现指南](architecture/AI_Core_Implementation_Guide.md)
+- [Web UI 计划](architecture/Web_UI_Plan.md)
+- [Web 端 AI 核心化优化计划](architecture/Web_AI_Core_Optimization_Plan.md)
+- [Web 端 AI 实施检查清单](architecture/Web_AI_Core_Implementation_Checklist.md)
+- [Web 端 AI 核心化实施进度](architecture/Web_AI_Core_Implementation_Progress.md)
 
-### API文档
-- [API文档](api/) - API接口文档
-- [AI集成快速参考](AI_Integration_Quick_Reference.md) - AI功能快速查询
+### 计划
+- [项目重构计划](plans/PROJECT_RESTRUCTURE_PLAN.md)
+- [MCP 开发计划](plans/MCP_Development_Plan.md)
+- [剩余任务](plans/REMAINING_TASKS.md)
+- [下一步计划](plans/NEXT_STEPS.md)
 
-### 开发指南
-- [AI集成实施指南](AI_Integration_Implementation_Guide.md) - AI功能集成详细步骤
-- [AI集成计划](AI_Integration_Plan.md) - AI集成架构设计
-- [CLI测试和开发](CLI_Testing_and_Development.md) - CLI开发指南
-- [Web端AI核心化优化计划](Web_AI_Core_Optimization_Plan.md) - ⭐️ Web端AI核心化技术方案
-- [Web端AI实施检查清单](Web_AI_Core_Implementation_Checklist.md) - ⭐️ AI核心化实施追踪
-- [AI核心化实施进度报告](Web_AI_Core_Implementation_Progress.md) - 🆕 最新进度报告（2024-12-21）
-- [AI核心化实施指南](AI_Core_Implementation_Guide.md) - 🆕 优化代码整合指南
-- [项目重构计划](PROJECT_RESTRUCTURE_PLAN.md) - 通用项目重构规范
-- [重构实施指南](RESTRUCTURE_GUIDE.md) - RuleK重构具体步骤
+### 遗留
+- [游戏设计文档](legacy/game_design.md)
 
-### 部署
-- [部署指南](DEPLOYMENT.md) - 生产环境部署
-
-### 进度报告
-- [Sprint计划和报告](sprints/) - 各个Sprint的计划和报告
-- [AI集成进度报告](AI_Integration_Progress_Report_Phase3_Complete.md) - AI功能实施进度
-- [Web端AI核心化实施进度](Web_AI_Core_Implementation_Progress.md) - 🆕 第一阶段完成（2024-12-21）
-
-### 测试和问题修复
-- [测试修复指南](TEST_FIX_GUIDE.md) - 测试问题解决方案
+### 其他
+- [部署指南](DEPLOYMENT.md)
+- [快速参考](QUICK_REFERENCE.md)
+- [贡献指南](contributing.md)
+- [Agents 说明](agents.md)
+- [清理完成报告](cleanup_complete.md)
 
 ---
 
@@ -42,10 +39,10 @@
 
 ### 运行游戏
 ```bash
-# CLI模式
+# CLI 模式
 python rulek.py cli
 
-# Web模式
+# Web 模式
 python rulek.py web
 
 # 演示模式
@@ -79,4 +76,4 @@ python analyze_project.py
 ```
 
 ---
-*最后更新：2024-12-21*
+*最后更新：2025-08-07*
