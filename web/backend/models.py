@@ -210,7 +210,30 @@ class AIActionResponse(BaseModel):
     target: Optional[str] = None
     reason: Optional[str] = None
     risk: Optional[str] = None
-    priority: int = 1
+    priority: Optional[Any] = 1
+    
+    @field_validator("priority", mode="before")
+    @classmethod
+    def normalize_priority(cls, v):
+        """Normalize priority to integer"""
+        if isinstance(v, int):
+            return max(1, min(5, v))
+        elif isinstance(v, str):
+            # Try to parse as int
+            try:
+                return max(1, min(5, int(v)))
+            except:
+                # Map string priorities to integers
+                priority_map = {
+                    "low": 1,
+                    "medium": 3,
+                    "high": 5,
+                    "hh": 5,  # Handle typo
+                    "ll": 1,  # Handle typo
+                    "mm": 3,  # Handle typo
+                }
+                return priority_map.get(v.lower(), 3)
+        return 3  # Default to medium
 
 
 class AITurnPlanResponse(BaseModel):

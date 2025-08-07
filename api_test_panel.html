@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RuleK API 测试面板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-online {
+            background: #4caf50;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-offline {
+            background: #f44336;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+            }
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+        
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .response-box {
+            background: #f5f5f5;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .error {
+            background: #ffebee;
+            border-left-color: #f44336;
+            color: #c62828;
+        }
+        
+        .success {
+            background: #e8f5e9;
+            border-left-color: #4caf50;
+            color: #2e7d32;
+        }
+        
+        .game-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+        
+        .npc-list {
+            margin-top: 10px;
+        }
+        
+        .npc-item {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .npc-name {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .npc-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+        }
+        
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .stat-icon {
+            font-size: 16px;
+        }
+        
+        .alive {
+            color: #4caf50;
+        }
+        
+        .dead {
+            color: #f44336;
+            text-decoration: line-through;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            border-radius: 0;
+            margin: 0;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            background: none;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 RuleK API 测试面板</h1>
+            <p class="subtitle">规则怪谈管理者 - 交互式测试工具</p>
+        </header>
+        
+        <div class="dashboard">
+            <!-- 服务器状态卡片 -->
+            <div class="card">
+                <h2>
+                    <span id="server-status" class="status-indicator status-offline"></span>
+                    服务器状态
+                </h2>
+                <div id="server-info">
+                    <p>正在连接...</p>
+                </div>
+                <button onclick="checkServer()">检查服务器</button>
+                <button onclick="window.open('http://localhost:8000/docs', '_blank')">打开API文档</button>
+            </div>
+            
+            <!-- 游戏管理卡片 -->
+            <div class="card">
+                <h2>游戏管理</h2>
+                <input type="text" id="game-id" placeholder="游戏ID (留空创建新游戏)">
+                <div style="display: flex; gap: 10px;">
+                    <select id="difficulty">
+                        <option value="easy">简单</option>
+                        <option value="normal" selected>普通</option>
+                        <option value="hard">困难</option>
+                    </select>
+                    <select id="npc-count">
+                        <option value="2">2个NPC</option>
+                        <option value="3">3个NPC</option>
+                        <option value="4" selected>4个NPC</option>
+                        <option value="5">5个NPC</option>
+                        <option value="6">6个NPC</option>
+                    </select>
+                </div>
+                <button onclick="createGame()">创建新游戏</button>
+                <button onclick="getGameState()">获取游戏状态</button>
+                <button onclick="advanceTurn()">推进回合</button>
+                <div id="game-response" class="response-box" style="display:none;"></div>
+            </div>
+            
+            <!-- 游戏状态显示 -->
+            <div class="card">
+                <h2>当前游戏状态</h2>
+                <div id="current-game-info">
+                    <p style="color: #999;">尚未加载游戏</p>
+                </div>
+            </div>
+            
+            <!-- NPC状态显示 -->
+            <div class="card">
+                <h2>NPC状态</h2>
+                <div id="npc-status">
+                    <p style="color: #999;">尚未加载NPC</p>
+                </div>
+            </div>
+            
+            <!-- 规则管理 -->
+            <div class="card">
+                <h2>规则管理</h2>
+                <input type="text" id="rule-name" placeholder="规则名称">
+                <textarea id="rule-description" placeholder="规则描述" style="width: 100%; padding: 10px; margin: 5px 0; border: 2px solid #e0e0e0; border-radius: 8px; resize: vertical; min-height: 80px;"></textarea>
+                <input type="number" id="rule-cost" placeholder="消耗积分" value="100" min="50" max="1000">
+                <button onclick="createRule()">创建规则</button>
+                <button onclick="getRules()">获取规则列表</button>
+                <div id="rule-response" class="response-box" style="display:none;"></div>
+            </div>
+            
+            <!-- AI功能 -->
+            <div class="card">
+                <h2>AI功能</h2>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('ai-turn')">AI回合</button>
+                    <button class="tab" onclick="switchTab('ai-rule')">AI规则评估</button>
+                    <button class="tab" onclick="switchTab('ai-narrative')">AI叙事</button>
+                </div>
+                
+                <div id="ai-turn" class="tab-content active">
+                    <button onclick="initAI()">初始化AI</button>
+                    <button onclick="checkAIStatus()">检查AI状态</button>
+                    <button onclick="runAITurn()">执行AI回合</button>
+                </div>
+                
+                <div id="ai-rule" class="tab-content">
+                    <textarea id="ai-rule-desc" placeholder="输入自然语言规则描述" style="width: 100%; padding: 10px; margin: 5px 0; border: 2px solid #e0e0e0; border-radius: 8px; resize: vertical; min-height: 80px;"></textarea>
+                    <button onclick="evaluateRule()">AI评估规则</button>
+                </div>
+                
+                <div id="ai-narrative" class="tab-content">
+                    <select id="narrative-style">
+                        <option value="horror">恐怖</option>
+                        <option value="suspense">悬疑</option>
+                        <option value="gothic">哥特</option>
+                    </select>
+                    <button onclick="generateNarrative()">生成叙事</button>
+                </div>
+                
+                <div id="ai-response" class="response-box" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let currentGameId = null;
+        
+        // 页面加载时检查服务器
+        window.onload = function() {
+            checkServer();
+        };
+        
+        // 通用API调用函数
+        async function apiCall(method, endpoint, data = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                const result = await response.json();
+                
+                return {
+                    success: response.ok,
+                    status: response.status,
+                    data: result
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+        
+        // 显示响应
+        function showResponse(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = 'response-box ' + (isError ? 'error' : 'success');
+            element.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        }
+        
+        // 检查服务器
+        async function checkServer() {
+            const result = await apiCall('GET', '/');
+            const statusElement = document.getElementById('server-status');
+            const infoElement = document.getElementById('server-info');
+            
+            if (result.success) {
+                statusElement.className = 'status-indicator status-online';
+                infoElement.innerHTML = `
+                    <div class="game-info">
+                        <div class="info-item">
+                            <span class="info-label">名称:</span>
+                            <span class="info-value">${result.data.name}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">版本:</span>
+                            <span class="info-value">${result.data.version}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">状态:</span>
+                            <span class="info-value">${result.data.status}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                statusElement.className = 'status-indicator status-offline';
+                infoElement.innerHTML = '<p style="color: #f44336;">服务器离线</p>';
+            }
+        }
+        
+        // 创建游戏
+        async function createGame() {
+            const difficulty = document.getElementById('difficulty').value;
+            const npcCount = parseInt(document.getElementById('npc-count').value);
+            
+            const result = await apiCall('POST', '/api/games', {
+                difficulty: difficulty,
+                npc_count: npcCount
+            });
+            
+            if (result.success) {
+                currentGameId = result.data.game_id;
+                document.getElementById('game-id').value = currentGameId;
+                showResponse('game-response', `游戏创建成功!\n游戏ID: ${currentGameId}`);
+                updateGameInfo(result.data);
+                updateNPCStatus(result.data.npcs);
+            } else {
+                showResponse('game-response', `创建失败: ${result.data?.detail || result.error}`, true);
+            }
+        }
+        
+        // 获取游戏状态
+        async function getGameState() {
+            const gameId = document.getElementById('game-id').value || currentGameId;
+            if (!gameId) {
+                showResponse('game-response', '请先创建游戏或输入游戏ID', true);
+                return;
+            }
+            
+            const result = await apiCall('GET', `/api/games/${gameId}`);
+            
+            if (result.success) {
+                currentGameId = gameId;
+                updateGameInfo(result.data);
+                updateNPCStatus(result.data.npcs);
+                showResponse('game-response', result.data);
+            } else {
+                showResponse('game-response', `获取失败: ${result.data?.detail || result.error}`, true);
+            }
+        }
+        
+        // 更新游戏信息显示
+        function updateGameInfo(data) {
+            const infoElement = document.getElementById('current-game-info');
+            infoElement.innerHTML = `
+                <div class="game-info">
+                    <div class="info-item">
+                        <span class="info-label">游戏ID:</span>
+                        <span class="info-value">${data.game_id}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">回合:</span>
+                        <span class="info-value">${data.current_turn}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">恐惧点:</span>
+                        <span class="info-value">${data.fear_points}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">阶段:</span>
+                        <span class="info-value">${data.phase}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">模式:</span>
+                        <span class="info-value">${data.mode}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">时间:</span>
+                        <span class="info-value">${data.time_of_day}</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 更新NPC状态显示
+        function updateNPCStatus(npcs) {
+            const npcElement = document.getElementById('npc-status');
+            if (!npcs || npcs.length === 0) {
+                npcElement.innerHTML = '<p style="color: #999;">没有NPC</p>';
+                return;
+            }
+            
+            let html = '<div class="npc-list">';
+            npcs.forEach(npc => {
+                const statusClass = npc.is_alive ? 'alive' : 'dead';
+                html += `
+                    <div class="npc-item">
+                        <span class="npc-name ${statusClass}">${npc.name}</span>
+                        <div class="npc-stats">
+                            <span class="stat">
+                                <span class="stat-icon">❤️</span>
+                                ${npc.hp}
+                            </span>
+                            <span class="stat">
+                                <span class="stat-icon">🧠</span>
+                                ${npc.sanity}
+                            </span>
+                            <span class="stat">
+                                <span class="stat-icon">😱</span>
+                                ${npc.fear}
+                            </span>
+                            <span class="stat">
+                                <span class="stat-icon">📍</span>
+                                ${npc.location}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            npcElement.innerHTML = html;
+        }
+        
+        // 推进回合
+        async function advanceTurn() {
+            const gameId = document.getElementById('game-id').value || currentGameId;
+            if (!gameId) {
+                showResponse('game-response', '请先创建游戏或输入游戏ID', true);
+                return;
+            }
+            
+            const result = await apiCall('POST', `/api/games/${gameId}/turn`);
+            
+            if (result.success) {
+                showResponse('game-response', result.data);
+                // 刷新游戏状态
+                getGameState();
+            } else {
+                showResponse('game-response', `推进失败: ${result.data?.detail || result.error}`, true);
+            }
+        }
+        
+        // 创建规则
+        async function createRule() {
+            const gameId = document.getElementById('game-id').value || currentGameId;
+            if (!gameId) {
+                showResponse('rule-response', '请先创建游戏或输入游戏ID', true);
+                return;
+            }
+            
+            const name = document.getElementById('rule-name').value;
+            const description = document.getElementById('rule-description').value;
+            const cost = parseInt(document.getElementById('rule-cost').value);
+            
+            if (!name || !description) {
+                showResponse('rule-response', '请填写规则名称和描述', true);
+                return;
+            }
+            
+            const result = await apiCall('POST', `/api/games/${gameId}/rules`, {
+                name: name,
+                description: description,
+                requirements: {"time": "night"},
+                trigger: {"type": "time"},
+                effect: {"type": "damage", "value": 10},
+                cost: cost
+            });
+            
+            if (result.success) {
+                showResponse('rule-response', `规则创建成功!\n${JSON.stringify(result.data, null, 2)}`);
+                // 清空输入
+                document.getElementById('rule-name').value = '';
+                document.getElementById('rule-description').value = '';
+            } else {
+                showResponse('rule-response', `创建失败: ${result.data?.detail || result.error}`, true);
+            }
+        }
+        
+        // 获取规则列表
+        async function getRules() {
+            const gameId = document.getElementById('game-id').value || currentGameId;
+            if (!gameId) {
+                showResponse('rule-response', '请先创建游戏或输入游戏ID', true);
+                return;
+            }
+            
+            const result = await apiCall('GET', `/api/games/${gameId}/rules`);
+            
+            if (result.success) {
+                showResponse('rule-response', result.data);
+            } else {
+                showResponse('rule-response', `获取失败: ${result.data?.detail || result.error}`, true);
+            }
+        }
+        
+        // AI功能
+        async function initAI() {
+            const gameId = document.getElementById('game-id').value || currentGameId;
+            if (!gameId) {
+                showResponse('ai-response', '请先创建游戏或输入游戏ID', true);
+                return;
+            }
+            
+            const result = await apiCall('POST', `/api/games/${gameId}/ai/init`);
+            
+            if (result.success) {
+                showResponse('ai-response', 'AI系统初始化成功!');
+            } else {
+                showResponse('ai-response', `初始化失败: ${result.data?.detail || result.error}`, true);
+            }
+        }
+        
+        async function checkAIStatus() {
+            const gameId = document.getElementById('game-id').value || currentGameId;
+            if (!gameId) {
+                showResponse('ai-response', '请先创建游戏或输入游戏ID', true);
+                return;
+            }
+            
+            const result = await apiCall('GET', `/api/games/${gameId}/ai/status`);
+            
+            if (result.success) {
+                showResponse('ai-response', result.data);
+            } else {
+                showResponse('ai-response', `检查失败: ${result.data?.detail || result.error}`, true);
+            }
+        }
+        
+        async function runAITurn() {
+            const gameId = document.getElementById('game-id').value || currentGameId;
+            if (!gameId) {
+                showResponse('ai-response', '请先创建游戏或输入游戏ID', true);
+                return;
+            }
+            
+            const result = await apiCall('POST', `/api/games/${gameId}/ai/turn`, {
+                force_dialogue: true,
+                include_hidden_events: false
+            });
+            
+            if (result.success) {
+                showResponse('ai-response', result.data);
+            } else {
+                showResponse('ai-response', `执行失败: ${result.data?.detail || result.error}`, true);
+            }
+        }
+        
+        async function evaluateRule() {
+            const gameId = document.getElementById('game-id').value || currentGameId;
+            if (!gameId) {
+                showResponse('ai-response', '请先创建游戏或输入游戏ID', true);
+                return;
+            }
+            
+            const description = document.getElementById('ai-rule-desc').value;
+            if (!description) {
+                showResponse('ai-response', '请输入规则描述', true);
+                return;
+            }
+            
+            const result = await apiCall('POST', `/api/games/${gameId}/ai/evaluate-rule`, {
+                rule_description: description
+            });
+            
+            if (result.success) {
+                showResponse('ai-response', result.data);
+            } else {
+                showResponse('ai-response', `评估失败: ${result.data?.detail || result.error}`, true);
+            }
+        }
+        
+        async function generateNarrative() {
+            const gameId = document.getElementById('game-id').value || currentGameId;
+            if (!gameId) {
+                showResponse('ai-response', '请先创建游戏或输入游戏ID', true);
+                return;
+            }
+            
+            const style = document.getElementById('narrative-style').value;
+            
+            const result = await apiCall('POST', `/api/games/${gameId}/ai/narrative`, {
+                include_hidden_events: false,
+                style: style
+            });
+            
+            if (result.success) {
+                showResponse('ai-response', result.data);
+            } else {
+                showResponse('ai-response', `生成失败: ${result.data?.detail || result.error}`, true);
+            }
+        }
+        
+        // 切换标签
+        function switchTab(tabName) {
+            // 移除所有active类
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 添加active类到当前标签
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+    </script>
+</body>
+</html>

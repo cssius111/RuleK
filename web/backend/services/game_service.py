@@ -111,6 +111,8 @@ class GameService:
             
             # 添加到游戏状态
             self.game_state.npcs[npc.id] = npc.to_dict()
+            # Also add to npc_manager tracking
+            self.npc_manager.npcs[npc.id] = npc
     
     def update_last_accessed(self):
         """更新最后访问时间"""
@@ -169,12 +171,20 @@ class GameService:
         for npc_id, npc_data in self.game_state.npcs.items():
             if npc_data.get("hp", 0) > 0:
                 npc = self.npc_manager.get_npc(npc_id)
+                if not npc:
+                    # Recreate NPC from data if missing
+                    from src.models.npc import NPC
+                    # Remove 'id' from npc_data if it exists to avoid duplicate
+                    npc_data_copy = npc_data.copy()
+                    npc_data_copy.pop('id', None)
+                    npc = NPC(id=npc_id, **npc_data_copy)
+                    self.npc_manager.npcs[npc_id] = npc
                 if npc:
                     action = self.npc_behavior.decide_action(npc, self.game_state)
                     if action:
                         events.append({
                             "type": "npc_action",
-                            "npc": npc.name,
+                            "npc": npc.name if hasattr(npc, 'name') else npc_data.get('name', 'Unknown'),
                             "action": action
                         })
         
@@ -224,9 +234,19 @@ class GameService:
     async def _run_dialogue_phase(self) -> List[Dict]:
         """运行对话阶段"""
         events = []
-        npcs = [self.npc_manager.get_npc(npc_id) 
-                for npc_id in self.game_state.npcs 
-                if self.game_state.npcs[npc_id].get("hp", 0) > 0]
+        npcs = []
+        for npc_id in self.game_state.npcs:
+            if self.game_state.npcs[npc_id].get("hp", 0) > 0:
+                npc = self.npc_manager.get_npc(npc_id)
+                if not npc:
+                    # Recreate from data if missing
+                    from src.models.npc import NPC
+                    npc_data = self.game_state.npcs[npc_id].copy()
+                    npc_data.pop('id', None)  # Remove id to avoid duplicate
+                    npc = NPC(id=npc_id, **npc_data)
+                    self.npc_manager.npcs[npc_id] = npc
+                if npc:
+                    npcs.append(npc)
         
         if len(npcs) >= 2:
             # 生成对话
@@ -258,14 +278,83 @@ class GameService:
     
     async def create_rule(self, rule_data: Dict) -> str:
         """创建新规则"""
+        import uuid
+        from src.models.rule import Rule, TriggerCondition, RuleEffect, EffectType, RuleRequirement
+        
         self.update_last_accessed()
         
         # 检查积分是否足够
         if self.game_state.fear_points < rule_data["cost"]:
             raise ValueError("Not enough fear points")
         
-        # 创建规则
-        rule = Rule(**rule_data)
+        # Generate ID if not provided
+        rule_id = rule_data.get("id") or f"rule_{uuid.uuid4().hex[:8]}"
+        
+        # Create trigger condition
+        trigger_data = rule_data.get("trigger", {})
+        trigger = TriggerCondition(
+            action=trigger_data.get("action", trigger_data.get("type", "manual")),
+            time_range=trigger_data.get("time_range"),
+            location=trigger_data.get("location"),
+            probability=trigger_data.get("probability", 0.8)
+        )
+        
+        # Handle requirements time conversion
+        requirements_data = rule_data.get("requirements", {})
+        if requirements_data and "time" in requirements_data:
+            time = requirements_data["time"]
+            if isinstance(time, str):
+                if time == "night":
+                    trigger.time_range = {"from": "20:00", "to": "04:00"}
+                elif time == "day":
+                    trigger.time_range = {"from": "06:00", "to": "18:00"}
+        
+        # Create effect
+        effect_data = rule_data.get("effect", {})
+        effect_type = effect_data.get("type", "fear_gain")
+        
+        # Map common types to enum values
+        type_mapping = {
+            "damage": EffectType.FEAR_GAIN,
+            "death": EffectType.INSTANT_DEATH,
+            "fear": EffectType.FEAR_GAIN,
+            "sanity": EffectType.SANITY_LOSS,
+            "teleport": EffectType.TELEPORT,
+            "transform": EffectType.TRANSFORM,
+            "spawn": EffectType.SPAWN_SPIRIT,
+            "event": EffectType.TRIGGER_EVENT
+        }
+        
+        if effect_type in type_mapping:
+            effect_type = type_mapping[effect_type]
+        elif effect_type not in [e.value for e in EffectType]:
+            effect_type = EffectType.FEAR_GAIN
+            
+        effect = RuleEffect(
+            type=effect_type,
+            params={"value": effect_data.get("value", 10)},
+            fear_gain=effect_data.get("value", 50)
+        )
+        
+        # Create requirements
+        requirements = RuleRequirement()
+        if requirements_data:
+            if "areas" in requirements_data:
+                requirements.areas = requirements_data["areas"]
+            if "items" in requirements_data:
+                requirements.items = requirements_data["items"]
+        
+        # Create rule with all required fields
+        rule = Rule(
+            id=rule_id,
+            name=rule_data["name"],
+            description=rule_data.get("description", ""),
+            trigger=trigger,
+            effect=effect,
+            requirements=requirements,
+            base_cost=rule_data.get("cost", 100)
+        )
+        
         self.rule_manager.add_rule(rule)
         
         # 扣除积分
@@ -276,7 +365,7 @@ class GameService:
             "update_type": "rule",
             "data": {
                 "action": "created",
-                "rule": rule.to_dict()
+                "rule": rule.model_dump()
             }
         })
         
@@ -329,7 +418,7 @@ class GameService:
             "saved_at": datetime.now().isoformat(),
             "game_state": self.game_state.to_dict(),
             "managers": {
-                "rules": [rule.to_dict() for rule in self.rule_manager.active_rules],
+                "rules": [rule.model_dump() for rule in self.rule_manager.active_rules],
                 "npcs": {npc_id: npc.to_dict() 
                         for npc_id, npc in self.npc_manager.npcs.items()},
                 "map": self.map_manager.to_dict()

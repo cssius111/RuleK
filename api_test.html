@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RuleK API 测试面板</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .game-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .info-card {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .info-card h4 {
+            margin: 0 0 5px 0;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 RuleK API 测试面板</h1>
+        
+        <div class="section">
+            <h2>服务器状态</h2>
+            <button onclick="checkStatus()">检查服务器状态</button>
+            <button onclick="checkDocs()">检查文档端点</button>
+            <div id="status-result" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h2>游戏管理</h2>
+            <div>
+                <input type="text" id="game-id" placeholder="游戏ID (如: game_07ecb3a5)" style="width: 300px; padding: 8px; margin: 5px;">
+                <button onclick="setGameId()">设置游戏ID</button>
+            </div>
+            <button onclick="createGame()">创建新游戏</button>
+            <button onclick="getGame()">获取游戏状态</button>
+            <button onclick="advanceTurn()">推进回合</button>
+            <div id="game-result" class="result"></div>
+            <div id="game-info" class="game-info"></div>
+        </div>
+
+        <div class="section">
+            <h2>规则管理</h2>
+            <button onclick="createRule()">创建测试规则</button>
+            <button onclick="getRules()">获取规则列表</button>
+            <div id="rule-result" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h2>AI功能</h2>
+            <button onclick="checkAI()">检查AI状态</button>
+            <button onclick="initAI()">初始化AI</button>
+            <button onclick="runAITurn()">执行AI回合</button>
+            <div id="ai-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let currentGameId = 'game_07ecb3a5';  // 默认使用你创建的游戏ID
+
+        function setGameId() {
+            const input = document.getElementById('game-id');
+            if (input.value) {
+                currentGameId = input.value;
+                alert(`游戏ID设置为: ${currentGameId}`);
+            }
+        }
+
+        async function checkStatus() {
+            const result = document.getElementById('status-result');
+            try {
+                const response = await fetch(`${API_BASE}/`);
+                const data = await response.json();
+                result.className = 'result success';
+                result.textContent = `✅ 服务器运行正常\n${JSON.stringify(data, null, 2)}`;
+                
+                // 也检查健康端点
+                const healthResponse = await fetch(`${API_BASE}/health`);
+                const healthData = await healthResponse.json();
+                result.textContent += `\n\n健康检查:\n${JSON.stringify(healthData, null, 2)}`;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ 错误: ${error.message}`;
+            }
+        }
+
+        async function checkDocs() {
+            const result = document.getElementById('status-result');
+            const endpoints = ['/docs', '/redoc', '/openapi.json'];
+            let output = '文档端点检查:\n\n';
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(`${API_BASE}${endpoint}`);
+                    if (response.ok) {
+                        output += `✅ ${endpoint} - 可访问 (${response.status})\n`;
+                        if (endpoint === '/openapi.json') {
+                            const data = await response.json();
+                            output += `   OpenAPI版本: ${data.openapi}\n`;
+                            output += `   API标题: ${data.info.title}\n`;
+                            output += `   端点数量: ${Object.keys(data.paths).length}\n`;
+                        }
+                    } else {
+                        output += `❌ ${endpoint} - 状态码 ${response.status}\n`;
+                    }
+                } catch (error) {
+                    output += `❌ ${endpoint} - ${error.message}\n`;
+                }
+            }
+            
+            result.className = 'result';
+            result.textContent = output;
+        }
+
+        async function createGame() {
+            const result = document.getElementById('game-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/games`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        difficulty: 'normal',
+                        npc_count: 5
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    currentGameId = data.game_id;
+                    document.getElementById('game-id').value = currentGameId;
+                    result.className = 'result success';
+                    result.textContent = `✅ 游戏创建成功!\n游戏ID: ${currentGameId}\n\n${JSON.stringify(data, null, 2)}`;
+                    displayGameInfo(data);
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ 创建失败: ${JSON.stringify(data)}`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ 错误: ${error.message}`;
+            }
+        }
+
+        async function getGame() {
+            const result = document.getElementById('game-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/games/${currentGameId}`);
+                const data = await response.json();
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.textContent = `✅ 游戏状态:\n${JSON.stringify(data, null, 2)}`;
+                    displayGameInfo(data);
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ 获取失败: ${JSON.stringify(data)}`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ 错误: ${error.message}`;
+            }
+        }
+
+        function displayGameInfo(data) {
+            const infoDiv = document.getElementById('game-info');
+            const aliveNpcs = data.npcs ? data.npcs.filter(npc => npc.is_alive).length : 0;
+            
+            infoDiv.innerHTML = `
+                <div class="info-card">
+                    <h4>游戏ID</h4>
+                    <div>${data.game_id || currentGameId}</div>
+                </div>
+                <div class="info-card">
+                    <h4>当前回合</h4>
+                    <div>${data.current_turn || 0}</div>
+                </div>
+                <div class="info-card">
+                    <h4>恐惧点数</h4>
+                    <div>${data.fear_points || 0}</div>
+                </div>
+                <div class="info-card">
+                    <h4>游戏阶段</h4>
+                    <div>${data.phase || 'N/A'}</div>
+                </div>
+                <div class="info-card">
+                    <h4>时间段</h4>
+                    <div>${data.time_of_day || 'N/A'}</div>
+                </div>
+                <div class="info-card">
+                    <h4>存活NPC</h4>
+                    <div>${aliveNpcs} / ${data.npcs ? data.npcs.length : 0}</div>
+                </div>
+                <div class="info-card">
+                    <h4>活跃规则</h4>
+                    <div>${data.active_rules || 0}</div>
+                </div>
+                <div class="info-card">
+                    <h4>总恐惧收获</h4>
+                    <div>${data.total_fear_gained || 0}</div>
+                </div>
+            `;
+        }
+
+        async function advanceTurn() {
+            const result = document.getElementById('game-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/games/${currentGameId}/turn`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.textContent = `✅ 回合推进成功!\n${JSON.stringify(data, null, 2)}`;
+                    displayGameInfo(data);
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ 推进失败: ${JSON.stringify(data)}`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ 错误: ${error.message}`;
+            }
+        }
+
+        async function createRule() {
+            const result = document.getElementById('rule-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/games/${currentGameId}/rules`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        name: '午夜禁声',
+                        description: '午夜时分，任何发出声音的人都会被传送到地下室',
+                        trigger_type: 'time',
+                        effect_type: 'teleport',
+                        cost: 150
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.textContent = `✅ 规则创建成功!\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ 创建失败: ${JSON.stringify(data)}`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ 错误: ${error.message}`;
+            }
+        }
+
+        async function getRules() {
+            const result = document.getElementById('rule-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/games/${currentGameId}/rules`);
+                const data = await response.json();
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.textContent = `✅ 规则列表:\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ 获取失败: ${JSON.stringify(data)}`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ 错误: ${error.message}`;
+            }
+        }
+
+        async function checkAI() {
+            const result = document.getElementById('ai-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/games/${currentGameId}/ai/status`);
+                const data = await response.json();
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.textContent = `✅ AI状态:\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ 获取失败: ${JSON.stringify(data)}`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ 错误: ${error.message}`;
+            }
+        }
+
+        async function initAI() {
+            const result = document.getElementById('ai-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/games/${currentGameId}/ai/init`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.textContent = `✅ AI初始化成功!\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ 初始化失败: ${JSON.stringify(data)}`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ 错误: ${error.message}`;
+            }
+        }
+
+        async function runAITurn() {
+            const result = document.getElementById('ai-result');
+            result.textContent = '⏳ AI正在生成回合内容...';
+            try {
+                const response = await fetch(`${API_BASE}/api/games/${currentGameId}/ai/turn`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        min_dialogue_turns: 2,
+                        force_dialogue: true
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.textContent = `✅ AI回合执行成功!\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ 执行失败: ${JSON.stringify(data)}`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ 错误: ${error.message}`;
+            }
+        }
+
+        // 页面加载时检查服务器
+        window.onload = () => {
+            checkStatus();
+        };
+    </script>
+</body>
+</html>

@@ -41,9 +41,37 @@ class PlannedAction(BaseModel):
     target: Optional[str] = Field(default=None, description="目标对象或地点")
     reason: Optional[str] = Field(default=None, description="行动理由")
     risk: Optional[str] = Field(default=None, description="潜在风险")
-    priority: Literal["high", "medium", "low"] = Field(
+    priority: Optional[Any] = Field(
         default="medium", description="优先级"
     )
+    
+    @field_validator("priority", mode="before")
+    @classmethod
+    def normalize_priority(cls, v):
+        """Normalize priority to string format"""
+        if isinstance(v, int):
+            # Convert int 1-5 to high/medium/low
+            if v >= 4:
+                return "high"
+            elif v >= 2:
+                return "medium"
+            else:
+                return "low"
+        elif isinstance(v, str):
+            if v in ["high", "medium", "low"]:
+                return v
+            # Try to parse as int
+            try:
+                int_val = int(v)
+                if int_val >= 4:
+                    return "high"
+                elif int_val >= 2:
+                    return "medium"
+                else:
+                    return "low"
+            except:
+                return "medium"
+        return "medium"
 
     model_config = ConfigDict(extra="allow")
 
