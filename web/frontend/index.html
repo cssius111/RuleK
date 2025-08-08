@@ -1,45 +1,13 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<!doctype html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>规则怪谈管理者</title>
-    <style>
-      /* 初始加载样式 */
-      #app {
-        min-height: 100vh;
-        background: #0a0a0a;
-        color: #ffffff;
-      }
-      
-      /* 加载动画 */
-      .loading {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        font-family: monospace;
-        font-size: 1.2rem;
-        color: #8b0000;
-      }
-      
-      .loading::after {
-        content: "...";
-        animation: dots 1.5s steps(5, end) infinite;
-      }
-      
-      @keyframes dots {
-        0%, 20% { content: "."; }
-        40% { content: ".."; }
-        60%, 100% { content: "..."; }
-      }
-    </style>
+    <title>RuleK - 规则怪谈管理者</title>
   </head>
   <body>
-    <div id="app">
-      <div class="loading">Loading</div>
-    </div>
+    <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

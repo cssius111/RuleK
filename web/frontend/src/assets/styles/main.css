@@ -1,87 +1,112 @@
-/* 全局样式 */
+/* 恐怖主题变量 */
 :root {
-  /* 主题颜色 */
-  --primary-color: #dc143c;
-  --primary-dark: #8b0000;
-  --secondary-color: #2d1b69;
-  
-  /* 背景颜色 */
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #1a0f1f;
-  --bg-card: rgba(26, 15, 31, 0.8);
-  
-  /* 文字颜色 */
-  --text-primary: #e0e0e0;
-  --text-secondary: #888;
-  --text-danger: #dc143c;
-  
-  /* 边框颜色 */
-  --border-color: rgba(139, 0, 0, 0.3);
-  --border-hover: rgba(139, 0, 0, 0.6);
-  
-  /* 阴影 */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 32px rgba(139, 0, 0, 0.3);
-  
-  /* 动画 */
-  --transition-fast: 0.2s ease;
-  --transition-normal: 0.3s ease;
-  --transition-slow: 0.5s ease;
+  --horror-black: #0a0a0a;
+  --horror-dark-red: #1a0f0f;
+  --horror-card-bg: rgba(20, 10, 10, 0.95);
+  --horror-primary: #8b0000;
+  --horror-accent: #dc143c;
+  --horror-danger: #ff0000;
+  --horror-text: #e8e8e8;
+  --horror-text-secondary: #a0a0a0;
+  --horror-border: rgba(139, 0, 0, 0.3);
+  --horror-shadow: 0 10px 40px rgba(139, 0, 0, 0.5);
+  --horror-glow: 0 0 30px rgba(220, 20, 60, 0.6);
 }
 
-/* 全局重置 */
+/* 全局样式重置 */
 * {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
 }
 
-html {
+/* 设置根元素样式 */
+html, body {
+  font-family: 'Creepster', 'Nosifer', 'Segoe UI', Tahoma, Geneva, Verdana, -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 16px;
   line-height: 1.5;
+  color: var(--horror-text);
+  background: var(--horror-black);
+  height: 100%;
+  overflow-x: hidden;
 }
 
-body {
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 
-               'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', 
-               Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: var(--bg-primary);
-  color: var(--text-primary);
+/* 平滑滚动 */
+html {
+  scroll-behavior: smooth;
 }
 
-/* 滚动条样式 */
+/* 链接默认样式 */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 按钮默认样式 */
+button {
+  font-family: inherit;
+  outline: none;
+}
+
+/* 输入框默认样式 */
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+}
+
+/* 图片默认样式 */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 滚动条样式 - 恐怖主题 */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--horror-dark-red);
+  border-radius: 0;
+  box-shadow: inset 0 0 5px rgba(139, 0, 0, 0.5);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
+  background: linear-gradient(180deg, var(--horror-primary), var(--horror-accent));
+  border-radius: 0;
+  box-shadow: 0 0 5px rgba(220, 20, 60, 0.3);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--border-hover);
+  background: linear-gradient(180deg, var(--horror-accent), var(--horror-danger));
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
 }
 
-/* 文字选中样式 */
-::selection {
-  background: var(--primary-color);
-  color: white;
+/* 工具类 */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
-/* 动画 */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* 动画类 */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -89,88 +114,192 @@ body {
   }
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.05);
-  }
-}
-
-@keyframes flicker {
-  0%, 100% {
-    opacity: 1;
-  }
-  10%, 30%, 50%, 70%, 90% {
-    opacity: 0.8;
-  }
-  20%, 40%, 60%, 80% {
-    opacity: 0.6;
-  }
-}
-
-/* 工具类 */
 .fade-in {
-  animation: fadeIn var(--transition-normal);
+  animation: fadeIn 0.5s ease-out;
 }
 
-.pulse {
-  animation: pulse 2s ease-in-out infinite;
+/* 加载动画 - 恐怖主题 */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-.flicker {
-  animation: flicker 3s ease-in-out infinite;
+@keyframes blood-pulse {
+  0% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.05);
+    filter: brightness(1.2);
+  }
+  100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
 }
 
-.text-danger {
-  color: var(--text-danger);
+.loading-spinner {
+  border: 3px solid rgba(139, 0, 0, 0.3);
+  border-top: 3px solid var(--horror-accent);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite, blood-pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
 }
 
-.text-secondary {
-  color: var(--text-secondary);
+/* 过渡效果 */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s;
 }
 
-.mt-1 { margin-top: 0.5rem; }
-.mt-2 { margin-top: 1rem; }
-.mt-3 { margin-top: 1.5rem; }
-.mt-4 { margin-top: 2rem; }
-
-.mb-1 { margin-bottom: 0.5rem; }
-.mb-2 { margin-bottom: 1rem; }
-.mb-3 { margin-bottom: 1.5rem; }
-.mb-4 { margin-bottom: 2rem; }
-
-.p-1 { padding: 0.5rem; }
-.p-2 { padding: 1rem; }
-.p-3 { padding: 1.5rem; }
-.p-4 { padding: 2rem; }
-
-/* 恐怖氛围效果 */
-.horror-text {
-  text-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-dark);
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 
-.horror-glow {
-  box-shadow: 0 0 20px var(--primary-color), inset 0 0 20px rgba(139, 0, 0, 0.2);
+/* 响应式断点 */
+@media (max-width: 1024px) {
+  .container {
+    max-width: 100%;
+  }
 }
 
-.blood-drip {
-  background: linear-gradient(to bottom, var(--primary-color) 0%, transparent 100%);
-  filter: drop-shadow(0 2px 4px var(--primary-dark));
-}
-
-/* 响应式 */
 @media (max-width: 768px) {
-  html {
+  html, body {
     font-size: 14px;
   }
 }
 
 @media (max-width: 480px) {
-  html {
-    font-size: 12px;
+  html, body {
+    font-size: 13px;
   }
+}
+
+/* 恐怖主题专用样式 */
+.horror-card {
+  background: linear-gradient(135deg, rgba(20, 10, 10, 0.95), rgba(40, 0, 0, 0.9));
+  border: 1px solid var(--horror-border);
+  box-shadow: var(--horror-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.horror-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, transparent 30%, rgba(139, 0, 0, 0.1) 70%);
+  animation: horror-breathe 4s ease-in-out infinite;
+}
+
+@keyframes horror-breathe {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.1) rotate(180deg); }
+}
+
+.blood-text {
+  color: var(--horror-accent);
+  text-shadow: 0 0 10px rgba(220, 20, 60, 0.5), 0 2px 4px rgba(139, 0, 0, 0.8);
+  animation: blood-drip 3s ease-in-out infinite;
+}
+
+@keyframes blood-drip {
+  0%, 100% { text-shadow: 0 0 10px rgba(220, 20, 60, 0.5), 0 2px 4px rgba(139, 0, 0, 0.8); }
+  50% { text-shadow: 0 0 20px rgba(220, 20, 60, 0.8), 0 4px 8px rgba(139, 0, 0, 1); }
+}
+
+.horror-button {
+  background: linear-gradient(135deg, var(--horror-primary), var(--horror-accent));
+  border: 1px solid var(--horror-primary);
+  color: var(--horror-text);
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.horror-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, var(--horror-danger) 0%, transparent 70%);
+  transition: all 0.5s;
+  transform: translate(-50%, -50%);
+}
+
+.horror-button:hover {
+  box-shadow: var(--horror-glow);
+  transform: scale(1.05);
+  border-color: var(--horror-danger);
+}
+
+.horror-button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.pulse-horror {
+  animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 40px rgba(220, 20, 60, 0.8);
+    transform: scale(1.02);
+  }
+}
+
+.death-overlay {
+  position: relative;
+  filter: grayscale(100%) brightness(0.3);
+  opacity: 0.7;
+}
+
+.death-overlay::after {
+  content: '☠';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3rem;
+  color: var(--horror-accent);
+  opacity: 0.5;
+}
+
+/* 抖动效果 */
+.horror-shake {
+  animation: shake 0.5s infinite;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+/* 闪烁效果 */
+.horror-flicker {
+  animation: flicker 2s infinite;
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.6; }
+  94% { opacity: 1; }
+  96% { opacity: 0.8; }
+  97% { opacity: 1; }
 }

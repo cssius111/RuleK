@@ -1,61 +1,39 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import HomePage from '@/views/HomePage.vue'
-import GameView from '@/views/GameView.vue'
-import SettingsView from '@/views/SettingsView.vue'
+import { createRouter, createWebHistory } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 
-const routes: Array<RouteRecordRaw> = [
+// 路由配置
+const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    name: 'home',
-    component: HomePage,
-    meta: {
-      title: '规则怪谈管理者'
-    }
+    name: 'Home',
+    component: () => import('@/views/Home.vue')
   },
   {
-    path: '/game/:gameId',
-    name: 'game',
-    component: GameView,
-    meta: {
-      title: '游戏进行中',
-      requiresGame: true
-    }
+    path: '/new-game',
+    name: 'NewGame',
+    component: () => import('@/views/NewGame.vue')
   },
   {
-    path: '/settings',
-    name: 'settings',
-    component: SettingsView,
-    meta: {
-      title: '设置'
-    }
+    path: '/load-game',
+    name: 'LoadGame',
+    component: () => import('@/views/LoadGame.vue')
   },
   {
-    path: '/:pathMatch(.*)*',
-    redirect: '/'
+    path: '/game',
+    name: 'Game',
+    component: () => import('@/views/Game.vue')
+  },
+  {
+    path: '/help',
+    name: 'Help',
+    component: () => import('@/views/Help.vue')
   }
 ]
 
+// 创建路由实例
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
-})
-
-// 路由守卫
-router.beforeEach((to, from, next) => {
-  // 设置页面标题
-  document.title = `${to.meta.title || '规则怪谈管理者'}`
-  
-  // 检查游戏状态
-  if (to.meta.requiresGame) {
-    // TODO: 检查是否有有效的游戏会话
-    const hasGame = true // 临时设置为true
-    if (!hasGame) {
-      next({ name: 'home' })
-      return
-    }
-  }
-  
-  next()
 })
 
 export default router

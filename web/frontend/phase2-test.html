@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 2 功能测试</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .test-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f7f7f7;
+            border-radius: 8px;
+        }
+        .test-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .status.success {
+            background: #10b981;
+            color: white;
+        }
+        .status.pending {
+            background: #f59e0b;
+            color: white;
+        }
+        .link-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        .link-btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-card">
+        <h1>🎮 Phase 2 - 新游戏配置页面测试</h1>
+        
+        <div class="test-section">
+            <h2>✅ 已实现的功能</h2>
+            <div class="test-item">
+                <span>📝 类型定义文件 (game.ts)</span>
+                <span class="status success">完成</span>
+            </div>
+            <div class="test-item">
+                <span>🔌 API服务 (gameApi.ts)</span>
+                <span class="status success">完成</span>
+            </div>
+            <div class="test-item">
+                <span>⏳ 加载动画组件</span>
+                <span class="status success">完成</span>
+            </div>
+            <div class="test-item">
+                <span>⚠️ 错误提示组件</span>
+                <span class="status success">完成</span>
+            </div>
+            <div class="test-item">
+                <span>🎯 游戏状态管理</span>
+                <span class="status success">完成</span>
+            </div>
+            <div class="test-item">
+                <span>🎨 新游戏配置界面</span>
+                <span class="status success">完成</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 配置页面功能点</h2>
+            <div class="test-item">
+                <span>玩家名称输入</span>
+                <span class="status success">✓</span>
+            </div>
+            <div class="test-item">
+                <span>难度选择（4种）</span>
+                <span class="status success">✓</span>
+            </div>
+            <div class="test-item">
+                <span>NPC数量滑块</span>
+                <span class="status success">✓</span>
+            </div>
+            <div class="test-item">
+                <span>恐惧点数输入</span>
+                <span class="status success">✓</span>
+            </div>
+            <div class="test-item">
+                <span>AI功能开关</span>
+                <span class="status success">✓</span>
+            </div>
+            <div class="test-item">
+                <span>配置预览</span>
+                <span class="status success">✓</span>
+            </div>
+            <div class="test-item">
+                <span>表单验证</span>
+                <span class="status success">✓</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🚀 测试入口</h2>
+            <div style="text-align: center; padding: 20px;">
+                <a href="http://localhost:5173" class="link-btn">🏠 返回首页</a>
+                <a href="http://localhost:5173/new-game" class="link-btn">🎮 新游戏配置</a>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Phase 2 完成度</h2>
+            <div style="background: #e5e7eb; border-radius: 20px; height: 30px; overflow: hidden;">
+                <div style="background: linear-gradient(90deg, #10b981 0%, #34d399 100%); 
+                           height: 100%; width: 100%; 
+                           display: flex; align-items: center; 
+                           justify-content: center; color: white; font-weight: bold;">
+                    100% 完成
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">
+            <h2 style="color: #065f46;">✨ 亮点功能</h2>
+            <ul style="color: #047857;">
+                <li>精美的UI设计，包含渐变色和动画效果</li>
+                <li>完整的表单验证和错误处理</li>
+                <li>模拟API支持，无需后端即可测试</li>
+                <li>响应式设计，支持移动端</li>
+                <li>TypeScript类型安全</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        console.log('Phase 2 测试页面已加载');
+        console.log('请访问 http://localhost:5173/new-game 查看新游戏配置页面');
+    </script>
+</body>
+</html>

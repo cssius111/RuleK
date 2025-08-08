@@ -1,0 +1,29 @@
+{
+  "name": "rulek-web",
+  "version": "1.0.0",
+  "description": "RuleK Web UI - 规则怪谈管理者",
+  "scripts": {
+    "install:all": "npm install && cd web/frontend && npm install",
+    "install:playwright": "npx playwright install chromium --with-deps",
+    "setup": "npm run install:all && npm run install:playwright",
+    "dev": "cd web/frontend && npm run dev",
+    "dev:backend": "python start_web_server.py",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev\"",
+    "test:frontend": "cd web/frontend && npm run test:phase0",
+    "test:simple": "cd web/frontend && npx playwright test tests/phase0-simple.spec.ts",
+    "fix:ports": "lsof -ti:5173 | xargs kill -9 2>/dev/null; lsof -ti:5174 | xargs kill -9 2>/dev/null",
+    "fix:all": "npm run fix:ports && npm install --save-dev @playwright/test playwright chalk && cd web/frontend && npm install",
+    "start": "npm run fix:ports && npm run dev:all"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2",
+    "chalk": "^5.5.0",
+    "concurrently": "^8.2.0",
+    "playwright": "^1.54.2"
+  },
+  "dependencies": {
+    "pinia": "^2.1.7",
+    "vue": "^3.3.11",
+    "vue-router": "^4.2.5"
+  }
+}

@@ -1,244 +1,139 @@
 // 游戏相关类型定义
 
-// ==================== 请求类型 ====================
-
-export interface GameCreateRequest {
-  difficulty: 'easy' | 'normal' | 'hard'
-  npc_count: number
+// 游戏难度枚举
+export enum GameDifficulty {
+  EASY = 'easy',
+  NORMAL = 'normal', 
+  HARD = 'hard',
+  NIGHTMARE = 'nightmare'
 }
 
-export interface RuleCreateRequest {
-  name: string
-  description: string
-  requirements: Record<string, any>
-  trigger: Record<string, any>
-  effect: Record<string, any>
-  cost: number
+// 游戏配置接口
+export interface GameConfig {
+  difficulty: GameDifficulty
+  initialFearPoints: number
+  initialNPCCount: number
+  aiEnabled: boolean
+  playerName?: string
 }
 
-export interface ActionRequest {
-  action_type: string
-  target?: string
-  params?: Record<string, any>
+// 游戏创建请求
+export interface CreateGameRequest {
+  config: GameConfig
 }
 
-// ==================== 响应类型 ====================
-
-export interface NPCStatus {
-  id: string
-  name: string
-  hp: number
-  sanity: number
-  fear: number
-  location: string
-  status_effects: string[]
-  is_alive: boolean
+// 游戏创建响应
+export interface CreateGameResponse {
+  gameId: string
+  config: GameConfig
+  state: GameState
+  message: string
 }
 
-export interface RuleInfo {
-  id: string
-  name: string
-  description: string
-  level: number
-  cost: number
-  is_active: boolean
-  times_triggered: number
-  loopholes: Array<{
-    id: string
-    description: string
-    patched: boolean
-  }>
-}
-
-export interface GameStateResponse {
-  game_id: string
-  started_at: string
-  current_turn: number
-  fear_points: number
-  phase: string
-  mode: string
-  time_of_day: string
-  npcs: NPCStatus[]
-  active_rules: number
-  total_fear_gained: number
-  npcs_died: number
-}
-
-export interface TurnResult {
-  turn: number
-  events: Array<{
-    type: string
-    [key: string]: any
-  }>
-  fear_gained: number
-  npcs_affected: string[]
-  rules_triggered: string[]
-  narrative?: string
-}
-
-export interface GameUpdate {
-  update_type: 'state' | 'event' | 'npc' | 'rule' | 'dialogue'
-  game_id: string
-  data: any
-  timestamp: string
-  type?: string // for ping/pong
-}
-
-// ==================== 游戏模型 ====================
-
-export interface GameState {
-  game_id: string
-  started_at: string
-  current_turn: number
-  fear_points: number
-  phase: GamePhase
-  mode: GameMode
-  time_of_day: TimeOfDay
-  npcs: NPCStatus[]
-  active_rules: number
-  total_fear_gained: number
-  npcs_died: number
-}
-
+// NPC状态
 export interface NPC {
   id: string
   name: string
   hp: number
   sanity: number
   fear: number
-  suspicion: number
   location: string
-  is_alive: boolean
-  death_cause?: string
-  death_turn?: number
-  inventory: string[]
-  memory: any[]
-  relationships: Record<string, number>
-  personality: {
-    rationality: number
-    courage: number
-    curiosity: number
-    sociability: number
-    loophole_sense: number
-    observation: number
-  }
-  behavior_weights: {
-    investigate: number
-    escape: number
-    cooperate: number
-    selfish: number
-  }
+  isAlive: boolean
+  status?: string
 }
 
+// 规则定义
 export interface Rule {
   id: string
   name: string
   description: string
-  level: number
   cost: number
-  is_active: boolean
-  times_triggered: number
-  requirements: {
-    items?: string[]
-    areas?: string[]
-    time?: {
-      from: string
-      to: string
-    }
-    actor_traits?: Record<string, any>
-  }
-  trigger: {
-    action: string
-    location?: string[]
-    time_range?: {
-      from: string
-      to: string
-    }
-    extra_conditions?: string[]
-    probability: number
-  }
-  effect: {
-    type: string
-    fear_gain?: number
-    sanity_loss?: number
-    damage?: number
-    side_effects?: string[]
-  }
-  loopholes: Array<{
-    id: string
-    description: string
-    discovery_difficulty: number
-    patched: boolean
-  }>
+  level: number
+  triggerType: string
+  effect: string
+  cooldown: number
+  currentCooldown: number
+  isActive: boolean
 }
 
-export interface Area {
+// 游戏事件
+export interface GameEvent {
   id: string
-  name: string
-  description: string
-  connections: string[]
-  items: any[]
-  effects: any[]
-  properties: {
-    light_level: number
-    temperature: number
-    safety_rating: number
-  }
-}
-
-// ==================== 枚举类型 ====================
-
-export enum GamePhase {
-  SETUP = 'setup',
-  MORNING_DIALOGUE = 'morning_dialogue',
-  EVENING_DIALOGUE = 'evening_dialogue',
-  ACTION = 'action',
-  RESOLUTION = 'resolution'
-}
-
-export enum GameMode {
-  BACKSTAGE = 'backstage',
-  IN_SCENE = 'in_scene'
-}
-
-export enum TimeOfDay {
-  MORNING = 'morning',
-  AFTERNOON = 'afternoon',
-  EVENING = 'evening',
-  NIGHT = 'night'
-}
-
-export enum EffectType {
-  INSTANT_DEATH = 'instant_death',
-  DAMAGE = 'damage',
-  FEAR_GAIN = 'fear_gain',
-  SANITY_LOSS = 'sanity_loss',
-  TELEPORT = 'teleport',
-  TRANSFORM = 'transform',
-  CURSE = 'curse'
-}
-
-// ==================== UI 相关类型 ====================
-
-export interface Notification {
-  id: string
-  type: 'success' | 'warning' | 'error' | 'info'
-  title: string
-  message?: string
-  duration?: number
-}
-
-export interface DialogueMessage {
-  speaker: string
-  content: string
-  emotion?: string
-  timestamp: string
-}
-
-export interface EventLog {
-  id: string
+  turn: number
   type: string
   description: string
-  timestamp: string
-  important: boolean
+  timestamp: number
+}
+
+// 游戏状态
+export interface GameState {
+  gameId: string
+  turn: number
+  day: number
+  phase: string
+  mode: string
+  fearPoints: number
+  npcs: NPC[]
+  rules: Rule[]
+  events: GameEvent[]
+  isGameOver: boolean
+  winner?: string
+}
+
+// API响应包装
+export interface ApiResponse<T> {
+  success: boolean
+  data?: T
+  error?: string
+  message?: string
+}
+
+// 游戏存档
+export interface GameSave {
+  id: string
+  name: string
+  gameState: GameState
+  config: GameConfig
+  createdAt: string
+  updatedAt: string
+}
+
+// 表单验证规则
+export interface ValidationRule {
+  required?: boolean
+  min?: number
+  max?: number
+  pattern?: RegExp
+  message: string
+}
+
+// 难度配置预设
+export const DIFFICULTY_PRESETS = {
+  [GameDifficulty.EASY]: {
+    fearPoints: 1500,
+    npcCount: 3,
+    description: '适合新手，NPC较少，恐惧点数充足'
+  },
+  [GameDifficulty.NORMAL]: {
+    fearPoints: 1000,
+    npcCount: 4,
+    description: '标准难度，平衡的游戏体验'
+  },
+  [GameDifficulty.HARD]: {
+    fearPoints: 750,
+    npcCount: 5,
+    description: '困难模式，需要精心策划'
+  },
+  [GameDifficulty.NIGHTMARE]: {
+    fearPoints: 500,
+    npcCount: 6,
+    description: '噩梦难度，只有大师才能生存'
+  }
+}
+
+// 游戏配置限制
+export const GAME_CONFIG_LIMITS = {
+  fearPoints: { min: 100, max: 5000 },
+  npcCount: { min: 1, max: 10 },
+  playerNameLength: { min: 1, max: 20 }
 }
