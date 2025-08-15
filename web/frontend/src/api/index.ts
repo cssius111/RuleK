@@ -1,10 +1,13 @@
-import axios, { AxiosInstance, AxiosError } from 'axios'
-import type { ApiResponse } from '@/types/game'
+// 简化的 API 客户端，避免类型导入问题
+import axios from 'axios'
 
-// 创建axios实例
-const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
-  timeout: 10000,
+// API 基础配置
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+
+// 创建 axios 实例
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -13,14 +16,11 @@ const apiClient: AxiosInstance = axios.create({
 // 请求拦截器
 apiClient.interceptors.request.use(
   (config) => {
-    // 可以在这里添加token等认证信息
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
+    // 可以在这里添加认证信息
     return config
   },
   (error) => {
+    console.error('Request error:', error)
     return Promise.reject(error)
   }
 )
@@ -30,17 +30,9 @@ apiClient.interceptors.response.use(
   (response) => {
     return response.data
   },
-  (error: AxiosError) => {
-    // 统一错误处理
+  (error) => {
     const message = error.response?.data?.message || error.message || '网络错误'
     console.error('API Error:', message)
-    
-    // 可以在这里添加全局错误提示
-    if (error.response?.status === 401) {
-      // 未授权，可能需要重新登录
-      localStorage.removeItem('token')
-      window.location.href = '/'
-    }
     
     return Promise.reject({
       success: false,

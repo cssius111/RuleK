@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Game Store</title>
+    <script type="module">
+        // 简单测试 store 功能
+        import { createPinia } from 'https://unpkg.com/pinia@2.1.7/dist/pinia.esm-browser.js'
+        import { createApp, ref } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
+        
+        const app = createApp({
+            setup() {
+                const message = ref('Testing Game Store...')
+                const result = ref('')
+                
+                const testStore = async () => {
+                    try {
+                        // 动态导入 store
+                        const module = await import('./src/stores/game.ts')
+                        const { useGameStore } = module
+                        
+                        // 创建 pinia 实例
+                        const pinia = createPinia()
+                        app.use(pinia)
+                        
+                        // 获取 store
+                        const gameStore = useGameStore()
+                        
+                        // 检查方法
+                        const methods = Object.keys(gameStore)
+                        result.value = `
+                            ✅ Store 加载成功！
+                            
+                            可用方法：
+                            ${methods.filter(m => typeof gameStore[m] === 'function').join(', ')}
+                            
+                            initGame 存在: ${gameStore.initGame ? '✅ 是' : '❌ 否'}
+                        `
+                    } catch (error) {
+                        result.value = `❌ 错误: ${error.message}`
+                    }
+                }
+                
+                testStore()
+                
+                return { message, result }
+            },
+            template: `
+                <div style="padding: 20px; font-family: monospace;">
+                    <h1>{{ message }}</h1>
+                    <pre>{{ result }}</pre>
+                </div>
+            `
+        })
+        
+        app.mount('#app')
+    </script>
+</head>
+<body>
+    <div id="app"></div>
+</body>
+</html>

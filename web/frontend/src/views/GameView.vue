@@ -15,7 +15,7 @@
       
       <div class="right-panel">
         <RuleList />
-        <ActionButtons />
+        <ActionButtons @create-rule="showRuleCreator = true" />
       </div>
     </div>
     

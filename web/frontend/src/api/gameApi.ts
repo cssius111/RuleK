@@ -1,36 +1,29 @@
 import apiClient from './index'
-import type { 
-  GameConfig, 
-  CreateGameRequest, 
-  CreateGameResponse,
-  GameState,
-  GameSave,
-  ApiResponse 
-} from '@/types/game'
 
 // 游戏API服务
 class GameApiService {
   // 创建新游戏
-  async createGame(config: GameConfig): Promise<CreateGameResponse> {
+  async createGame(config: any) {
     try {
-      const response = await apiClient.post<any, CreateGameResponse>('/games', {
-        config
-      })
+      // 转换前端格式到后端期望的格式
+      const requestData = {
+        difficulty: config.difficulty || 'normal',
+        npc_count: config.initialNPCCount || config.npc_count || 4
+      }
+      const response = await apiClient.post('/api/games', requestData)
       return response
     } catch (error) {
       console.error('创建游戏失败:', error)
-      // 如果后端未实现，返回模拟数据
-      if (error?.statusCode === 404 || error?.statusCode === 500) {
-        return this.mockCreateGame(config)
-      }
-      throw error
+      // 如果后端不可用，返回模拟数据
+      console.log('使用模拟数据代替')
+      return this.mockCreateGame(config)
     }
   }
 
   // 获取游戏状态
-  async getGameState(gameId: string): Promise<GameState> {
+  async getGameState(gameId: string) {
     try {
-      const response = await apiClient.get<any, GameState>(`/games/${gameId}`)
+      const response = await apiClient.get(`/api/games/${gameId}`)
       return response
     } catch (error) {
       console.error('获取游戏状态失败:', error)
@@ -38,46 +31,70 @@ class GameApiService {
     }
   }
 
-  // 初始化AI（如果启用）
-  async initializeAI(gameId: string): Promise<ApiResponse<any>> {
+  // 初始化AI
+  async initializeAI(gameId: string) {
     try {
-      const response = await apiClient.post<any, ApiResponse<any>>(`/games/${gameId}/ai/init`)
+      const response = await apiClient.post(`/api/games/${gameId}/ai/init`)
       return response
     } catch (error) {
       console.error('初始化AI失败:', error)
-      // 返回成功以便继续测试
-      return { success: true, message: 'AI初始化成功（模拟）' }
+      throw error
     }
   }
 
-  // 获取存档列表
-  async getSavesList(): Promise<GameSave[]> {
+  // 执行游戏回合
+  async executeTurn(gameId: string, action: any) {
     try {
-      const response = await apiClient.get<any, GameSave[]>('/saves')
+      const response = await apiClient.post(`/api/games/${gameId}/turn`, action)
       return response
     } catch (error) {
-      console.error('获取存档列表失败:', error)
-      // 返回空列表
-      return []
+      console.error('执行回合失败:', error)
+      throw error
     }
   }
 
-  // 加载存档
-  async loadSave(saveId: string): Promise<GameState> {
+  // AI回合
+  async executeAITurn(gameId: string) {
     try {
-      const response = await apiClient.get<any, GameState>(`/saves/${saveId}`)
+      const response = await apiClient.post(`/api/games/${gameId}/ai/turn`)
       return response
     } catch (error) {
-      console.error('加载存档失败:', error)
+      console.error('执行AI回合失败:', error)
+      throw error
+    }
+  }
+
+  // AI评估规则
+  async evaluateRuleWithAI(gameId: string, ruleDescription: string) {
+    try {
+      const response = await apiClient.post(`/api/games/${gameId}/ai/evaluate-rule`, {
+        description: ruleDescription
+      })
+      return response
+    } catch (error) {
+      console.error('AI评估规则失败:', error)
+      throw error
+    }
+  }
+
+  // 生成AI叙事
+  async generateNarrative(gameId: string, events: any[]) {
+    try {
+      const response = await apiClient.post(`/api/games/${gameId}/ai/narrative`, {
+        events
+      })
+      return response
+    } catch (error) {
+      console.error('生成叙事失败:', error)
       throw error
     }
   }
 
   // 保存游戏
-  async saveGame(gameId: string, saveName: string): Promise<ApiResponse<GameSave>> {
+  async saveGame(gameId: string, saveName: string) {
     try {
-      const response = await apiClient.post<any, ApiResponse<GameSave>>(`/games/${gameId}/save`, {
-        name: saveName
+      const response = await apiClient.post(`/api/games/${gameId}/save`, {
+        save_name: saveName
       })
       return response
     } catch (error) {
@@ -86,65 +103,153 @@ class GameApiService {
     }
   }
 
-  // 推进回合
-  async advanceTurn(gameId: string): Promise<GameState> {
+  // 加载游戏
+  async loadGame(saveId: string) {
     try {
-      const response = await apiClient.post<any, GameState>(`/games/${gameId}/turn`)
+      const response = await apiClient.post(`/api/games/load/${saveId}`)
       return response
     } catch (error) {
-      console.error('推进回合失败:', error)
+      console.error('加载游戏失败:', error)
       throw error
     }
   }
 
-  // 模拟创建游戏（用于开发测试）
-  private mockCreateGame(config: GameConfig): CreateGameResponse {
+  // 获取规则模板
+  async getRuleTemplates() {
+    try {
+      const response = await apiClient.get('/api/rules/templates')
+      return response
+    } catch (error) {
+      console.error('获取规则模板失败:', error)
+      throw error
+    }
+  }
+
+  // 创建规则（从模板）
+  async createRuleFromTemplate(gameId: string, templateId: string) {
+    try {
+      const response = await apiClient.post(`/api/games/${gameId}/rules/template`, {
+        template_id: templateId
+      })
+      return response
+    } catch (error) {
+      console.error('创建规则失败:', error)
+      throw error
+    }
+  }
+
+  // 创建自定义规则
+  async createCustomRule(gameId: string, ruleData: any) {
+    try {
+      const response = await apiClient.post(`/api/games/${gameId}/rules/custom`, ruleData)
+      return response
+    } catch (error) {
+      console.error('创建自定义规则失败:', error)
+      throw error
+    }
+  }
+
+  // 获取游戏规则列表
+  async getGameRules(gameId: string) {
+    try {
+      const response = await apiClient.get(`/api/games/${gameId}/rules`)
+      return response
+    } catch (error) {
+      console.error('获取规则列表失败:', error)
+      throw error
+    }
+  }
+
+  // 切换规则状态
+  async toggleRule(gameId: string, ruleId: string) {
+    try {
+      const response = await apiClient.put(`/api/games/${gameId}/rules/${ruleId}/toggle`)
+      return response
+    } catch (error) {
+      console.error('切换规则状态失败:', error)
+      throw error
+    }
+  }
+
+  // 升级规则
+  async upgradeRule(gameId: string, ruleId: string) {
+    try {
+      const response = await apiClient.post(`/api/games/${gameId}/rules/${ruleId}/upgrade`)
+      return response
+    } catch (error) {
+      console.error('升级规则失败:', error)
+      throw error
+    }
+  }
+
+  // AI解析规则
+  async parseRuleWithAI(description: string, gameId?: string) {
+    try {
+      const response = await apiClient.post('/api/ai/parse-rule', {
+        description,
+        game_id: gameId
+      })
+      return response
+    } catch (error) {
+      console.error('AI解析规则失败:', error)
+      throw error
+    }
+  }
+
+  // 计算规则成本
+  async calculateRuleCost(ruleData: any) {
+    try {
+      const response = await apiClient.post('/api/rules/calculate-cost', ruleData)
+      return response
+    } catch (error) {
+      console.error('计算规则成本失败:', error)
+      return { cost: 100 }
+    }
+  }
+
+  // 模拟创建游戏（用于开发）
+  private mockCreateGame(config: any) {
     const gameId = `game_${Date.now()}`
+    // 返回与后端 GameStateResponse 格式一致的数据
+    return {
+      game_id: gameId,
+      started_at: new Date().toISOString(),
+      current_turn: 1,
+      fear_points: config.initialFearPoints || 1000,
+      phase: 'setup',
+      mode: 'backstage',
+      time_of_day: 'morning',
+      npcs: this.generateMockNPCs(config.initialNPCCount || config.npc_count || 4),
+      active_rules: 0,
+      total_fear_gained: 0,
+      npcs_died: 0,
+      // 额外字段以便前端使用
+      rules: [],
+      events_history: []
+    }
+  }
+
+  // 生成模拟NPC
+  private generateMockNPCs(count: number) {
+    const names = ['张三', '李四', '王五', '赵六', '钱七', '孙八']
     const npcs = []
     
-    // 生成NPC
-    for (let i = 0; i < config.initialNPCCount; i++) {
+    for (let i = 0; i < Math.min(count, names.length); i++) {
       npcs.push({
         id: `npc_${i}`,
-        name: `NPC_${i + 1}`,
+        name: names[i],
         hp: 100,
         sanity: 100,
         fear: 0,
-        location: '大厅',
-        isAlive: true,
-        status: '正常'
+        location: 'main_hall',
+        status_effects: [],
+        is_alive: true
       })
     }
-
-    const gameState: GameState = {
-      gameId,
-      turn: 1,
-      day: 1,
-      phase: 'setup',
-      mode: 'backstage',
-      fearPoints: config.initialFearPoints,
-      npcs,
-      rules: [],
-      events: [
-        {
-          id: 'event_1',
-          turn: 0,
-          type: 'game_start',
-          description: '游戏开始了，诡异的氛围笼罩着整个空间...',
-          timestamp: Date.now()
-        }
-      ],
-      isGameOver: false
-    }
-
-    return {
-      gameId,
-      config,
-      state: gameState,
-      message: '游戏创建成功！'
-    }
+    
+    return npcs
   }
 }
 
-// 导出单例
 export const gameApi = new GameApiService()
+export default gameApi

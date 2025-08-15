@@ -41,13 +41,14 @@ export const useGameStore = defineStore('game', () => {
       const response = await gameApi.createGame(config)
       
       // 保存游戏状态
-      gameState.value = response.state
+      // 后端返回的是GameStateResponse，需要转换
+      gameState.value = response
       gameConfig.value = config
-      currentGameId.value = response.gameId
+      currentGameId.value = response.game_id || response.gameId
       
       // 如果启用AI，初始化AI
-      if (config.aiEnabled && response.gameId) {
-        await gameApi.initializeAI(response.gameId)
+      if (config.aiEnabled && currentGameId.value) {
+        await gameApi.initializeAI(currentGameId.value)
       }
       
       return response

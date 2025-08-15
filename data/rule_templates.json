@@ -1,91 +1,161 @@
-{
-  "templates": [
-    {
-      "id": "tpl_001",
-      "name": "午夜镜子",
-      "description": "午夜时分照镜子的人将被镜中的自己替换",
-      "trigger": {
-        "type": "time_action",
-        "time_condition": "night",
-        "action": "look_mirror",
-        "location": "bathroom",
-        "probability": 0.8
+[
+  {
+    "id": "midnight_mirror",
+    "name": "午夜镜像",
+    "description": "午夜12点照镜子会看到恐怖的景象，NPC恐惧值大幅增加",
+    "cost": 300,
+    "category": "时间触发",
+    "difficulty": "normal",
+    "trigger": {
+      "type": "time",
+      "conditions": {
+        "time": "00:00",
+        "action": "look_mirror"
       },
-      "effect": {
-        "type": "instant_death",
-        "death_description": "被镜中的影子拖入了镜面世界",
-        "fear_gain": 100
-      },
-      "cost": 150,
-      "cooldown": 3,
-      "loopholes": ["闭着眼睛", "打破镜子"]
+      "probability": 0.8
     },
-    {
-      "id": "tpl_002",
-      "name": "红字禁忌",
-      "description": "说出带有'红'字的词语会引发诅咒",
-      "trigger": {
-        "type": "dialogue",
-        "keyword": "红",
-        "probability": 0.6
+    "effects": [
+      {
+        "type": "fear_increase",
+        "value": 50,
+        "target": "trigger_npc"
+      }
+    ],
+    "cooldown": 3
+  },
+  {
+    "id": "corridor_whisper",
+    "name": "走廊低语",
+    "description": "晚上10点后在走廊会听到诡异的低语声，理智值下降",
+    "cost": 200,
+    "category": "地点触发",
+    "difficulty": "easy",
+    "trigger": {
+      "type": "location",
+      "conditions": {
+        "location": "corridor",
+        "time_range": "22:00-06:00"
       },
-      "effect": {
-        "type": "damage",
-        "damage": 30,
-        "sanity_loss": 20,
-        "fear_gain": 50
-      },
-      "cost": 100,
-      "cooldown": 1,
-      "loopholes": ["用其他颜色代替", "保持沉默"]
+      "probability": 0.6
     },
-    {
-      "id": "tpl_003",
-      "name": "楼梯数错",
-      "description": "上楼时数错台阶数会进入异空间",
-      "trigger": {
-        "type": "location_action",
-        "action": "move",
-        "location": "stairs",
-        "condition": "count_wrong",
-        "probability": 0.7
+    "effects": [
+      {
+        "type": "sanity_decrease",
+        "value": 20,
+        "target": "trigger_npc"
       },
-      "effect": {
-        "type": "teleport",
-        "target_location": "void",
-        "fear_gain": 80,
-        "sanity_loss": 30
+      {
+        "type": "fear_increase",
+        "value": 30,
+        "target": "trigger_npc"
+      }
+    ],
+    "cooldown": 2
+  },
+  {
+    "id": "shadow_follower",
+    "name": "影子跟随者",
+    "description": "独自一人时，影子会做出不同的动作，令人毛骨悚然",
+    "cost": 400,
+    "category": "条件触发",
+    "difficulty": "hard",
+    "trigger": {
+      "type": "condition",
+      "conditions": {
+        "alone": true,
+        "light_level": "dim"
       },
-      "cost": 120,
-      "cooldown": 2,
-      "loopholes": ["不数台阶", "倒着走"]
+      "probability": 0.7
     },
-    {
-      "id": "tpl_004",
-      "name": "敲门必应",
-      "description": "听到敲门声必须回应，否则会被带走",
-      "trigger": {
-        "type": "event",
-        "event": "knock_door",
-        "response_required": true,
-        "time_limit": 10,
-        "probability": 0.9
+    "effects": [
+      {
+        "type": "sanity_decrease",
+        "value": 30,
+        "target": "trigger_npc"
       },
-      "effect": {
-        "type": "conditional",
-        "no_response_effect": {
-          "type": "instant_death",
-          "death_description": "被门外的存在带走了"
-        },
-        "response_effect": {
-          "type": "summon",
-          "entity": "visitor",
-          "fear_gain": 40
-        }
+      {
+        "type": "fear_increase",
+        "value": 40,
+        "target": "all_witness"
+      }
+    ],
+    "cooldown": 4
+  },
+  {
+    "id": "door_knock",
+    "name": "敲门声",
+    "description": "深夜会听到房门被敲响，但门外没有人",
+    "cost": 250,
+    "category": "时间触发",
+    "difficulty": "easy",
+    "trigger": {
+      "type": "time",
+      "conditions": {
+        "time_range": "02:00-04:00",
+        "location_type": "room"
       },
-      "cost": 180,
-      "cooldown": 4,
-      "loopholes": ["戴耳塞", "假装不在"]
-    }
-  ]
-}
+      "probability": 0.3
+    },
+    "effects": [
+      {
+        "type": "fear_increase",
+        "value": 40,
+        "target": "random_npc"
+      }
+    ],
+    "cooldown": 1
+  },
+  {
+    "id": "cursed_item",
+    "name": "诅咒物品",
+    "description": "拿起特定物品会触发诅咒，持续掉血",
+    "cost": 500,
+    "category": "物品触发",
+    "difficulty": "hard",
+    "trigger": {
+      "type": "item",
+      "conditions": {
+        "item_type": "cursed",
+        "action": "pick_up"
+      },
+      "probability": 1.0
+    },
+    "effects": [
+      {
+        "type": "continuous_damage",
+        "value": 10,
+        "duration": 5,
+        "target": "trigger_npc"
+      }
+    ],
+    "cooldown": 0
+  },
+  {
+    "id": "blood_writing",
+    "name": "血字警告",
+    "description": "墙上出现血字，看到的NPC理智大幅下降",
+    "cost": 350,
+    "category": "随机触发",
+    "difficulty": "normal",
+    "trigger": {
+      "type": "random",
+      "conditions": {
+        "min_fear_total": 200
+      },
+      "probability": 0.2
+    },
+    "effects": [
+      {
+        "type": "sanity_decrease",
+        "value": 50,
+        "target": "all_in_location"
+      },
+      {
+        "type": "fear_increase",
+        "value": 30,
+        "target": "all_in_location"
+      }
+    ],
+    "cooldown": 5
+  }
+]

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RuleK 游戏测试</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 { color: #ff0000; }
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+        .info { color: #ffff00; }
+        button {
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 10px 20px;
+            margin: 10px 0;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        button:hover { background: #444; }
+        pre {
+            background: #000;
+            padding: 10px;
+            border: 1px solid #333;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 RuleK 游戏测试控制台</h1>
+    
+    <div id="status"></div>
+    
+    <button onclick="testAPI()">测试API连接</button>
+    <button onclick="createGame()">创建新游戏</button>
+    <button onclick="goToGame()">访问游戏页面</button>
+    
+    <h2>测试结果：</h2>
+    <pre id="output"></pre>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const output = document.getElementById('output');
+        const status = document.getElementById('status');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type;
+            output.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        async function testAPI() {
+            log('🔍 测试API连接...', 'info');
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                log('✅ API健康检查通过', 'success');
+                log(JSON.stringify(data, null, 2), 'info');
+            } catch (error) {
+                log(`❌ API连接失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function createGame() {
+            log('🎮 创建新游戏...', 'info');
+            
+            const gameConfig = {
+                difficulty: 'normal',
+                initial_fear_points: 1000,
+                initial_npc_count: 4,
+                ai_enabled: false,
+                player_name: 'TestPlayer'
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/games`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(gameConfig)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('✅ 游戏创建成功！', 'success');
+                    log(`游戏ID: ${data.game_id}`, 'success');
+                    log(JSON.stringify(data, null, 2), 'info');
+                    
+                    // 保存游戏ID
+                    window.currentGameId = data.game_id;
+                } else {
+                    log(`❌ 游戏创建失败: ${response.status}`, 'error');
+                    log(JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                log(`❌ 请求失败: ${error.message}`, 'error');
+            }
+        }
+        
+        function goToGame() {
+            log('🌐 打开游戏页面...', 'info');
+            window.open('http://localhost:5173/new-game', '_blank');
+        }
+        
+        // 页面加载时自动测试
+        window.onload = async () => {
+            status.innerHTML = '<span class="info">⏳ 检查服务状态...</span>';
+            
+            // 检查前端
+            try {
+                const response = await fetch('http://localhost:5173');
+                if (response.ok) {
+                    status.innerHTML += '<br><span class="success">✅ 前端服务运行中</span>';
+                }
+            } catch (error) {
+                status.innerHTML += '<br><span class="error">❌ 前端服务未运行</span>';
+            }
+            
+            // 检查后端
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    status.innerHTML += '<br><span class="success">✅ 后端服务运行中</span>';
+                }
+            } catch (error) {
+                status.innerHTML += '<br><span class="error">❌ 后端服务未运行</span>';
+            }
+            
+            log('页面加载完成，可以开始测试', 'success');
+        };
+    </script>
+</body>
+</html>

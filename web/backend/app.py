@@ -342,3 +342,242 @@ if __name__ == "__main__":
         reload=True,
         log_level="info"
     )
+
+
+# ==================== 规则管理API ====================
+
+@app.get("/api/rules/templates")
+async def get_rule_templates():
+    """获取所有规则模板"""
+    try:
+        # 加载规则模板
+        template_file = Path("data/rule_templates.json")
+        if template_file.exists():
+            import json
+            with open(template_file, 'r', encoding='utf-8') as f:
+                templates = json.load(f)
+            return {"success": True, "templates": templates}
+        else:
+            return {"success": True, "templates": []}
+    except Exception as e:
+        logger.error(f"Failed to load rule templates: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/games/{game_id}/rules/template")
+async def create_rule_from_template(game_id: str, request: Dict):
+    """从模板创建规则"""
+    game_service = session_manager.get_game(game_id)
+    if not game_service:
+        raise HTTPException(status_code=404, detail="Game not found")
+    
+    try:
+        template_id = request.get("template_id")
+        
+        # 从rule_service创建规则
+        from .services.rule_service import RuleService
+        rule_service = RuleService(game_service.game_state)
+        rule = rule_service.create_rule_from_template(template_id)
+        
+        if not rule:
+            raise HTTPException(status_code=404, detail="Template not found")
+        
+        # 添加到游戏状态
+        game_service.game_state.add_rule(rule)
+        
+        return {
+            "success": True,
+            "rule": {
+                "id": rule.id,
+                "name": rule.name,
+                "description": rule.description,
+                "cost": rule.cost,
+                "trigger": rule.trigger.dict(),
+                "effects": [e.dict() for e in rule.effects]
+            },
+            "remaining_fear_points": game_service.game_state.fear_points
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to create rule from template: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/games/{game_id}/rules/custom")
+async def create_custom_rule(game_id: str, request: Dict):
+    """创建自定义规则"""
+    game_service = session_manager.get_game(game_id)
+    if not game_service:
+        raise HTTPException(status_code=404, detail="Game not found")
+    
+    try:
+        from .services.rule_service import RuleService
+        rule_service = RuleService(game_service.game_state)
+        
+        # 创建自定义规则
+        rule = rule_service.create_custom_rule(request)
+        
+        # 添加到游戏状态
+        game_service.game_state.add_rule(rule)
+        
+        return {
+            "success": True,
+            "rule": {
+                "id": rule.id,
+                "name": rule.name,
+                "description": rule.description,
+                "cost": rule.cost,
+                "trigger": rule.trigger.dict(),
+                "effects": [e.dict() for e in rule.effects]
+            },
+            "remaining_fear_points": game_service.game_state.fear_points
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to create custom rule: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/games/{game_id}/rules")
+async def get_game_rules(game_id: str):
+    """获取游戏中的所有规则"""
+    game_service = session_manager.get_game(game_id)
+    if not game_service:
+        raise HTTPException(status_code=404, detail="Game not found")
+    
+    rules = []
+    for rule in game_service.game_state.rules:
+        rules.append({
+            "id": rule.id,
+            "name": rule.name,
+            "description": rule.description,
+            "level": getattr(rule, 'level', 1),
+            "is_active": getattr(rule, 'is_active', True),
+            "cooldown": getattr(rule, 'cooldown', 0)
+        })
+    
+    return {
+        "success": True,
+        "rules": rules,
+        "total_count": len(rules)
+    }
+
+@app.put("/api/games/{game_id}/rules/{rule_id}/toggle")
+async def toggle_rule(game_id: str, rule_id: str):
+    """切换规则激活状态"""
+    game_service = session_manager.get_game(game_id)
+    if not game_service:
+        raise HTTPException(status_code=404, detail="Game not found")
+    
+    try:
+        from .services.rule_service import RuleService
+        rule_service = RuleService(game_service.game_state)
+        is_active = rule_service.toggle_rule(rule_id)
+        
+        return {
+            "success": True,
+            "rule_id": rule_id,
+            "is_active": is_active
+        }
+    except Exception as e:
+        logger.error(f"Failed to toggle rule: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/games/{game_id}/rules/{rule_id}/upgrade")
+async def upgrade_rule(game_id: str, rule_id: str):
+    """升级规则"""
+    game_service = session_manager.get_game(game_id)
+    if not game_service:
+        raise HTTPException(status_code=404, detail="Game not found")
+    
+    try:
+        from .services.rule_service import RuleService
+        rule_service = RuleService(game_service.game_state)
+        rule = rule_service.upgrade_rule(rule_id)
+        
+        if not rule:
+            raise HTTPException(status_code=404, detail="Rule not found")
+        
+        return {
+            "success": True,
+            "rule": {
+                "id": rule.id,
+                "name": rule.name,
+                "level": rule.level,
+                "effects": [e.dict() for e in rule.effects]
+            },
+            "remaining_fear_points": game_service.game_state.fear_points
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to upgrade rule: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/ai/parse-rule")
+async def parse_rule_with_ai(request: Dict):
+    """使用AI解析自然语言规则描述"""
+    description = request.get("description", "")
+    game_id = request.get("game_id")
+    
+    if not description:
+        raise HTTPException(status_code=400, detail="Description is required")
+    
+    try:
+        # 这里集成AI服务
+        # 暂时返回模拟数据
+        parsed_rule = {
+            "rule_name": "AI解析的规则",
+            "description": description,
+            "trigger": {
+                "type": "condition",
+                "conditions": {},
+                "probability": 0.7
+            },
+            "effects": [
+                {
+                    "type": "fear_increase",
+                    "value": 40,
+                    "target": "trigger_npc"
+                }
+            ],
+            "estimated_cost": 350,
+            "suggestions": [
+                "建议添加更具体的触发条件",
+                "可以增加冷却时间以平衡游戏性",
+                "考虑添加多重效果以增加趣味性"
+            ]
+        }
+        
+        return {
+            "success": True,
+            **parsed_rule
+        }
+    except Exception as e:
+        logger.error(f"Failed to parse rule with AI: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ==================== 规则计算API ====================
+
+@app.post("/api/rules/calculate-cost")
+async def calculate_rule_cost(request: Dict):
+    """计算规则成本"""
+    try:
+        from .services.rule_service import RuleService
+        
+        # 创建临时的RuleService实例来计算成本
+        rule_service = RuleService(None)
+        cost = rule_service.calculate_rule_cost(request)
+        
+        return {
+            "success": True,
+            "cost": cost,
+            "breakdown": {
+                "base_cost": 100,
+                "effect_cost": cost - 100,
+                "probability_modifier": request.get("trigger", {}).get("probability", 1.0),
+                "cooldown_modifier": request.get("cooldown", 0)
+            }
+        }
+    except Exception as e:
+        logger.error(f"Failed to calculate rule cost: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

@@ -55,50 +55,50 @@ class APIClient {
   
   // 游戏管理
   async createGame(data: GameCreateRequest): Promise<GameStateResponse> {
-    return this.client.post('/games', data)
+    return this.client.post('/api/games', data)
   }
   
   async getGameState(gameId: string): Promise<GameStateResponse> {
-    return this.client.get(`/games/${gameId}`)
+    return this.client.get(`/api/games/${gameId}`)
   }
   
   async deleteGame(gameId: string): Promise<void> {
-    return this.client.delete(`/games/${gameId}`)
+    return this.client.delete(`/api/games/${gameId}`)
   }
   
   // 游戏操作
   async advanceTurn(gameId: string): Promise<TurnResult> {
-    return this.client.post(`/games/${gameId}/turn`)
+    return this.client.post(`/api/games/${gameId}/turn`)
   }
   
   // 规则管理
   async createRule(gameId: string, data: RuleCreateRequest): Promise<{ rule_id: string; cost: number }> {
-    return this.client.post(`/games/${gameId}/rules`, data)
+    return this.client.post(`/api/games/${gameId}/rules`, data)
   }
   
   async getRules(gameId: string): Promise<RuleInfo[]> {
-    return this.client.get(`/games/${gameId}/rules`)
+    return this.client.get(`/api/games/${gameId}/rules`)
   }
   
   // NPC管理
   async getNPCs(gameId: string): Promise<NPCStatus[]> {
-    return this.client.get(`/games/${gameId}/npcs`)
+    return this.client.get(`/api/games/${gameId}/npcs`)
   }
   
   // 存档管理
   async saveGame(gameId: string): Promise<{ filename: string; message: string }> {
-    return this.client.post(`/games/${gameId}/save`)
+    return this.client.post(`/api/games/${gameId}/save`)
   }
   
   async loadGame(filename: string): Promise<GameStateResponse> {
-    return this.client.post('/games/load', null, {
+    return this.client.post('/api/games/load', null, {
       params: { filename }
     })
   }
   
   // 健康检查
   async healthCheck(): Promise<{ status: string; timestamp: string; active_games: number }> {
-    return this.client.get('/health')
+    return this.client.get('/api/health')
   }
 }
 
