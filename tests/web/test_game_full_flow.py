@@ -7,7 +7,21 @@ import asyncio
 from playwright.async_api import async_playwright, Page, expect
 import json
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, AsyncGenerator
+
+
+@pytest.fixture
+async def page() -> AsyncGenerator[Page, None]:
+    """提供 Playwright Page 实例。"""
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch()
+        context = await browser.new_context()
+        page = await context.new_page()
+        try:
+            yield page
+        finally:
+            await context.close()
+            await browser.close()
 
 class TestRuleKFullFlow:
     """完整游戏流程测试"""
@@ -30,6 +44,7 @@ class TestRuleKFullFlow:
         for result in self.test_results:
             print(f"  {result}")
     
+    @pytest.mark.asyncio
     async def test_01_homepage_navigation(self, page: Page):
         """测试1: 主页导航"""
         print("\n📍 测试主页导航...")
@@ -54,6 +69,7 @@ class TestRuleKFullFlow:
             else:
                 self.test_results.append("❌ 找不到开始游戏按钮")
     
+    @pytest.mark.asyncio
     async def test_02_game_creation(self, page: Page):
         """测试2: 创建新游戏"""
         print("\n🎲 测试创建新游戏...")
@@ -119,6 +135,7 @@ class TestRuleKFullFlow:
         else:
             self.test_results.append("❌ 找不到创建游戏按钮")
     
+    @pytest.mark.asyncio
     async def test_03_game_dashboard(self, page: Page):
         """测试3: 游戏主界面"""
         print("\n📊 测试游戏主界面...")
@@ -147,6 +164,7 @@ class TestRuleKFullFlow:
             else:
                 self.test_results.append(f"❌ {name}未找到")
     
+    @pytest.mark.asyncio
     async def test_04_rule_creation(self, page: Page):
         """测试4: 规则创建功能"""
         print("\n📜 测试规则创建...")
@@ -201,6 +219,7 @@ class TestRuleKFullFlow:
         else:
             self.test_results.append("❌ 找不到规则管理入口")
     
+    @pytest.mark.asyncio
     async def test_05_ai_rule_creation(self, page: Page):
         """测试5: AI规则解析"""
         print("\n🤖 测试AI规则解析...")
@@ -248,6 +267,7 @@ class TestRuleKFullFlow:
         else:
             self.test_results.append("⚠️ AI规则功能未启用")
     
+    @pytest.mark.asyncio
     async def test_06_turn_advancement(self, page: Page):
         """测试6: 回合推进"""
         print("\n⏭️ 测试回合推进...")
@@ -292,6 +312,7 @@ class TestRuleKFullFlow:
         else:
             self.test_results.append("❌ 找不到回合推进按钮")
     
+    @pytest.mark.asyncio
     async def test_07_save_game(self, page: Page):
         """测试7: 游戏保存"""
         print("\n💾 测试游戏保存...")
@@ -333,6 +354,7 @@ class TestRuleKFullFlow:
         else:
             self.test_results.append("❌ 找不到保存按钮")
     
+    @pytest.mark.asyncio
     async def test_08_api_endpoints(self, page: Page):
         """测试8: API端点测试"""
         print("\n🔌 测试API端点...")
