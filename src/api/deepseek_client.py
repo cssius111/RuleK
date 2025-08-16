@@ -85,8 +85,21 @@ class ResponseCache:
         return hashlib.md5(content.encode("utf-8")).hexdigest()
 
     def get(self, prompt: str, params: Dict[str, Any]) -> Optional[Any]:
-        """获取缓存"""
+        """获取缓存
+
+        如果存在同名 ``.error`` 文件，说明上次写入失败。
+        这种情况下会移除该标记并返回 ``None``。
+        """
         key = self._generate_key(prompt, params)
+
+        # 先检查是否有错误标记文件
+        error_file = self.cache_dir / f"{key}.error"
+        if error_file.exists():
+            try:
+                error_file.unlink()
+            except OSError as e:
+                logger.warning(f"删除错误标记失败: {e}")
+            return None
 
         # 先检查内存缓存
         if key in self.memory_cache:
@@ -118,8 +131,11 @@ class ResponseCache:
 
     def set(
         self, prompt: str, params: Dict[str, Any], data: Any, ttl: Optional[int] = None
-    ):
-        """设置缓存"""
+    ) -> None:
+        """设置缓存
+
+        当写入文件失败时，会创建同名 ``.error`` 文件用于标记。
+        """
         key = self._generate_key(prompt, params)
         expires_at = datetime.now() + timedelta(seconds=ttl or self.default_ttl)
 
@@ -143,6 +159,11 @@ class ResponseCache:
                 )
         except Exception as e:
             logger.error(f"保存缓存失败: {e}")
+            error_file = self.cache_dir / f"{key}.error"
+            try:
+                error_file.write_text(str(e), encoding="utf-8")
+            except Exception as write_error:
+                logger.error(f"创建错误标记失败: {write_error}")
 
 
 class DeepSeekClient:
