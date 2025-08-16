@@ -37,27 +37,27 @@ RuleK/
 ## 🚀 快速开始
 
 ### 主要入口
-- `rulek.py` - 统一入口程序
-- `start_web_server.py` - Web服务器启动
-- `manage.py` - 项目管理工具
+- `rulek.py` - 统一入口程序（包括Web服务器启动）
+- `Makefile` - 项目管理和快速启动
 - `start.sh` / `start.bat` - 快速启动脚本
 
 ### 常用命令
 
 ```bash
 # 启动Web服务器
-python start_web_server.py
-# 或
 python rulek.py web
+# 或
+make serve
 
 # 启动CLI游戏
 python rulek.py cli
+# 或
+make cli
 
 # 运行测试
 python rulek.py test
-
-# 项目管理
-python manage.py
+# 或
+make test
 ```
 
 ## 📂 脚本分类说明

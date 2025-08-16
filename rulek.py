@@ -51,6 +51,10 @@ def start_web():
     print("   按 Ctrl+C 停止服务器")
     print("-" * 50)
     
+    # 确保在项目根目录
+    import os
+    os.chdir(PROJECT_ROOT)
+    
     try:
         import uvicorn
         uvicorn.run(

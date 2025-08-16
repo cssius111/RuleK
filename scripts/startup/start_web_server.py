@@ -7,8 +7,11 @@ import os
 from pathlib import Path
 
 # 添加项目根目录到Python路径
-PROJECT_ROOT = Path(__file__).parent
+PROJECT_ROOT = Path(__file__).parent.parent.parent  # scripts/startup/ -> scripts/ -> RuleK/
 sys.path.insert(0, str(PROJECT_ROOT))
+
+# 确保可以找到web模块
+os.chdir(PROJECT_ROOT)  # 切换到项目根目录
 
 def main():
     """启动Web服务器"""

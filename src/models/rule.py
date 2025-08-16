@@ -98,6 +98,36 @@ class Rule(BaseModel):
     detectable: bool = Field(True, description="是否可被推理发现")
     reverse_risk: float = Field(0.1, ge=0.0, le=1.0, description="被反利用风险")
 
+    @field_validator("loopholes", mode="before")
+    @classmethod
+    def convert_loopholes(cls, v):
+        """将字符串列表转换为Loophole对象列表"""
+        if not v:
+            return []
+        
+        # 如果已经是Loophole对象列表，直接返回
+        if isinstance(v, list) and all(isinstance(item, Loophole) for item in v):
+            return v
+        
+        # 如果是字符串列表，转换为Loophole对象
+        if isinstance(v, list) and all(isinstance(item, str) for item in v):
+            return [
+                Loophole(
+                    id=f"loophole_{i}",
+                    description=item,
+                    discovery_difficulty=5,
+                    patch_cost=100
+                )
+                for i, item in enumerate(v)
+            ]
+        
+        # 如果是字典列表，尝试构造Loophole对象
+        if isinstance(v, list) and all(isinstance(item, dict) for item in v):
+            return [Loophole(**item) if isinstance(item, dict) else item for item in v]
+        
+        # 其他情况，返回原值让Pydantic处理
+        return v
+
     # 状态
     active: bool = True
     cooldown_turns: int = Field(0, ge=0, description="冷却回合数")

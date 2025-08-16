@@ -164,7 +164,8 @@ class TestRuleKFullFlow:
             
             # 检查规则创建选项
             creation_options = {
-                "自定义规则": page.locator('button:has-text("自定义"), button:has-text("创建自定义")')                "模板规则": page.locator('button:has-text("模板"), button:has-text("使用模板")'),
+                "自定义规则": page.locator('button:has-text("自定义"), button:has-text("创建自定义")'),
+                "模板规则": page.locator('button:has-text("模板"), button:has-text("使用模板")'),
                 "AI规则": page.locator('button:has-text("AI"), button:has-text("智能创建")')
             }
             

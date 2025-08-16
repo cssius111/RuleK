@@ -8,7 +8,7 @@ from dataclasses import dataclass, asdict, field
 from enum import Enum
 from typing import Any, Dict, Optional
 import uuid
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 
 
 class EventType(str, Enum):
@@ -47,7 +47,7 @@ class Event:
     id: str = field(default_factory=lambda: f"evt_{uuid.uuid4().hex[:8]}")
     game_time: Optional[str] = None
     meta: Optional[Dict[str, Any]] = None
-    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     # ---- 序列化辅助 --------------------------------------------------------
 

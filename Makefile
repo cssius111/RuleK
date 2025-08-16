@@ -22,7 +22,7 @@ help:
 
 serve:
 	@echo "🚀 启动Web服务器..."
-	@python start_web_server.py
+	@python scripts/startup/start_web_server.py
 
 web:
 	@python rulek.py web

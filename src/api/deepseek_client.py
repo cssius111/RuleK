@@ -528,7 +528,20 @@ class DeepSeekClient:
         """异步生成对话（兼容旧接口）"""
         npc_states = [{"name": name, "fear": 50, "sanity": 80} for name in participants]
         scene_context = {"description": context}
-        return await self.generate_dialogue(npc_states, scene_context)
+        
+        # 如果没有参与者，返回默认对话
+        if not participants:
+            return [{"speaker": "系统", "text": "没有参与者"}]
+        
+        try:
+            return await self.generate_dialogue(npc_states, scene_context)
+        except Exception as e:
+            logger.error(f"生成对话失败: {e}")
+            # 返回默认对话
+            return [
+                {"speaker": participants[0] if participants else "系统", 
+                 "text": "这里好冷...我有种不祥的预感。"}
+            ]
 
     async def evaluate_rule(
         self, rule_draft: Dict[str, Any], world_context: Dict[str, Any]
@@ -618,8 +631,19 @@ class DeepSeekClient:
         if traits:
             prompt += f"性格特征从以下选择：{', '.join(traits)}"
 
-        # ... API调用逻辑
-        return []
+        # 暂时返回mock数据（API实现待完成）
+        logger.warning("非mock模式下的NPC批量生成尚未实现，返回mock数据")
+        
+        # 生成足够数量的mock NPC
+        mock_npcs = []
+        for i in range(count):
+            mock_npcs.append({
+                "name": f"测试NPC{i+1}",
+                "background": f"临时生成的NPC，编号{i+1}",
+                "fear": 30 + i * 10,
+                "sanity": 90 - i * 5,
+            })
+        return mock_npcs
 
     async def close(self):
         """关闭客户端"""

@@ -6,7 +6,7 @@ import logging
 import sys
 from pathlib import Path
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
 # 创建日志目录
 LOG_DIR = Path("logs")
@@ -63,7 +63,7 @@ class ColoredFormatter(logging.Formatter):
 
 def setup_logger(
     name: str,
-    level: str | int = "INFO",
+    level: Union[str, int] = "INFO",
     log_file: Optional[str] = None,
     console: bool = True,
 ) -> logging.Logger:

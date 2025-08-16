@@ -19,10 +19,7 @@ class TestDeepSeekAPI:
     @pytest.fixture
     def client(self):
         """创建测试客户端"""
-        # 检查是否有API密钥
-        api_key = os.getenv("DEEPSEEK_API_KEY")
-        if not api_key or api_key == "your_deepseek_api_key_here":
-            pytest.skip("需要配置DEEPSEEK_API_KEY环境变量")
+        # 不管是否有API密钥，都创建客户端（没有密钥会自动使用mock模式）
         return DeepSeekClient()
     
     @pytest.fixture
@@ -171,11 +168,7 @@ class TestAPIIntegration:
     @pytest.mark.asyncio
     async def test_full_game_cycle(self):
         """测试完整游戏周期"""
-        # 检查API密钥
-        api_key = os.getenv("DEEPSEEK_API_KEY")
-        if not api_key or api_key == "your_deepseek_api_key_here":
-            pytest.skip("需要配置DEEPSEEK_API_KEY环境变量")
-            
+        # 创建客户端（没有API密钥会自动使用mock模式）
         client = DeepSeekClient()
         
         print("\n开始完整游戏周期测试...")

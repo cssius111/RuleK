@@ -14,7 +14,10 @@ python start_all.py
 
 #### 1. 启动后端
 ```bash
-python start_web_server.py
+# 使用 Makefile
+make serve
+# 或使用 rulek.py
+python rulek.py web
 ```
 - 运行在: http://localhost:8000
 - API文档: http://localhost:8000/docs
