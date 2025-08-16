@@ -201,75 +201,35 @@ class DeepSeekClient:
     def _generate_mock_response(
         self, endpoint: str, data: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """生成Mock响应"""
-        import random
+        """生成Mock响应
 
-        messages = data.get("messages", [])
-        if len(messages) > 1:
-            user_content = messages[-1].get("content", "")
+        无论请求内容如何，始终返回包含 ``dialogue``、``actions``、
+        ``turn_summary`` 和 ``atmosphere`` 的JSON字符串，确保测试环境中
+        的响应结构稳定。
+        """
 
-            # 根据用户内容判断响应类型
-            if "json" in user_content.lower():
-                # 返回JSON格式的mock响应
-                if "dialogue" in user_content or "对话" in user_content:
-                    content = json.dumps(
-                        {
-                            "dialogue": [
-                                {
-                                    "speaker": "张三",
-                                    "text": "这里好冷...我有种不祥的预感。",
-                                    "emotion": "恐惧",
-                                },
-                                {
-                                    "speaker": "李四",
-                                    "text": "大家不要分散，待在一起！",
-                                    "emotion": "紧张",
-                                },
-                            ],
-                            "actions": [
-                                {
-                                    "npc": "张三",
-                                    "action": "search",
-                                    "target": "抽屉",
-                                    "reason": "寻找有用的物品",
-                                    "priority": 3,
-                                }
-                            ],
-                            "turn_summary": "NPC们开始探索房间",
-                            "atmosphere": "tense",
-                        },
-                        ensure_ascii=False,
-                    )
-                elif "规则" in user_content or "rule" in user_content:
-                    content = json.dumps(
-                        {
-                            "name": "午夜禁声",
-                            "trigger": {
-                                "type": "time",
-                                "conditions": ["hour == 0"],
-                                "logic": "AND",
-                            },
-                            "effect": {
-                                "type": "death",
-                                "params": {"method": "窒息"},
-                                "description": "发出声音者将窒息而死",
-                            },
-                            "cooldown": 3600,
-                            "cost": 200,
-                            "difficulty": 7,
-                            "loopholes": ["可以用手语交流", "写字不算发声"],
-                            "suggestion": "可以增加声音检测的灵敏度",
-                            "estimated_fear_gain": 80,
-                        },
-                        ensure_ascii=False,
-                    )
-                else:
-                    content = '{"message": "mock response"}'
-            else:
-                # 返回叙事文本
-                content = random.choice(self._mock_responses["narration"])
-        else:
-            content = "Mock response"
+        mock_payload = {
+            "dialogue": [
+                {
+                    "speaker": "张三",
+                    "text": "这是一个测试对话。",
+                    "emotion": "neutral",
+                }
+            ],
+            "actions": [
+                {
+                    "npc": "张三",
+                    "action": "wait",
+                    "target": None,
+                    "reason": "mock",
+                    "priority": 1,
+                }
+            ],
+            "turn_summary": "测试回合",
+            "atmosphere": "calm",
+        }
+
+        content = json.dumps(mock_payload, ensure_ascii=False)
 
         return {
             "choices": [{"message": {"content": content}, "finish_reason": "stop"}],
@@ -301,6 +261,13 @@ class DeepSeekClient:
         min_dialogue: int = 1,
     ) -> TurnPlan:
         """生成回合计划（对话+行动）"""
+        # 补全NPC状态所需字段
+        default_location = scene_context.get("current_location", "未知地点")
+        for npc in npc_states:
+            npc.setdefault("traits", [])
+            npc.setdefault("status", "normal")
+            npc.setdefault("location", default_location)
+
         # 检查缓存
         cache_key = f"turn_plan_{time_of_day}_{len(npc_states)}"
         if self.cache:
