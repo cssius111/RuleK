@@ -16,10 +16,14 @@ class APIConfig:
             self.base_url = ds["base_url"]
             self.model = ds["model"]
             self.timeout = global_config.get("api", {}).get("timeout", 30)
-            self.max_retries = global_config.get("api", {}).get("max_retries", 3)
+            self.max_retries = global_config.get("api", {}).get(
+                "max_retries", 3
+            )
         else:
             self.deepseek_api_key = config_dict.get("deepseek_api_key", "")
-            self.base_url = config_dict.get("base_url", "https://api.deepseek.com/v1")
+            self.base_url = config_dict.get(
+                "base_url", "https://api.deepseek.com/v1"
+            )
             self.model = config_dict.get("model", "deepseek-chat")
             self.timeout = config_dict.get("timeout", 30)
             self.max_retries = config_dict.get("max_retries", 3)
