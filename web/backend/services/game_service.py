@@ -10,6 +10,7 @@ import json
 import uuid
 import logging
 from pathlib import Path
+import httpx
 
 from src.core.game_state import GameState, GameStateManager
 from src.ai.turn_pipeline import AITurnPipeline
@@ -52,8 +53,12 @@ class GameService:
         self.ai_pipeline = None
         self.game_state_manager = None
     
-    async def initialize(self):
-        """异步初始化游戏组件"""
+    async def initialize(self, http_client: httpx.AsyncClient | None = None):
+        """异步初始化游戏组件
+
+        Args:
+            http_client: 可注入的HTTP客户端
+        """
         if self._initialized:
             return
         
@@ -86,7 +91,7 @@ class GameService:
         self.rule_executor = RuleExecutor(self.game_state_manager)
         
         # 初始化AI系统
-        self.deepseek_client = DeepSeekClient()
+        self.deepseek_client = DeepSeekClient(http_client=http_client)
         self.dialogue_system = DialogueSystem(self.deepseek_client)
         self.narrator = Narrator(self.deepseek_client)
         
