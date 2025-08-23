@@ -74,8 +74,9 @@ def cli_game():
 
 @pytest.fixture
 def initialized_game(cli_game):
-    """创建已初始化的游戏实例"""
-    cli_game.game_manager.new_game("test_game")
+    """创建已初始化的游戏实例，包含测试NPC"""
+    # 为测试创建NPC
+    cli_game.game_manager.new_game("test_game", config={"create_test_npcs": True, "test_npc_count": 3})
     cli_game.rule_executor = RuleExecutor(cli_game.game_manager)
     cli_game.npc_behavior = NPCBehavior(cli_game.game_manager)
     return cli_game

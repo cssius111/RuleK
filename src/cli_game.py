@@ -193,6 +193,11 @@ class CLIGame:
             return
 
         # 创建游戏
+        # 在测试模式下创建NPC
+        if self.test_mode or os.environ.get("PYTEST_RUNNING") == "1":
+            config["create_test_npcs"] = True
+            config["test_npc_count"] = config.get("starting_npcs", 4)
+        
         self.game_manager.new_game(config=config)
         self.rule_executor = RuleExecutor(self.game_manager)
         self.npc_behavior = NPCBehavior(self.game_manager)

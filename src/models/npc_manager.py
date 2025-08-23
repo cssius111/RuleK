@@ -11,33 +11,39 @@ class NPCManager:
 
     def __init__(self):
         self.npcs: Dict[str, NPC] = {}
+        # 使用更多样化的英文名字
         self.npc_names = [
-            "张明",
-            "李静",
-            "王芳",
-            "刘强",
-            "陈雪",
-            "杨帆",
-            "赵磊",
-            "周婷",
-            "吴敏",
-            "徐阳",
-            "孙莉",
-            "马超",
+            # 普通人名
+            "Alice", "Bob", "Charlie", "Diana", "Eric", "Fiona",
+            "George", "Helen", "Ivan", "Julia", "Kevin", "Luna",
+            "Marcus", "Nina", "Oliver", "Petra", "Quinn", "Ruby",
+            "Sam", "Tina", "Ulrich", "Vera", "Walter", "Xena",
+            "Yuki", "Zoe",
+            # 职业相关命名
+            "Dr. Morgan", "Prof. Chen", "Officer Davis", "Nurse Kelly",
+            "Engineer Park", "Janitor Mike", "Security Tom", "Student Amy"
         ]
         self.name_index = 0
+        self.used_names = set()
 
     def create_npc(
         self, name: Optional[str] = None, template: Optional[str] = None, **kwargs
     ) -> NPC:
         """创建NPC"""
         if not name:
-            # 使用默认名字
-            if self.name_index < len(self.npc_names):
+            # 智能选择名字
+            available_names = [n for n in self.npc_names if n not in self.used_names]
+            if available_names:
+                import random
+                name = random.choice(available_names)
+                self.used_names.add(name)
+            elif self.name_index < len(self.npc_names):
+                # 如果没有可用名字，顺序使用
                 name = self.npc_names[self.name_index]
                 self.name_index += 1
             else:
-                name = f"NPC_{len(self.npcs) + 1}"
+                # 全部用完，生成序号名
+                name = f"Survivor_{len(self.npcs) + 1}"
 
         # 设置默认值
         npc_data = {
@@ -83,6 +89,7 @@ class NPCManager:
         """清空所有NPC"""
         self.npcs.clear()
         self.name_index = 0
+        self.used_names.clear()
 
     def remove_npc(self, npc_id: str) -> bool:
         """移除NPC"""

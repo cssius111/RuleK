@@ -6,6 +6,9 @@ import router from './router'
 // 引入全局样式
 import './assets/styles/main.css'
 
+// 引入 Naive UI 样式（必须）
+import 'naive-ui/dist/index.css'
+
 const app = createApp(App)
 
 // 使用 Pinia 状态管理

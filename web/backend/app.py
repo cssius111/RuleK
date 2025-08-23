@@ -38,6 +38,7 @@ from .models import (
 )
 from .services.game_service import GameService
 from .services.session_manager import SessionManager
+from .services.streaming_service import streaming_service
 
 # 设置日志
 logger = setup_logger("api")
@@ -293,34 +294,71 @@ async def initialize_ai(game_id: str):
 
 @app.websocket("/ws/{game_id}")
 async def websocket_endpoint(websocket: WebSocket, game_id: str):
-    """WebSocket连接处理"""
+    """WebSocket连接处理 - 使用StreamingService"""
+    # 验证游戏是否存在
     game_service = session_manager.get_game(game_id)
     if not game_service:
         await websocket.close(code=4004, reason="Game not found")
         return
     
-    await websocket.accept()
-    connection_id = await game_service.add_websocket(websocket)
+    # 使用客户端ID（组合game_id和时间戳）
+    import time
+    client_id = f"{game_id}_{int(time.time() * 1000)}"
+    
+    # 通过StreamingService建立连接
+    await streaming_service.connect(websocket, client_id)
+    
+    # 将客户端ID关联到游戏
+    game_service.add_websocket_client(client_id)
     
     try:
         while True:
             # 接收客户端消息
-            data = await websocket.receive_json()
-            message = WebSocketMessage(**data)
+            message_text = await websocket.receive_text()
             
-            # 处理消息
-            if message.type == "ping":
-                await websocket.send_json({"type": "pong"})
-            elif message.type == "action":
-                result = await game_service.handle_action(message.data)
-                await game_service.broadcast_update(result)
+            # 处理消息（通过streaming_service）
+            await streaming_service.handle_message(client_id, message_text)
+            
+            # 解析消息来处理游戏逻辑
+            try:
+                import json
+                data = json.loads(message_text)
+                msg_type = data.get("type")
+                
+                if msg_type == "action":
+                    # 处理游戏动作
+                    result = await game_service.handle_action(data.get("data", {}))
+                    
+                    # 通过streaming_service广播更新
+                    await streaming_service.send_message(client_id, {
+                        "type": "game_update",
+                        "data": result
+                    })
+                    
+                elif msg_type == "turn":
+                    # 处理回合推进
+                    result = await game_service.advance_turn()
+                    
+                    # 流式发送回合结果
+                    async def generate_turn_chunks():
+                        for event in result.get("events", []):
+                            yield json.dumps(event)
+                            await asyncio.sleep(0.1)  # 控制流速
+                    
+                    await streaming_service.send_stream(client_id, generate_turn_chunks())
+                    
+            except json.JSONDecodeError:
+                pass  # 忽略非JSON消息（如ping/pong）
             
     except WebSocketDisconnect:
-        await game_service.remove_websocket(connection_id)
-        logger.info(f"WebSocket disconnected: {connection_id}")
+        # 断开连接
+        await streaming_service.disconnect(client_id)
+        game_service.remove_websocket_client(client_id)
+        logger.info(f"WebSocket disconnected: {client_id}")
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
-        await game_service.remove_websocket(connection_id)
+        await streaming_service.disconnect(client_id)
+        game_service.remove_websocket_client(client_id)
 
 # ==================== 健康检查 ====================
 

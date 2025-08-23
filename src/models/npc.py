@@ -439,38 +439,35 @@ class NPC(BaseModel):
         return self.model_dump()
 
 
-# NPC名字池
+# NPC名字池 - 使用更恐怖氛围的英文名字
 NPC_NAMES = [
-    "小明",
-    "小红",
-    "张伟",
-    "李静",
-    "王芳",
-    "刘洋",
-    "陈晨",
-    "赵雷",
-    "孙悦",
-    "周涛",
-    "吴敏",
-    "郑浩",
-    "老王",
-    "小李",
-    "阿姨",
-    "大叔",
-    "小妹",
-    "老张",
+    # 普通角色
+    "Emily", "Michael", "Sarah", "David", "Jessica", "James",
+    "Ashley", "Daniel", "Rebecca", "Thomas", "Amanda", "Joseph",
+    "Elizabeth", "Robert", "Patricia", "William", "Jennifer", "Charles",
+    
+    # 带职业的角色
+    "Dr. Harrison", "Officer Miller", "Nurse Thompson", "Security Guard Jake",
+    "Janitor Bob", "Student Lisa", "Professor Williams", "Receptionist Anna",
+    
+    # 神秘感的名字
+    "The Stranger", "The Watcher", "Unknown Person", "Lost Soul"
 ]
 
 # NPC背景模板
 NPC_BACKGROUNDS = [
-    "大学生，放假回家探亲",
-    "上班族，加班到深夜",
-    "保安，负责夜班巡逻",
-    "清洁工，打扫这栋建筑",
-    "记者，调查灵异事件",
-    "探险爱好者，寻求刺激",
-    "普通居民，不小心卷入",
-    "外卖员，送餐时被困",
+    "College student, visiting home during vacation",
+    "Office worker, staying late for overtime",
+    "Security guard, on night patrol duty",
+    "Janitor, cleaning the building",
+    "Journalist, investigating paranormal events",
+    "Thrill-seeker, looking for adventure",
+    "Regular resident, accidentally involved",
+    "Delivery person, trapped while making a delivery",
+    "Lost tourist, wandered into the wrong place",
+    "Night shift worker, just doing their job",
+    "Urban explorer, documenting abandoned places",
+    "Paranormal investigator, hunting for evidence"
 ]
 
 

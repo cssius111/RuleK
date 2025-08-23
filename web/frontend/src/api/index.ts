@@ -43,3 +43,4 @@ apiClient.interceptors.response.use(
 )
 
 export default apiClient
+export { apiClient as api }  // 添加命名导出，供 stores 使用

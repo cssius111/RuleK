@@ -8,9 +8,9 @@ import random
 import json
 from pathlib import Path
 
-from src.models.game_state import GameState
-from src.models.rule import Rule, RuleTrigger, RuleEffect
-from src.core.npc import NPC
+from src.core.game_state import GameState
+from src.models.rule import Rule, TriggerCondition, RuleEffect, EffectType
+from src.models.npc import NPC
 
 class RuleService:
     """规则服务类"""
@@ -48,7 +48,7 @@ class RuleService:
             name=template['name'],
             description=template['description'],
             cost=template['cost'],
-            trigger=RuleTrigger(**template['trigger']),
+            trigger=TriggerCondition(**template['trigger']),
             effects=[RuleEffect(**e) for e in template['effects']],
             cooldown=template.get('cooldown', 0),
             is_active=True,
@@ -76,7 +76,7 @@ class RuleService:
             name=rule_data['name'],
             description=rule_data['description'],
             cost=cost,
-            trigger=RuleTrigger(**rule_data['trigger']),
+            trigger=TriggerCondition(**rule_data['trigger']),
             effects=[RuleEffect(**e) for e in rule_data['effects']],
             cooldown=rule_data.get('cooldown', 0),
             is_active=True,
@@ -139,7 +139,7 @@ class RuleService:
         
         return triggered_rules
     
-    def _check_trigger_condition(self, trigger: RuleTrigger, event: Dict[str, Any]) -> bool:
+    def _check_trigger_condition(self, trigger: TriggerCondition, event: Dict[str, Any]) -> bool:
         """检查触发条件是否满足"""
         if trigger.type != event.get('type'):
             return False

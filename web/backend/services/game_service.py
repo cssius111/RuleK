@@ -99,8 +99,8 @@ class GameService:
     def _create_npcs(self):
         """创建NPC"""
         for i in range(self.npc_count):
+            # 让NPCManager自动选择名字，不再传递name参数
             npc = self.npc_manager.create_npc(
-                name=f"NPC_{i+1}",  # 实际游戏中会用AI生成名字
                 rationality=5 + (i % 3),
                 courage=3 + (i % 4),
                 curiosity=4 + (i % 3)
@@ -173,19 +173,53 @@ class GameService:
                 npc = self.npc_manager.get_npc(npc_id)
                 if not npc:
                     # Recreate NPC from data if missing
-                    from src.models.npc import NPC
-                    # Remove 'id' from npc_data if it exists to avoid duplicate
+                    from src.models.npc import NPC, NPCPersonality, NPCMemory
+                    # Prepare data for NPC creation
                     npc_data_copy = npc_data.copy()
-                    npc_data_copy.pop('id', None)
+                    npc_data_copy.pop('id', None)  # Remove id to avoid duplicate
+                    
+                    # Convert personality and memory to objects if they're dicts
+                    if 'personality' in npc_data_copy and isinstance(npc_data_copy['personality'], dict):
+                        npc_data_copy['personality'] = NPCPersonality(**npc_data_copy['personality'])
+                    if 'memory' in npc_data_copy and isinstance(npc_data_copy['memory'], dict):
+                        npc_data_copy['memory'] = NPCMemory(**npc_data_copy['memory'])
+                    
+                    # Create NPC with proper types
                     npc = NPC(id=npc_id, **npc_data_copy)
                     self.npc_manager.npcs[npc_id] = npc
                 if npc:
-                    action = self.npc_behavior.decide_action(npc, self.game_state)
+                    # 确保传递字典格式给decide_action
+                    if hasattr(npc, 'to_dict'):
+                        npc_dict = npc.to_dict()
+                    elif hasattr(npc, 'model_dump'):
+                        npc_dict = npc.model_dump()
+                    elif hasattr(npc, 'dict'):
+                        npc_dict = npc.dict()
+                    elif isinstance(npc, dict):
+                        npc_dict = npc
+                    else:
+                        # 如果是NPC对象，手动构建字典
+                        npc_dict = {
+                            'id': npc_id,
+                            'name': getattr(npc, 'name', npc_data.get('name', 'Unknown')),
+                            'hp': getattr(npc, 'hp', npc_data.get('hp', 100)),
+                            'sanity': getattr(npc, 'sanity', npc_data.get('sanity', 100)),
+                            'fear': getattr(npc, 'fear', npc_data.get('fear', 0)),
+                            'location': getattr(npc, 'location', npc_data.get('location', 'unknown')),
+                            'alive': getattr(npc, 'hp', npc_data.get('hp', 100)) > 0,
+                            'rationality': getattr(npc, 'rationality', 5),
+                            'courage': getattr(npc, 'courage', 5),
+                            'curiosity': getattr(npc, 'curiosity', 5),
+                            'sociability': getattr(npc, 'sociability', 5),
+                            'stamina': getattr(npc, 'stamina', 100),
+                            'suspicion': getattr(npc, 'suspicion', 0)
+                        }
+                    action = self.npc_behavior.decide_action(npc_dict)
                     if action:
                         events.append({
                             "type": "npc_action",
                             "npc": npc.name if hasattr(npc, 'name') else npc_data.get('name', 'Unknown'),
-                            "action": action
+                            "action": action.action.value if hasattr(action, 'action') else str(action)
                         })
         
         # 3. 规则判定阶段
@@ -240,9 +274,17 @@ class GameService:
                 npc = self.npc_manager.get_npc(npc_id)
                 if not npc:
                     # Recreate from data if missing
-                    from src.models.npc import NPC
+                    from src.models.npc import NPC, NPCPersonality, NPCMemory
                     npc_data = self.game_state.npcs[npc_id].copy()
                     npc_data.pop('id', None)  # Remove id to avoid duplicate
+                    
+                    # Convert personality and memory to objects if they're dicts
+                    if 'personality' in npc_data and isinstance(npc_data['personality'], dict):
+                        npc_data['personality'] = NPCPersonality(**npc_data['personality'])
+                    if 'memory' in npc_data and isinstance(npc_data['memory'], dict):
+                        npc_data['memory'] = NPCMemory(**npc_data['memory'])
+                    
+                    # Create NPC with proper types
                     npc = NPC(id=npc_id, **npc_data)
                     self.npc_manager.npcs[npc_id] = npc
                 if npc:
@@ -411,6 +453,7 @@ class GameService:
         filename = f"save_{self.game_id}_{datetime.now():%Y%m%d_%H%M%S}.json"
         save_path = save_dir / filename
         
+        # 准备保存数据
         save_data = {
             "version": "1.0",
             "game_id": self.game_id,
@@ -418,12 +461,102 @@ class GameService:
             "saved_at": datetime.now().isoformat(),
             "game_state": self.game_state.to_dict(),
             "managers": {
-                "rules": [rule.model_dump() for rule in self.rule_manager.active_rules],
-                "npcs": {npc_id: npc.to_dict() 
-                        for npc_id, npc in self.npc_manager.npcs.items()},
-                "map": self.map_manager.to_dict()
+                "rules": [],
+                "npcs": {},
+                "map": {}
             }
         }
+        
+        # 安全序列化规则
+        for rule in self.rule_manager.active_rules:
+            try:
+                save_data["managers"]["rules"].append(rule.model_dump())
+            except Exception:
+                # 如果无法序列化，跳过
+                pass
+        
+        # 定义递归序列化函数（在循环外定义一次）
+        def serialize_obj(obj):
+            """递归序列化任何对象为JSON兼容格式"""
+            # 处理基本类型
+            if obj is None or isinstance(obj, (str, int, float, bool)):
+                return obj
+            
+            # 处理datetime
+            if hasattr(obj, 'isoformat'):
+                return obj.isoformat()
+            
+            # 处理字典
+            if isinstance(obj, dict):
+                return {k: serialize_obj(v) for k, v in obj.items()}
+            
+            # 处理列表和元组
+            if isinstance(obj, (list, tuple)):
+                return [serialize_obj(item) for item in obj]
+            
+            # 处理Pydantic模型
+            if hasattr(obj, 'model_dump'):
+                # Pydantic v2 - 强制使用json模式
+                try:
+                    return obj.model_dump(mode='json')
+                except:
+                    return obj.model_dump()
+            elif hasattr(obj, 'dict'):
+                # Pydantic v1
+                return serialize_obj(obj.dict())
+            
+            # 处理有to_dict方法的对象
+            if hasattr(obj, 'to_dict'):
+                return serialize_obj(obj.to_dict())
+            
+            # 处理枚举
+            if hasattr(obj, 'value'):
+                return obj.value
+            
+            # 处理其他有__dict__的对象
+            if hasattr(obj, '__dict__'):
+                try:
+                    return serialize_obj(obj.__dict__)
+                except:
+                    return str(obj)
+            
+            # 最后的备选：转换为字符串
+            return str(obj)
+        
+        # 安全序列化NPC
+        for npc_id, npc in self.npc_manager.npcs.items():
+            try:
+                # 直接使用通用序列化函数
+                npc_serialized = serialize_obj(npc)
+                
+                # 确保结果是字典
+                if not isinstance(npc_serialized, dict):
+                    npc_serialized = {'data': npc_serialized}
+                
+                # 确保有基本字段
+                if 'id' not in npc_serialized:
+                    npc_serialized['id'] = npc_id
+                if 'name' not in npc_serialized:
+                    npc_serialized['name'] = getattr(npc, 'name', 'Unknown')
+                
+                save_data["managers"]["npcs"][npc_id] = npc_serialized
+            except Exception as e:
+                logger.warning(f"Failed to serialize NPC {npc_id}: {e}")
+                # 保存基本信息
+                save_data["managers"]["npcs"][npc_id] = {
+                    "id": npc_id,
+                    "name": getattr(npc, 'name', 'Unknown'),
+                    "hp": getattr(npc, 'hp', 100),
+                    "sanity": getattr(npc, 'sanity', 100),
+                    "fear": getattr(npc, 'fear', 0),
+                    "location": getattr(npc, 'location', 'unknown')
+                }
+        
+        # 安全序列化地图
+        try:
+            save_data["managers"]["map"] = self.map_manager.to_dict()
+        except Exception:
+            save_data["managers"]["map"] = {}
         
         with open(save_path, 'w', encoding='utf-8') as f:
             json.dump(save_data, f, ensure_ascii=False, indent=2)

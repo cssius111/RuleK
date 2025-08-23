@@ -71,6 +71,12 @@
       </div>
     </div>
 
+    <!-- 规则创建模态框 -->
+    <RuleCreatorModal 
+      v-model:show="showRuleCreator"
+      @created="handleRuleCreated"
+    />
+
     <!-- 加载遮罩 -->
     <LoadingSpinner 
       v-if="isLoading"
@@ -120,6 +126,7 @@ import NPCCard from '@/components/game/NPCCard.vue'
 import EventLog from '@/components/game/EventLog.vue'
 import ActionPanel from '@/components/game/ActionPanel.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import RuleCreatorModal from '@/components/game/RuleCreatorModal.vue'
 
 const router = useRouter()
 const gameStore = useGameStore()
@@ -132,6 +139,7 @@ const isGameOver = ref(false)
 const gameOverReason = ref('')
 const totalFearHarvested = ref(0)
 const totalKills = ref(0)
+const showRuleCreator = ref(false)
 
 // 计算属性
 const aliveNPCCount = computed(() => {
@@ -231,7 +239,14 @@ const handleStartTurn = async () => {
 
 // 创建规则
 const handleCreateRule = () => {
-  router.push('/game/create-rule')
+  showRuleCreator.value = true
+}
+
+// 处理规则创建成功
+const handleRuleCreated = () => {
+  showRuleCreator.value = false
+  // 刷新游戏状态以更新规则列表
+  gameStore.refreshGameState()
 }
 
 // 保存游戏

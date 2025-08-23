@@ -167,8 +167,9 @@ class GameStateManager:
         self.log(f"新游戏开始 - ID: {game_id}")
         self._trigger_event("game_start", {"state": self.state})
 
-        # 创建默认NPC
-        self._create_default_npcs()
+        # 如果是测试环境，创建测试NPC
+        if config.get("create_test_npcs", False):
+            self._create_test_npcs(config.get("test_npc_count", 3))
 
         return self.state
 
@@ -372,31 +373,7 @@ class GameStateManager:
             return True
         return False
 
-    def create_rule(self, rule_data: Dict[str, Any]) -> Optional[str]:
-        """创建新规则并扣除相应恐惧积分"""
-        if self.state is None:
-            raise RuntimeError("游戏未初始化")
 
-        cost = rule_data.get("base_cost") or rule_data.get("cost", 0)
-        if self.state.fear_points < cost:
-            self.log(f"恐惧积分不足，无法创建规则 {rule_data.get('name', '')}")
-            return None
-
-        rule_id = rule_data.get("id") or f"rule_{len(self.rules) + 1:03d}"
-        rule = Rule(
-            id=rule_id,
-            name=rule_data.get("name", "未命名规则"),
-            description=rule_data.get("description", ""),
-            level=rule_data.get("level", 1),
-            trigger=TriggerCondition(**rule_data.get("trigger", {"action": "custom"})),
-            effect=RuleEffect(**rule_data.get("effect", {"type": "fear_gain"})),
-            base_cost=cost,
-        )
-
-        self.add_rule(rule)
-        self.spend_fear_points(cost)
-        self.log(f"创建规则 [{rule.name}] - 消耗 {cost} 恐惧积分")
-        return rule.id
 
     def add_rule(self, rule: Any):
         """添加规则
@@ -689,29 +666,71 @@ class GameStateManager:
             await self.ai_pipeline.ds_client.close()
             self.log("AI客户端已关闭")
 
-    def _create_default_npcs(self):
-        """创建默认NPC"""
-        try:
-            from ..models.npc import generate_random_npc
 
-            default_npc_names = ["张三", "李四", "王五"]
-            for name in default_npc_names:
-                npc = generate_random_npc(name)
-                npc_dict = npc.__dict__ if hasattr(npc, "__dict__") else npc
-                self.add_npc(npc_dict)
-        except ImportError:
-            # 如果无法导入NPC模块，创建简单的NPC
-            for i, name in enumerate(["张三", "李四", "王五"]):
-                simple_npc = {
-                    "id": f"npc_{i+1}",
-                    "name": name,
-                    "hp": 100,
-                    "sanity": 100,
-                    "fear": 0,
-                    "location": "living_room",
-                    "alive": True,
-                }
-                self.add_npc(simple_npc)
+    
+
+    
+    def create_rule(self, rule_data: Dict[str, Any]) -> str:
+        """创建规则
+        
+        Args:
+            rule_data: 规则数据
+        
+        Returns:
+            规则ID
+        """
+        from ..models.rule import Rule, TriggerCondition, RuleEffect
+        
+        # 获取成本
+        cost = rule_data.get("base_cost") or rule_data.get("cost", 0)
+        
+        # 检查积分是否足够
+        if self.state and self.state.fear_points < cost:
+            self.log(f"恐惧积分不足，无法创建规则 {rule_data.get('name', '')}")
+            return ""
+        
+        rule_id = f"rule_{len(self.rules) + 1:03d}"
+        rule = Rule(
+            id=rule_id,
+            name=rule_data.get("name", "未命名规则"),
+            description=rule_data.get("description", ""),
+            level=rule_data.get("level", 1),
+            trigger=TriggerCondition(**rule_data.get("trigger", {"action": "manual"})),
+            effect=RuleEffect(**rule_data.get("effect", {"type": "fear_gain", "fear_gain": 10})),
+            base_cost=cost
+        )
+        
+        self.add_rule(rule)
+        
+        # 扣除恐惧积分
+        if cost > 0:
+            self.spend_fear_points(cost)
+            self.log(f"创建规则 [{rule.name}] - 消耗 {cost} 恐惧积分")
+        
+        return rule_id
+
+
+
+    def _create_test_npcs(self, count: int = 3):
+        """为测试创建NPC"""
+        test_names = ["Test_NPC_1", "Test_NPC_2", "Test_NPC_3", "Test_NPC_4", "Test_NPC_5"]
+        for i in range(min(count, len(test_names))):
+            npc = {
+                "id": f"test_npc_{i+1}",
+                "name": test_names[i],
+                "hp": 100,
+                "sanity": 100,
+                "fear": 0,
+                "location": "living_room",
+                "alive": True,
+                "rationality": 5 + (i % 3),
+                "courage": 5 + (i % 2),
+                "curiosity": 5 + (i % 3),
+                "traits": ["测试"],
+                "inventory": [],
+                "memories": []
+            }
+            self.add_npc(npc)
 
 
 # 单元测试
