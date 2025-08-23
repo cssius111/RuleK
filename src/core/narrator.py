@@ -44,7 +44,7 @@ class Narrator:
     def __init__(self, deepseek_client=None):
         """Initialize the narrator with an optional DeepSeek client."""
         self.deepseek_client = deepseek_client or DeepSeekClient(
-            APIConfig(mock_mode=True)
+            APIConfig(mock_mode=True), http_client=None
         )
         self.api_client = self.deepseek_client
         self.style: NarrativeStyle = NarrativeStyle.DEFAULT

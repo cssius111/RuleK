@@ -523,7 +523,7 @@ class GameStateManager:
 
                 # 创建DeepSeek客户端
                 api_config = APIConfig()
-                ds_client = DeepSeekClient(api_config)
+                ds_client = DeepSeekClient(api_config, http_client=None)
 
                 # 创建AI管线
                 self.ai_pipeline = AITurnPipeline(self, ds_client)

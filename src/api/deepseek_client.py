@@ -169,12 +169,23 @@ class ResponseCache:
 class DeepSeekClient:
     """增强版DeepSeek客户端"""
 
-    def __init__(self, config: Optional[APIConfig] = None):
+    def __init__(
+        self,
+        config: Optional[APIConfig] = None,
+        http_client: httpx.AsyncClient | None = None,
+    ):
+        """初始化客户端
+
+        Args:
+            config: API配置
+            http_client: 可注入的HTTP客户端
+        """
+
         self.config = config or APIConfig()
         self.cache = (
             ResponseCache(self.config.cache_dir) if self.config.cache_enabled else None
         )
-        self.client = httpx.AsyncClient(timeout=self.config.timeout)
+        self.client = http_client or httpx.AsyncClient(timeout=self.config.timeout)
         self.prompt_mgr = PromptManager()
         self._mock_responses = self._init_mock_responses()
 
