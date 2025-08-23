@@ -1,10 +1,12 @@
 """
 API测试模块 - 测试DeepSeek集成
 """
-import pytest
+import json
 import os
 import sys
 from pathlib import Path
+
+import pytest
 
 # 添加项目根目录到Python路径
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -137,6 +139,32 @@ class TestDeepSeekAPI:
 
             assert dialogues == [{"speaker": "测试NPC", "text": "这是一个测试响应"}]
             print("✓ 同步方法测试通过")
+
+    @pytest.mark.asyncio
+    async def test_make_request_empty_response(self, mock_client):
+        """空响应应抛出异常"""
+        mock_response = MagicMock()
+        mock_response.content = b""
+        mock_response.text = ""
+        mock_response.raise_for_status = MagicMock()
+        mock_response.json = MagicMock()
+        mock_client.client.post = AsyncMock(return_value=mock_response)
+
+        with pytest.raises(ValueError, match="Empty response"):
+            await mock_client._make_request("test", {})
+
+    @pytest.mark.asyncio
+    async def test_make_request_invalid_json(self, mock_client):
+        """非JSON响应应抛出异常"""
+        mock_response = MagicMock()
+        mock_response.content = b"invalid"
+        mock_response.text = "invalid"
+        mock_response.raise_for_status = MagicMock()
+        mock_response.json.side_effect = json.JSONDecodeError("err", "invalid", 0)
+        mock_client.client.post = AsyncMock(return_value=mock_response)
+
+        with pytest.raises(ValueError, match="Invalid JSON"):
+            await mock_client._make_request("test", {})
     
     @pytest.mark.asyncio
     async def test_batch_npc_generation(self, client):

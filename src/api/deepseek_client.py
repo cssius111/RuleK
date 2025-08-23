@@ -209,7 +209,16 @@ class DeepSeekClient:
                 f"{self.config.base_url}/{endpoint}", headers=headers, content=json_data
             )
             response.raise_for_status()
-            return response.json()
+            if not response.content or not response.text.strip():
+                logger.error(f"空响应: {endpoint}")
+                raise ValueError(f"Empty response from {endpoint}")
+            try:
+                return response.json()
+            except json.JSONDecodeError as e:
+                logger.error(f"非JSON响应: {response.text}")
+                raise ValueError(
+                    f"Invalid JSON response from {endpoint}: {response.text[:100]}"
+                ) from e
         except httpx.HTTPStatusError as e:
             logger.error(f"HTTP错误 {e.response.status_code}: {e.response.text}")
             if e.response.status_code == 429:  # Rate limit
