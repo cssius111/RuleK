@@ -204,9 +204,12 @@ class DeepSeekClient:
         self, endpoint: str, data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """发送API请求（带重试）"""
+        logger.info("request %s", endpoint)
         if self.config.mock_mode:
             await asyncio.sleep(0.1)  # 模拟网络延迟
-            return self._generate_mock_response(endpoint, data)
+            result = self._generate_mock_response(endpoint, data)
+            logger.info("response %s mock", endpoint)
+            return result
 
         headers = {
             "Authorization": f"Bearer {self.config.api_key}",
@@ -224,7 +227,9 @@ class DeepSeekClient:
                 logger.error(f"空响应: {endpoint}")
                 raise ValueError(f"Empty response from {endpoint}")
             try:
-                return response.json()
+                res_data = response.json()
+                logger.info("response %s %s", endpoint, response.status_code)
+                return res_data
             except json.JSONDecodeError as e:
                 logger.error(f"非JSON响应: {response.text}")
                 raise ValueError(
@@ -302,6 +307,13 @@ class DeepSeekClient:
         min_dialogue: int = 1,
     ) -> TurnPlan:
         """生成回合计划（对话+行动）"""
+        logger.info(
+            "generate_turn_plan npcs=%d time_of_day=%s places=%d min_dialogue=%d",
+            len(npc_states),
+            time_of_day,
+            len(available_places),
+            min_dialogue,
+        )
         # 补全NPC状态所需字段
         default_location = scene_context.get("current_location", "未知地点")
         for npc in npc_states:
@@ -315,7 +327,13 @@ class DeepSeekClient:
             cached = self.cache.get(cache_key, {"npcs": len(npc_states)})
             if cached:
                 try:
-                    return TurnPlan.model_validate(cached)
+                    plan = TurnPlan.model_validate(cached)
+                    logger.info(
+                        "turn_plan cache dialogue=%d actions=%d",
+                        len(plan.dialogue),
+                        len(plan.actions),
+                    )
+                    return plan
                 except Exception:
                     pass
 
@@ -364,6 +382,12 @@ class DeepSeekClient:
                 self.cache.set(
                     cache_key, {"npcs": len(npc_states)}, plan.model_dump(), ttl=300
                 )
+
+            logger.info(
+                "turn_plan generated dialogue=%d actions=%d",
+                len(plan.dialogue),
+                len(plan.actions),
+            )
 
             return plan
 
