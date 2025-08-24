@@ -256,9 +256,7 @@ GET /api/metrics
 ### 日志监控
 ```bash
 # 查看优化相关日志
-tail -f logs/api.log | grep "AI-Core"
-tail -f logs/cache.log
-tail -f logs/streaming.log
+tail -f artifacts/runtime_extract.log | grep "AI-Core"
 ```
 
 ---

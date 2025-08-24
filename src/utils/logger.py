@@ -6,9 +6,9 @@ import logging
 import sys
 from pathlib import Path
 from datetime import datetime
-from typing import Optional, Union
+from typing import Union
 
-# 创建日志目录
+# 创建日志目录（用于特殊日志如游戏事件）
 LOG_DIR = Path("logs")
 LOG_DIR.mkdir(exist_ok=True)
 
@@ -24,6 +24,28 @@ LOG_LEVELS = {
     "ERROR": logging.ERROR,
     "CRITICAL": logging.CRITICAL,
 }
+
+
+def setup_logging(level: str = "INFO") -> logging.Logger:
+    """配置根日志器，将日志写入 artifacts/runtime_extract.log"""
+
+    log_path = Path("artifacts") / "runtime_extract.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(LOG_LEVELS.get(level.upper(), logging.INFO))
+
+    # 避免重复添加文件处理器
+    if not any(
+        isinstance(handler, logging.FileHandler)
+        and Path(handler.baseFilename) == log_path
+        for handler in root_logger.handlers
+    ):
+        file_handler = logging.FileHandler(log_path, encoding="utf-8")
+        file_handler.setFormatter(logging.Formatter(LOG_FORMAT, DATE_FORMAT))
+        root_logger.addHandler(file_handler)
+
+    return root_logger
 
 
 class ColoredFormatter(logging.Formatter):
@@ -64,7 +86,6 @@ class ColoredFormatter(logging.Formatter):
 def setup_logger(
     name: str,
     level: Union[str, int] = "INFO",
-    log_file: Optional[str] = None,
     console: bool = True,
 ) -> logging.Logger:
     """设置日志器
@@ -75,49 +96,37 @@ def setup_logger(
         日志器名称
     level : str | int, optional
         日志级别，可以是 ``"INFO"`` 这样的字符串或 ``logging.INFO`` 的整数值。
-    log_file : Optional[str], optional
-        如果提供则写入指定的日志文件
     console : bool, optional
         是否输出到控制台
     """
 
-    logger = logging.getLogger(name)
     if isinstance(level, int):
-        logger.setLevel(level)
+        level_name = logging.getLevelName(level)
     else:
-        logger.setLevel(LOG_LEVELS.get(str(level).upper(), logging.INFO))
+        level_name = str(level).upper()
 
-    # 清除现有处理器
+    setup_logging(level_name)
+
+    logger = logging.getLogger(name)
+    logger.setLevel(LOG_LEVELS.get(level_name, logging.INFO))
+
+    # 清除现有处理器，避免重复控制台输出
     logger.handlers.clear()
 
-    # 控制台处理器
     if console:
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(ColoredFormatter(LOG_FORMAT, DATE_FORMAT))
         logger.addHandler(console_handler)
-
-    # 文件处理器
-    if log_file:
-        file_path = LOG_DIR / log_file
-        file_handler = logging.FileHandler(file_path, encoding="utf-8")
-        file_handler.setFormatter(logging.Formatter(LOG_FORMAT, DATE_FORMAT))
-        logger.addHandler(file_handler)
 
     return logger
 
 
 def get_logger(name: str) -> logging.Logger:
     """获取日志器（便捷方法）"""
-    # 从环境变量或配置文件读取日志级别
     import os
 
     log_level = os.environ.get("LOG_LEVEL", "INFO")
-
-    # 自动创建日志文件
-    today = datetime.now().strftime("%Y%m%d")
-    log_file = f"game_{today}.log"
-
-    return setup_logger(name, level=log_level, log_file=log_file)
+    return setup_logger(name, level=log_level)
 
 
 # 全局日志器

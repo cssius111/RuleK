@@ -24,7 +24,7 @@ RuleK/
 │   ├── design/                # 设计文档
 │   ├── guides/                # 使用指南
 │   └── reports/               # 各类报告
-├── logs/                       # 日志文件
+├── artifacts/                  # 运行时日志
 ├── scripts/                    # 脚本工具
 │   ├── dev/                   # 开发脚本
 │   ├── test/                  # 测试脚本
