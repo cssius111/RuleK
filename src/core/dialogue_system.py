@@ -2,12 +2,15 @@
 对话系统
 生成NPC之间的对话
 """
-from typing import List, Dict, Any, Optional
+import logging
+import random
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
 from src.api.deepseek_client import APIConfig, DeepSeekClient
-import random
-from enum import Enum
-from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
 
 
 class DialogueType(Enum):
@@ -122,8 +125,7 @@ class DialogueSystem:
                     result.append({"speaker": turn.speaker, "text": turn.text})
                 return result
             except Exception:
-                # 如果AI失败，使用模板生成
-                pass
+                logger.exception("Failed to generate dialogue via AI, falling back to templates")
 
         # 使用模板生成对话
         npc1, npc2 = npcs[0], npcs[1]

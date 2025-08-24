@@ -131,10 +131,11 @@ class CLI:
 
         try:
             index = int(choice) - 1
-            if 0 <= index < len(items):
-                return items[index]
         except ValueError:
-            pass
+            self.print_error("无效的选择")
+            return None
+        if 0 <= index < len(items):
+            return items[index]
 
         self.print_error("无效的选择")
         return None
