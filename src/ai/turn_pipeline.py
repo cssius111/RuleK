@@ -26,7 +26,7 @@ from src.core.rule_executor import RuleContext
 if TYPE_CHECKING:
     from src.core.game_state import GameStateManager, GameState
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("deepseek.pipeline")
 
 
 class AITurnPipeline:

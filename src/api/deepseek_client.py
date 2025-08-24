@@ -33,7 +33,7 @@ from src.api.schemas import (
 from src.api.prompts import PromptManager, RULE_EVAL_SYSTEM
 from src.utils.config import config as global_config
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("deepseek.client")
 
 
 class APIConfig:
