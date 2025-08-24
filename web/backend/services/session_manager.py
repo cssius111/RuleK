@@ -67,7 +67,17 @@ class SessionManager:
         """移除游戏会话"""
         if game_id in self.sessions:
             game_service = self.sessions[game_id]
-            asyncio.create_task(game_service.cleanup())
+
+            async def _safe_cleanup(gs: GameService) -> None:
+                """Safely cleanup a game service"""
+                try:
+                    await gs.cleanup()
+                except Exception:  # pragma: no cover - logging
+                    logger.exception(
+                        "Error during game cleanup for %s", gs.game_state.game_id
+                    )
+
+            asyncio.create_task(_safe_cleanup(game_service))
             del self.sessions[game_id]
             logger.info(f"Removed game session: {game_id}")
             return True
