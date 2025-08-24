@@ -231,14 +231,15 @@ def start_frontend(standalone=True):
         return process
 
 
-def start_cli():
+def start_cli() -> None:
     """启动CLI游戏"""
     print(f"\n{Colors.GREEN}💻 启动命令行游戏...{Colors.RESET}")
     print("-" * 50)
-    
+
     try:
+        import asyncio
         from src.cli_game import main as cli_main
-        cli_main()
+        asyncio.run(cli_main())
     except ImportError as e:
         # 尝试其他路径
         try:
