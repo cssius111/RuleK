@@ -351,10 +351,25 @@ class SideEffectManager:
                 results.append(result)
         return results
 
-    def update_active_effects(self, current_turn: int):
-        """更新活跃副作用（移除过期的）"""
-        # 这里可以实现副作用的持续时间管理
-        pass
+    def update_active_effects(self, current_turn: int) -> None:
+        """更新活跃副作用列表并移除过期的副作用。
+
+        Args:
+            current_turn: 当前游戏回合数
+        """
+        remaining_effects = []
+        for effect in self.active_effects:
+            context = effect.get("context", {})
+            duration = context.get("duration", 1)
+            turn_applied = effect.get("turn_applied", 0)
+
+            if current_turn - turn_applied >= duration:
+                logger.info("副作用 %s 已过期", effect.get("effect_name"))
+                continue
+
+            remaining_effects.append(effect)
+
+        self.active_effects = remaining_effects
 
     def get_effects_in_location(self, location: str) -> List[Dict[str, Any]]:
         """获取指定位置的所有活跃副作用"""
