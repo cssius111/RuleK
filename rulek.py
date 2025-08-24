@@ -16,6 +16,8 @@ import signal
 from pathlib import Path
 from typing import List, Optional, Dict, Callable
 
+from src.utils.logger import setup_logging
+
 # 项目根目录
 PROJECT_ROOT = Path(__file__).parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -507,6 +509,9 @@ signal.signal(signal.SIGTERM, handle_signal)
 
 def main():
     """主函数"""
+    logger = setup_logging()
+    logger.info("RuleK unified entry started")
+
     # 命令映射
     commands = {
         "start": start_full_game,
