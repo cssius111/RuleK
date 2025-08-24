@@ -3,8 +3,9 @@ AI 驱动的回合管线
 处理对话生成、行动规划、规则评估等核心 AI 功能
 """
 import logging
-from typing import Dict, Any, List, Optional, TYPE_CHECKING
 import random
+from types import SimpleNamespace
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from src.api.deepseek_client import DeepSeekClient
 from src.api.schemas import (
@@ -20,8 +21,9 @@ from src.api.prompts import (
     create_mock_narrative,
     create_mock_rule_eval,
 )
-from src.models.event import Event, EventType
+from src.core.dialogue_system import DialogueSystem
 from src.core.rule_executor import RuleContext
+from src.models.event import Event, EventType
 
 if TYPE_CHECKING:
     from src.core.game_state import GameStateManager, GameState
@@ -463,8 +465,40 @@ class AITurnPipeline:
             )
 
     async def _handle_talk(self, npc: Dict[str, Any], action: PlannedAction):
-        """处理交谈行动（已在对话阶段处理）"""
-        pass
+        """处理交谈行动
+
+        目前仅生成简单对话并记录事件，尚未实现关系变化等完整逻辑。
+        """
+        if self.game_mgr.state is None:
+            raise RuntimeError("游戏状态未初始化")
+
+        if not action.target:
+            raise NotImplementedError("交谈目标未指定")
+
+        target_npc = self._find_npc_by_name(action.target)
+        if not target_npc:
+            raise NotImplementedError("目标NPC不存在")
+
+        dialogue_system = DialogueSystem(self.ds_client)
+
+        participants = [
+            SimpleNamespace(**npc),
+            SimpleNamespace(**target_npc),
+        ]
+        context = {
+            "location": npc.get("location", ""),
+            "time": self.game_mgr.state.time_of_day,
+            "participants": [npc["name"], target_npc["name"]],
+        }
+
+        dialogue = await dialogue_system.generate_dialogue(participants, context)
+
+        for turn in dialogue:
+            self._create_event(
+                EventType.NPC_DIALOGUE,
+                f"{turn['speaker']}: {turn['text']}",
+                {"speaker": turn["speaker"], "text": turn["text"]},
+            )
 
     async def _handle_use_item(self, npc: Dict[str, Any], action: PlannedAction):
         """处理使用物品行动"""
