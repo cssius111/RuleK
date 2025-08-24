@@ -16,6 +16,9 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
+# 存档目录
+SAVE_DIR = (project_root / "data" / "saves").resolve()
+
 from src.core.game_state import GameState
 from src.models.rule import Rule
 from src.models.npc import NPC
@@ -182,11 +185,22 @@ async def save_game(game_id: str):
 @app.post("/api/games/load")
 async def load_game(filename: str):
     """加载游戏存档"""
+    path = Path(filename)
+    if ".." in path.parts:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
+    resolved = (SAVE_DIR / path).resolve()
+    if not resolved.is_relative_to(SAVE_DIR):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
     try:
-        game_service = await session_manager.load_game(filename)
+        relative = resolved.relative_to(SAVE_DIR)
+        game_service = await session_manager.load_game(str(relative))
         return game_service.get_state_response()
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Save file not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to load game: {e}")
         raise HTTPException(status_code=500, detail=str(e))
