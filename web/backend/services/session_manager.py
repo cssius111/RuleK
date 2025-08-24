@@ -3,6 +3,7 @@
 管理多个并行的游戏实例
 """
 import asyncio
+from pathlib import Path
 from typing import Dict, Optional
 from datetime import datetime, timedelta
 import uuid
@@ -11,6 +12,9 @@ import logging
 from .game_service import GameService
 
 logger = logging.getLogger(__name__)
+
+# 存档目录
+SAVE_DIR = (Path(__file__).resolve().parents[2] / "data" / "saves").resolve()
 
 
 class SessionManager:
@@ -89,18 +93,28 @@ class SessionManager:
     
     async def load_game(self, filename: str) -> GameService:
         """从文件加载游戏"""
+        path = Path(filename)
+        if ".." in path.parts:
+            raise ValueError("Invalid filename")
+
+        resolved = (SAVE_DIR / path).resolve()
+        if not resolved.is_relative_to(SAVE_DIR):
+            raise ValueError("Invalid filename")
+
+        relative = resolved.relative_to(SAVE_DIR)
+
         async with self._lock:
             if len(self.sessions) >= self.max_sessions:
                 await self._cleanup_expired_sessions()
-            
+
             # 创建新的游戏服务并加载存档
-            game_service = GameService.load_from_file(filename)
+            game_service = GameService.load_from_file(str(relative))
             await game_service.initialize()
-            
+
             game_id = game_service.game_state.game_id
             self.sessions[game_id] = game_service
             logger.info(f"Loaded game from save: {game_id}")
-            
+
             return game_service
     
     async def _cleanup_expired_sessions(self):
