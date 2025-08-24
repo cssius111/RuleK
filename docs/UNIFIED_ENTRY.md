@@ -64,6 +64,8 @@
 
 ## 📋 使用方法
 
+运行入口命令时会自动生成 `artifacts/runtime_extract.log` 用于记录运行日志。
+
 ### 交互式菜单（新手推荐）
 ```bash
 python rulek.py
