@@ -1,13 +1,38 @@
 """Utility module for loading configuration files and environment variables."""
 from __future__ import annotations
 
+import ast
 import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_cors_origins(value: str) -> List[str]:
+    """Parse a string of origins into a list.
+
+    The function tries JSON decoding first, then falls back to
+    ``ast.literal_eval``. If both methods fail, the string is split by
+    commas and stripped of whitespace.
+    """
+    try:
+        data = json.loads(value)
+        if isinstance(data, list):
+            return [str(item).strip() for item in data]
+    except Exception:
+        pass
+
+    try:
+        data = ast.literal_eval(value)
+        if isinstance(data, list):
+            return [str(item).strip() for item in data]
+    except Exception:
+        pass
+
+    return [item.strip() for item in value.split(",") if item.strip()]
 
 
 class Config:
@@ -92,7 +117,7 @@ class Config:
         return {
             "host": self.get("WEB_HOST", "0.0.0.0"),
             "port": int(self.get("WEB_PORT", 8000)),
-            "cors_origins": eval(
+            "cors_origins": _parse_cors_origins(
                 self.get("WEB_CORS_ORIGINS", '["http://localhost:3000"]')
             ),
         }
