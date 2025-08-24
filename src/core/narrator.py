@@ -2,12 +2,15 @@
 叙事生成器
 生成恐怖氛围的游戏叙事
 """
-from typing import List, Dict, Any
+import logging
+import random
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Dict, List
 
 from src.api.deepseek_client import APIConfig, DeepSeekClient
-from enum import Enum
-from dataclasses import dataclass
-import random
+
+logger = logging.getLogger(__name__)
 
 
 class EventSeverity(str, Enum):
@@ -111,8 +114,7 @@ class Narrator:
                 )
                 return narrative
             except Exception:
-                # 如果AI失败，使用模板生成
-                pass
+                logger.exception("Failed to generate narrative via AI, falling back to templates")
 
         # 使用模板生成叙事
         narrative_parts = []

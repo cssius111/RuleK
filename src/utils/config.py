@@ -22,15 +22,15 @@ def _parse_cors_origins(value: str) -> List[str]:
         data = json.loads(value)
         if isinstance(data, list):
             return [str(item).strip() for item in data]
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Failed to parse CORS origins as JSON: %s", exc)
 
     try:
         data = ast.literal_eval(value)
         if isinstance(data, list):
             return [str(item).strip() for item in data]
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Failed to parse CORS origins via ast.literal_eval: %s", exc)
 
     return [item.strip() for item in value.split(",") if item.strip()]
 

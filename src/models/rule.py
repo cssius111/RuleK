@@ -3,12 +3,16 @@
 定义游戏中所有规则相关的数据结构
 """
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-from typing import Dict, List, Optional, Any
-from enum import Enum
-from datetime import datetime
-from pathlib import Path
 import json
+import logging
+from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+logger = logging.getLogger(__name__)
 
 
 class EffectType(str, Enum):
@@ -317,7 +321,7 @@ def load_rule_templates(path: Path = _TEMPLATE_PATH) -> Dict[str, Any]:
             if isinstance(data, dict):
                 return data
         except Exception:
-            pass
+            logger.exception("Failed to load rule templates from %s", path)
     return _DEFAULT_RULE_TEMPLATES.copy()
 
 

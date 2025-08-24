@@ -335,7 +335,7 @@ class DeepSeekClient:
                     )
                     return plan
                 except Exception:
-                    pass
+                    logger.exception("Failed to validate cached turn plan")
 
         # 构建prompt
         system_prompt, user_prompt = self.prompt_mgr.build_turn_plan_prompt(
@@ -392,7 +392,7 @@ class DeepSeekClient:
             return plan
 
         except Exception as e:
-            logger.error(f"生成回合计划失败: {str(e)}")
+            logger.exception(f"生成回合计划失败: {str(e)}")
             speaker = npc_states[0]["name"] if npc_states else "系统"
             text = locals().get("content", "").strip()
             if "：" in text:
