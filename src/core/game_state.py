@@ -605,9 +605,35 @@ class GameStateManager:
                 desc = str(event)
             recent_event_descriptions.append(desc)
 
-        # 构建上下文
+        # 从游戏状态或会话对象获取玩家当前位置
+        location: Optional[str] = None
+        if self.state:
+            location = (
+                getattr(self.state, "player_location", None)
+                or getattr(self.state, "location", None)
+            )
+            if not location:
+                player = getattr(self.state, "player", None)
+                if isinstance(player, dict):
+                    location = player.get("location")
+                else:
+                    location = getattr(player, "location", None)
+        if not location and hasattr(self, "session"):
+            session_obj = getattr(self, "session")
+            location = (
+                getattr(session_obj, "player_location", None)
+                or getattr(session_obj, "location", None)
+            )
+            if not location:
+                player = getattr(session_obj, "player", None)
+                if isinstance(player, dict):
+                    location = player.get("location")
+                else:
+                    location = getattr(player, "location", None)
+
+        # 构建上下文，current_location来源于状态或会话信息
         context = {
-            "current_location": "游戏世界",  # TODO: 实现具体位置追踪
+            "current_location": location or "unknown",
             "recent_events": recent_event_descriptions,
             "active_rules": self.state.active_rules,
             "ambient_fear_level": self._calculate_ambient_fear(),
