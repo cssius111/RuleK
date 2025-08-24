@@ -4,7 +4,7 @@
 """
 from typing import Dict, List, Optional, Any, Literal, cast
 from datetime import datetime
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict, is_dataclass
 import json
 from pathlib import Path
 
@@ -173,31 +173,27 @@ class GameStateManager:
 
         return self.state
 
-    def _serialize_npc(self, npc: Any) -> Dict[str, Any]:
-        """序列化NPC对象为可保存的字典格式"""
+    def _serialize_npc(self, npc: Any) -> Any:
+        """序列化NPC对象为可保存的字典格式
+
+        支持 dataclass、Pydantic 模型、字典、列表及普通对象，递归处理嵌套结构。
+        """
+
         if isinstance(npc, dict):
-            # 处理字典中的嵌套对象
-            result = {}
-            for key, value in npc.items():
-                if hasattr(value, "dict"):  # Pydantic模型
-                    result[key] = value.model_dump()
-                elif hasattr(value, "__dict__") and not isinstance(
-                    value, (str, int, float, bool, list, dict, type(None))
-                ):
-                    # 其他对象
-                    result[key] = value.__dict__
-                else:
-                    result[key] = value
-            return result
-        elif hasattr(npc, "model_dump"):
-            return npc.model_dump()
-        elif hasattr(npc, "dict"):
-            return npc.model_dump()
-        elif hasattr(npc, "__dict__"):
-            # 递归处理嵌套对象
-            return self._serialize_npc(npc.__dict__)
-        else:
-            return npc
+            return {key: self._serialize_npc(value) for key, value in npc.items()}
+        if isinstance(npc, list):
+            return [self._serialize_npc(item) for item in npc]
+        if is_dataclass(npc):
+            return self._serialize_npc(asdict(npc))
+        if hasattr(npc, "model_dump"):
+            return self._serialize_npc(npc.model_dump())
+        if hasattr(npc, "dict"):
+            return self._serialize_npc(npc.model_dump())
+        if hasattr(npc, "__dict__") and not isinstance(
+            npc, (str, int, float, bool)
+        ):
+            return self._serialize_npc(vars(npc))
+        return npc
 
     def _serialize_rule(self, rule: Any) -> Dict[str, Any]:
         """序列化规则对象为可保存的字典格式"""
