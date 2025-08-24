@@ -191,11 +191,11 @@ def start_backend(standalone=True):
         print(f"\n{Colors.GREEN}✅ 服务器已停止{Colors.RESET}")
 
 
-def start_frontend(standalone=True):
+def start_frontend(standalone: bool = True) -> Optional[subprocess.Popen]:
     """启动前端服务"""
     if standalone:
         print(f"\n{Colors.GREEN}🎨 启动前端界面...{Colors.RESET}")
-    
+
     frontend_dir = PROJECT_ROOT / "web" / "frontend"
     
     if not frontend_dir.exists():
@@ -216,17 +216,31 @@ def start_frontend(standalone=True):
     node_modules = frontend_dir / "node_modules"
     if not node_modules.exists():
         print(f"{Colors.YELLOW}📦 安装前端依赖...{Colors.RESET}")
-        subprocess.run(["npm", "install"], cwd=frontend_dir, check=True)
+        try:
+            subprocess.run(["npm", "install"], cwd=frontend_dir, check=True)
+        except subprocess.CalledProcessError:
+            print(f"{Colors.RED}❌ 前端依赖安装失败{Colors.RESET}")
+            print("   请检查 npm 配置或网络连接")
+            return None
     
     # 启动前端
     if standalone:
         print(f"   地址: {Colors.CYAN}http://localhost:5173{Colors.RESET}")
         print(f"   按 {Colors.YELLOW}Ctrl+C{Colors.RESET} 停止")
         print("-" * 50)
-        subprocess.run(["npm", "run", "dev"], cwd=frontend_dir)
+        try:
+            subprocess.run(["npm", "run", "dev"], cwd=frontend_dir, check=True)
+        except subprocess.CalledProcessError:
+            print(f"{Colors.RED}❌ 前端启动失败{Colors.RESET}")
+            print("   请检查 npm 配置或源码是否存在错误")
+            return None
     else:
         cmd = ["npm", "run", "dev"]
-        process = subprocess.Popen(cmd, cwd=frontend_dir)
+        try:
+            process = subprocess.Popen(cmd, cwd=frontend_dir)
+        except Exception as e:  # pragma: no cover - 捕获所有子进程异常
+            print(f"{Colors.RED}❌ 前端启动失败: {e}{Colors.RESET}")
+            return None
         print(f"   ✅ 前端已启动 (PID: {process.pid})")
         return process
 
