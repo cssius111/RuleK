@@ -9,6 +9,7 @@ from fastapi import WebSocket
 import json
 import uuid
 import logging
+import random
 from pathlib import Path
 import httpx
 
@@ -240,8 +241,18 @@ class GameService:
                     "result": result
                 })
         
-        # 4. 随机事件（占位）
-        # TODO: 实现基于新的事件模型的随机事件逻辑
+        # 4. 随机事件
+        random_events = [
+            "窗外传来诡异声响",
+            "远处传来微弱的哭泣声",
+            "突然一阵冷风袭来",
+        ]
+        if random.random() < 0.25:
+            description = random.choice(random_events)
+            event = {"type": "ambient", "description": description}
+            events.append(event)
+            if self.game_state_manager:
+                self.game_state_manager.log(description)
         
         # 5. 生成叙事
         narrative = None
