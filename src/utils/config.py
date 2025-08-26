@@ -6,7 +6,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ def _parse_cors_origins(value: str) -> List[str]:
 
 
 class Config:
-    """Configuration loader."""
+    """Configuration loader for project-wide settings."""
 
     def __init__(self) -> None:
         self.project_root = Path(__file__).resolve().parents[2]
@@ -62,25 +62,28 @@ class Config:
             logger.debug(".env file not found at %s", search_path)
 
     # ------------------------------------------------------------------
-    def _load_config_files(self) -> None:
-        """Load ``config.json`` and ``deepseek_config.json`` from the project."""
-        config_dir = self.project_root / "config"
+    def _expand_env(self, data: Any) -> Any:
+        """Recursively expand environment variables in a data structure."""
+        if isinstance(data, dict):
+            return {k: self._expand_env(v) for k, v in data.items()}
+        if isinstance(data, list):
+            return [self._expand_env(v) for v in data]
+        if isinstance(data, str):
+            return os.path.expandvars(data)
+        return data
 
+    # ------------------------------------------------------------------
+    def _load_config_files(self) -> None:
+        """Load ``config.json`` from the project root."""
+        config_dir = self.project_root / "config"
         main_cfg = config_dir / "config.json"
         if main_cfg.exists():
             try:
                 with open(main_cfg, "r", encoding="utf-8") as fh:
-                    self._config.update(json.load(fh))
+                    data = json.load(fh)
+                self._config.update(self._expand_env(data))
             except Exception as exc:  # pragma: no cover - file reading errors
                 logger.error("Failed to load %s: %s", main_cfg, exc)
-
-        deepseek_cfg = config_dir / "deepseek_config.json"
-        if deepseek_cfg.exists():
-            try:
-                with open(deepseek_cfg, "r", encoding="utf-8") as fh:
-                    self._config["deepseek"] = json.load(fh)
-            except Exception as exc:  # pragma: no cover - file reading errors
-                logger.error("Failed to load %s: %s", deepseek_cfg, exc)
 
     # ------------------------------------------------------------------
     def get(self, key: str, default: Any = None) -> Any:
@@ -91,16 +94,18 @@ class Config:
         return self._config.get(key, default)
 
     # ------------------------------------------------------------------
-    def get_deepseek_config(self) -> Dict[str, str]:
+    def get_deepseek_config(self) -> Dict[str, Any]:
         """Return DeepSeek API configuration settings."""
-        ds_cfg = self._config.get("deepseek", {})
+        api_cfg = self._config.get("api", {})
         return {
-            "api_key": self.get("DEEPSEEK_API_KEY", ds_cfg.get("api_key", "")),
-            "base_url": self.get(
-                "DEEPSEEK_BASE_URL",
-                ds_cfg.get("base_url", "https://api.deepseek.com/v1"),
+            "api_key": self.get("DEEPSEEK_API_KEY", api_cfg.get("deepseek_api_key", "")),
+            "endpoint": self.get(
+                "DEEPSEEK_BASE_URL", api_cfg.get("deepseek_endpoint", "https://api.deepseek.com/v1")
             ),
-            "model": self.get("DEEPSEEK_MODEL", ds_cfg.get("model", "deepseek-chat")),
+            "model": self.get("DEEPSEEK_MODEL", api_cfg.get("model", "deepseek-chat")),
+            "max_retries": int(self.get("DEEPSEEK_MAX_RETRIES", api_cfg.get("max_retries", 3))),
+            "timeout": int(self.get("DEEPSEEK_TIMEOUT", api_cfg.get("timeout", 30))),
+            "cache_ttl": int(self.get("DEEPSEEK_CACHE_TTL", api_cfg.get("cache_ttl", 300))),
         }
 
     # ------------------------------------------------------------------
@@ -114,39 +119,17 @@ class Config:
         return str(self.get("GAME_LOG_LEVEL", "INFO"))
 
     def get_web_config(self) -> Dict[str, Any]:
+        """Return Web server configuration settings."""
+        web_cfg = self._config.get("web", {})
+        origins = self.get(
+            "WEB_CORS_ORIGINS",
+            json.dumps(web_cfg.get("cors_origins", ["http://localhost:3000"])),
+        )
         return {
-            "host": self.get("WEB_HOST", "0.0.0.0"),
-            "port": int(self.get("WEB_PORT", 8000)),
-            "cors_origins": _parse_cors_origins(
-                self.get("WEB_CORS_ORIGINS", '["http://localhost:3000"]')
-            ),
+            "host": self.get("WEB_HOST", web_cfg.get("host", "0.0.0.0")),
+            "port": int(self.get("WEB_PORT", web_cfg.get("port", 8000))),
+            "cors_origins": _parse_cors_origins(origins),
         }
-
-    # ------------------------------------------------------------------
-    def save_deepseek_config(
-        self,
-        api_key: str,
-        base_url: Optional[str] = None,
-        model: Optional[str] = None,
-    ) -> bool:
-        """Persist DeepSeek configuration to ``deepseek_config.json``."""
-        config_dir = self.project_root / "config"
-        config_dir.mkdir(exist_ok=True)
-        path = config_dir / "deepseek_config.json"
-        data = {
-            "api_key": api_key,
-            "base_url": base_url or "https://api.deepseek.com/v1",
-            "model": model or "deepseek-chat",
-        }
-        try:
-            with open(path, "w", encoding="utf-8") as fh:
-                json.dump(data, fh, indent=2, ensure_ascii=False)
-            self._config["deepseek"] = data
-            logger.info("DeepSeek configuration saved to %s", path)
-            return True
-        except Exception as exc:  # pragma: no cover - file writing errors
-            logger.error("Failed to save deepseek config: %s", exc)
-            return False
 
 
 # ---------------------------------------------------------------------------
@@ -176,8 +159,12 @@ def load_config(path: str | None = None) -> Config:
     return config
 
 
-def get_deepseek_config() -> Dict[str, str]:
+def get_deepseek_config() -> Dict[str, Any]:
     return config.get_deepseek_config()
+
+
+def get_web_config() -> Dict[str, Any]:
+    return config.get_web_config()
 
 
 def is_test_mode() -> bool:
@@ -193,6 +180,7 @@ __all__ = [
     "config",
     "load_config",
     "get_deepseek_config",
+    "get_web_config",
     "is_test_mode",
     "is_debug_mode",
 ]
