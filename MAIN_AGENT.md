@@ -48,9 +48,13 @@ RuleK/
 │   └── frontend/      # 前端代码
 │
 ├── scripts/           # ✅ 脚本工具
-│   ├── test/         # 测试脚本
-│   ├── fix/          # 修复脚本
-│   └── dev/          # 开发工具
+│   ├── startup/     # 启动脚本
+│   ├── test/        # 测试脚本
+│   ├── fix/         # 修复脚本
+│   ├── dev/         # 开发工具
+│   ├── deploy/      # 部署脚本
+│   ├── diagnostic/  # 诊断工具
+│   └── utils/       # 通用工具
 │
 ├── tests/            # ✅ 测试文件
 ├── docs/             # ✅ 文档

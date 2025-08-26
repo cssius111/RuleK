@@ -23,6 +23,7 @@ uvicorn web.backend.app:app --reload --host 0.0.0.0 --port 8000
 ```bash
 python rulek.py web
 ```
+> `rulek.py` 仅负责参数解析和调度，实际启动逻辑在 `scripts/` 模块中实现。
 
 ## 如果启动失败
 
