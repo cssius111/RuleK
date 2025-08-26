@@ -101,6 +101,27 @@ cd web/frontend
 npm install
 ```
 
+## ⚙️ 配置
+
+项目使用 `src/utils/config.py` 统一加载 `.env` 与 `config/config.json`。
+
+1. 复制 `.env.example` 为 `.env` 并填写必要参数：
+   ```bash
+   cp .env.example .env
+   ```
+   建议在生产环境通过 CI Secrets 等安全方式存储 API Key。
+
+2. 根据需求修改 `config/config.json`。
+
+在代码中可以这样访问配置：
+
+```python
+from src.utils.config import config
+
+deepseek = config.get_deepseek_config()
+web = config.get_web_config()
+```
+
 ## 🗂️ 项目结构
 ```
 RuleK/

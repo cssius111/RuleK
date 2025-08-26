@@ -1,5 +1,9 @@
 # 🚀 RuleK 快速启动指南
 
+## 配置环境
+
+项目使用 `src/utils/config.py` 统一管理配置。启动前请复制 `.env.example` 为 `.env` 并填写必要参数，例如 DeepSeek API Key。生产环境请通过 CI Secrets 等安全方式注入变量。可修改 `config/config.json` 调整默认参数。
+
 ## Web服务器启动方式
 
 ### 方式1：使用Makefile（推荐）
