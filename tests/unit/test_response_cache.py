@@ -1,20 +1,19 @@
-import builtins
 from pathlib import Path
 
-from src.api.deepseek_client import ResponseCache
+from src.api.deepseek_http_client import ResponseCache
 
 
 def test_set_creates_error_file_on_failure(tmp_path, monkeypatch):
     cache = ResponseCache(tmp_path)
 
-    original_open = builtins.open
+    original_open = Path.open
 
-    def fake_open(path, mode="r", *args, **kwargs):
-        if isinstance(path, (str, Path)) and str(path).endswith(".json") and "w" in mode:
+    def fake_open(self, mode="r", *args, **kwargs):
+        if str(self).endswith(".json") and "w" in mode:
             raise OSError("disk error")
-        return original_open(path, mode, *args, **kwargs)
+        return original_open(self, mode, *args, **kwargs)
 
-    monkeypatch.setattr(builtins, "open", fake_open)
+    monkeypatch.setattr(Path, "open", fake_open)
 
     cache.set("p", {"k": "v"}, {"result": True})
 

@@ -1,4 +1,5 @@
-from .deepseek_client import DeepSeekClient, APIConfig
+from .deepseek_client import DeepSeekClient
+from .deepseek_http_client import APIConfig
 from src.utils.config import get_deepseek_config, is_test_mode
 from src.utils.logger import get_logger
 

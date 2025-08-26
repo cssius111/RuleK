@@ -24,7 +24,8 @@ async def main():
     try:
         from src.utils.config import Config, load_config
         from src.core.game_state import GameState, GameStateManager
-        from src.api.deepseek_client import DeepSeekClient, APIConfig
+        from src.api.deepseek_client import DeepSeekClient
+        from src.api.deepseek_http_client import APIConfig
         from src.ai.turn_pipeline import AITurnPipeline
         print("✅ 所有基础模块导入成功")
     except Exception as e:

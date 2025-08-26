@@ -8,7 +8,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List
 
-from src.api.deepseek_client import APIConfig, DeepSeekClient
+from src.api.deepseek_client import DeepSeekClient
+from src.api.deepseek_http_client import APIConfig
+from src.api.llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
 
@@ -44,11 +46,9 @@ class GameEvent:
 class Narrator:
     """叙事生成器"""
 
-    def __init__(self, deepseek_client=None):
+    def __init__(self, deepseek_client: LLMClient | None = None):
         """Initialize the narrator with an optional DeepSeek client."""
-        self.deepseek_client = deepseek_client or DeepSeekClient(
-            APIConfig(mock_mode=True), http_client=None
-        )
+        self.deepseek_client = deepseek_client or DeepSeekClient(APIConfig(mock_mode=True))
         self.api_client = self.deepseek_client
         self.style: NarrativeStyle = NarrativeStyle.DEFAULT
         self.narrative_templates = {
