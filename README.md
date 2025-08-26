@@ -21,6 +21,7 @@ python rulek.py start
 # 查看所有命令
 python rulek.py help
 ```
+> `rulek.py` 现仅负责参数解析和调度，实际功能由 `scripts/` 模块实现，命令用法保持不变。
 
 ### 📋 交互式菜单
 
