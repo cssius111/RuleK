@@ -8,7 +8,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from src.api.deepseek_client import APIConfig, DeepSeekClient
+from src.api.deepseek_client import DeepSeekClient
+from src.api.deepseek_http_client import APIConfig
+from src.api.llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
 
@@ -54,11 +56,9 @@ class DialogueEntry:
 class DialogueSystem:
     """对话系统"""
 
-    def __init__(self, deepseek_client=None):
+    def __init__(self, deepseek_client: LLMClient | None = None):
         """Initialize dialogue system with an optional DeepSeek client."""
-        self.deepseek_client = deepseek_client or DeepSeekClient(
-            APIConfig(mock_mode=True), http_client=None
-        )
+        self.deepseek_client = deepseek_client or DeepSeekClient(APIConfig(mock_mode=True))
         self.api_client = self.deepseek_client  # backward compatibility
         self.dialogue_templates = {
             "fear": [

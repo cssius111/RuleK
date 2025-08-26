@@ -8,19 +8,8 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import hashlib
-from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 import re
-
-import httpx
-from tenacity import (
-    retry,
-    stop_after_attempt,
-    wait_exponential,
-    retry_if_exception_type,
-)
 
 from src.api.schemas import (
     DialogueTurn,
@@ -31,148 +20,21 @@ from src.api.schemas import (
     RuleEffect,
 )
 from src.api.prompts import PromptManager, RULE_EVAL_SYSTEM
-from src.utils.config import config as global_config
+from .deepseek_http_client import APIConfig, DeepSeekHTTPClient
+from .llm_client import LLMClient
 
 logger = logging.getLogger("deepseek.client")
 
 
-class APIConfig:
-    """API配置类"""
-
-    def __init__(
-        self,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
-        model: Optional[str] = None,
-        **kwargs,
-    ):
-        # 优先使用传入的参数，否则从全局配置获取
-        deepseek_cfg = global_config.get_deepseek_config()
-
-        self.api_key = api_key or deepseek_cfg.get("api_key", "")
-        self.base_url = base_url or deepseek_cfg.get(
-            "base_url", "https://api.deepseek.com/v1"
-        )
-        self.model = model or deepseek_cfg.get("model", "deepseek-chat")
-
-        # 其他配置项
-        self.max_retries = kwargs.get("max_retries", 3)
-        self.timeout = kwargs.get("timeout", 30)
-        self.cache_enabled = kwargs.get("cache_enabled", True)
-        self.cache_dir = Path(kwargs.get("cache_dir", "data/cache/api"))
-        self.mock_mode = kwargs.get("mock_mode", False)
-
-        # 如果没有API Key，自动启用mock模式
-        if not self.api_key:
-            self.mock_mode = True
-            logger.warning("未配置API Key，自动启用Mock模式")
 
 
-class ResponseCache:
-    """响应缓存管理"""
-
-    def __init__(self, cache_dir: Path, default_ttl: int = 3600):
-        self.cache_dir = cache_dir
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-        self.default_ttl = default_ttl
-        self.memory_cache: Dict[str, Dict[str, Any]] = {}
-
-    def _generate_key(self, prompt: str, params: Dict[str, Any]) -> str:
-        """生成缓存键"""
-        content = json.dumps(
-            {"prompt": prompt, "params": params}, sort_keys=True, ensure_ascii=False
-        )
-        return hashlib.md5(content.encode("utf-8")).hexdigest()
-
-    def get(self, prompt: str, params: Dict[str, Any]) -> Optional[Any]:
-        """获取缓存
-
-        如果存在同名 ``.error`` 文件，说明上次写入失败。
-        这种情况下会移除该标记并返回 ``None``。
-        """
-        key = self._generate_key(prompt, params)
-
-        # 先检查是否有错误标记文件
-        error_file = self.cache_dir / f"{key}.error"
-        if error_file.exists():
-            try:
-                error_file.unlink()
-            except OSError as e:
-                logger.warning(f"删除错误标记失败: {e}")
-            return None
-
-        # 先检查内存缓存
-        if key in self.memory_cache:
-            entry = self.memory_cache[key]
-            if datetime.now() < entry["expires_at"]:
-                logger.debug(f"缓存命中（内存）: {key[:8]}...")
-                return entry["data"]
-
-        # 检查文件缓存
-        cache_file = self.cache_dir / f"{key}.json"
-        if cache_file.exists():
-            try:
-                with open(cache_file, "r", encoding="utf-8") as f:
-                    entry = json.load(f)
-                expires_at = datetime.fromisoformat(entry["expires_at"])
-                if datetime.now() < expires_at:
-                    self.memory_cache[key] = {
-                        "data": entry["data"],
-                        "expires_at": expires_at,
-                    }
-                    logger.debug(f"缓存命中（文件）: {key[:8]}...")
-                    return entry["data"]
-                else:
-                    cache_file.unlink()  # 删除过期缓存
-            except Exception as e:
-                logger.error(f"读取缓存失败: {e}")
-
-        return None
-
-    def set(
-        self, prompt: str, params: Dict[str, Any], data: Any, ttl: Optional[int] = None
-    ) -> None:
-        """设置缓存
-
-        当写入文件失败时，会创建同名 ``.error`` 文件用于标记。
-        """
-        key = self._generate_key(prompt, params)
-        expires_at = datetime.now() + timedelta(seconds=ttl or self.default_ttl)
-
-        # 保存到内存
-        self.memory_cache[key] = {"data": data, "expires_at": expires_at}
-
-        # 保存到文件
-        cache_file = self.cache_dir / f"{key}.json"
-        try:
-            with open(cache_file, "w", encoding="utf-8") as f:
-                json.dump(
-                    {
-                        "data": data,
-                        "expires_at": expires_at.isoformat(),
-                        "prompt_hash": key,
-                        "created_at": datetime.now().isoformat(),
-                    },
-                    f,
-                    ensure_ascii=False,
-                    indent=2,
-                )
-        except Exception as e:
-            logger.error(f"保存缓存失败: {e}")
-            error_file = self.cache_dir / f"{key}.error"
-            try:
-                error_file.write_text(str(e), encoding="utf-8")
-            except Exception as write_error:
-                logger.error(f"创建错误标记失败: {write_error}")
-
-
-class DeepSeekClient:
+class DeepSeekClient(LLMClient):
     """增强版DeepSeek客户端"""
 
     def __init__(
         self,
         config: Optional[APIConfig] = None,
-        http_client: httpx.AsyncClient | None = None,
+        http_client: DeepSeekHTTPClient | None = None,
     ):
         """初始化客户端
 
@@ -182,12 +44,9 @@ class DeepSeekClient:
         """
 
         self.config = config or APIConfig()
-        self.cache = (
-            ResponseCache(self.config.cache_dir) if self.config.cache_enabled else None
-        )
-        self.client = http_client or httpx.AsyncClient(timeout=self.config.timeout)
+        self.http = http_client or DeepSeekHTTPClient(self.config)
+        self.cache = self.http.cache
         self.prompt_mgr = PromptManager()
-        self._mock_responses = self._init_mock_responses()
 
     async def __aenter__(self):
         return self
@@ -195,102 +54,9 @@ class DeepSeekClient:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        retry=retry_if_exception_type((httpx.TimeoutException, httpx.NetworkError)),
-    )
-    async def _make_request(
-        self, endpoint: str, data: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """发送API请求（带重试）"""
-        logger.info("request %s", endpoint)
-        if self.config.mock_mode:
-            await asyncio.sleep(0.1)  # 模拟网络延迟
-            result = self._generate_mock_response(endpoint, data)
-            logger.info("response %s mock", endpoint)
-            return result
-
-        headers = {
-            "Authorization": f"Bearer {self.config.api_key}",
-            "Content-Type": "application/json; charset=utf-8",
-        }
-
-        try:
-            # 修复中文编码问题：手动序列化JSON
-            json_data = json.dumps(data, ensure_ascii=False).encode("utf-8")
-            response = await self.client.post(
-                f"{self.config.base_url}/{endpoint}", headers=headers, content=json_data
-            )
-            response.raise_for_status()
-            if not response.content or not response.text.strip():
-                logger.error(f"空响应: {endpoint}")
-                raise ValueError(f"Empty response from {endpoint}")
-            try:
-                res_data = response.json()
-                logger.info("response %s %s", endpoint, response.status_code)
-                return res_data
-            except json.JSONDecodeError as e:
-                logger.error(f"非JSON响应: {response.text}")
-                raise ValueError(
-                    f"Invalid JSON response from {endpoint}: {response.text[:100]}"
-                ) from e
-        except httpx.HTTPStatusError as e:
-            logger.error(f"HTTP错误 {e.response.status_code}: {e.response.text}")
-            if e.response.status_code == 429:  # Rate limit
-                await asyncio.sleep(5)
-            raise
-        except Exception as e:
-            logger.error(f"请求失败: {str(e)}")
-            raise
-
-    def _generate_mock_response(
-        self, endpoint: str, data: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """生成Mock响应
-
-        无论请求内容如何，始终返回包含 ``dialogue``、``actions``、
-        ``turn_summary`` 和 ``atmosphere`` 的JSON字符串，确保测试环境中
-        的响应结构稳定。
-        """
-
-        mock_payload = {
-            "dialogue": [
-                {
-                    "speaker": "张三",
-                    "text": "这是一个测试对话。",
-                    "emotion": "neutral",
-                }
-            ],
-            "actions": [
-                {
-                    "npc": "张三",
-                    "action": "wait",
-                    "target": None,
-                    "reason": "mock",
-                    "priority": 1,
-                }
-            ],
-            "turn_summary": "测试回合",
-            "atmosphere": "calm",
-        }
-
-        content = json.dumps(mock_payload, ensure_ascii=False)
-
-        return {
-            "choices": [{"message": {"content": content}, "finish_reason": "stop"}],
-            "usage": {"total_tokens": 100},
-        }
-
-    def _init_mock_responses(self) -> Dict[str, List[str]]:
-        """初始化Mock响应"""
-        return {
-            "narration": [
-                "夜幕降临，废弃的建筑物里弥漫着腐朽的气息。墙壁上的影子仿佛有了生命，在昏暗的灯光下扭曲蠕动。每一声细微的响动都让人心跳加速，仿佛有什么不可名状的存在正在暗中窥视。空气变得粘稠而压抑，让人喘不过气来。",
-                "走廊尽头传来若有若无的哭泣声，像是来自另一个世界的召唤。地板吱呀作响，每一步都像是踩在命运的琴弦上。镜子里映出的不再是熟悉的面孔，而是扭曲的、陌生的存在。恐惧如潮水般涌来，吞噬着每个人的理智。",
-                "时钟的指针在午夜停止了转动，时间仿佛凝固在这一刻。房间的温度骤然下降，呼出的气息化作白雾。墙上的血迹开始蠕动，组成了诡异的文字。这不是幻觉，这是真实存在的噩梦。",
-            ]
-        }
+    async def _make_request(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """发送API请求，实际调用底层HTTP客户端"""
+        return await self.http.post(endpoint, data)
 
     def _ensure_len_text(self, text: str, min_len: int = 200) -> str:
         """确保文本长度不少于 ``min_len`` 字符"""
@@ -679,7 +445,7 @@ class DeepSeekClient:
 
     async def close(self):
         """关闭客户端"""
-        await self.client.aclose()
+        await self.http.close()
 
 
 # ========== 工厂函数 ==========

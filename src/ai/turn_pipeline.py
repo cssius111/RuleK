@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from src.api.deepseek_client import DeepSeekClient
+from src.api.llm_client import LLMClient
 from src.api.schemas import (
     TurnPlan,
     DialogueTurn,
@@ -37,7 +38,7 @@ class AITurnPipeline:
     def __init__(
         self,
         game_mgr: "GameStateManager",
-        ds_client: DeepSeekClient | None = None,
+        ds_client: LLMClient | None = None,
     ):
         """初始化AI管线
 

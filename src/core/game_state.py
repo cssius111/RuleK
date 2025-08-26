@@ -514,7 +514,8 @@ class GameStateManager:
         """初始化AI管线"""
         if self.ai_enabled:
             try:
-                from src.api.deepseek_client import DeepSeekClient, APIConfig
+                from src.api.deepseek_client import DeepSeekClient
+                from src.api.deepseek_http_client import APIConfig
                 from src.ai.turn_pipeline import AITurnPipeline
 
                 # 创建DeepSeek客户端

@@ -21,7 +21,9 @@ from src.core.dialogue_system import DialogueSystem
 
 from src.core.npc_behavior import NPCBehavior
 from src.core.rule_executor import RuleExecutor
+from src.api.llm_client import LLMClient
 from src.api.deepseek_client import DeepSeekClient
+from src.api.deepseek_http_client import APIConfig, DeepSeekHTTPClient
 from src.utils.config import load_config
 
 from ..models import GameStateResponse, NPCStatus, RuleInfo, TurnResult, GameUpdate
@@ -54,7 +56,11 @@ class GameService:
         self.ai_pipeline = None
         self.game_state_manager = None
     
-    async def initialize(self, http_client: httpx.AsyncClient | None = None):
+    async def initialize(
+        self,
+        http_client: httpx.AsyncClient | None = None,
+        llm_client: LLMClient | None = None,
+    ):
         """异步初始化游戏组件
 
         Args:
@@ -92,7 +98,12 @@ class GameService:
         self.rule_executor = RuleExecutor(self.game_state_manager)
         
         # 初始化AI系统
-        self.deepseek_client = DeepSeekClient(http_client=http_client)
+        if llm_client is not None:
+            self.deepseek_client = llm_client
+        else:
+            cfg = APIConfig()
+            http = DeepSeekHTTPClient(cfg, http_client=http_client)
+            self.deepseek_client = DeepSeekClient(cfg, http)
         self.dialogue_system = DialogueSystem(self.deepseek_client)
         self.narrator = Narrator(self.deepseek_client)
         

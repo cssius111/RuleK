@@ -5,7 +5,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from src.api.deepseek_client import APIConfig, DeepSeekClient
+from src.api.deepseek_http_client import APIConfig, DeepSeekHTTPClient
 
 
 @pytest.mark.asyncio
@@ -24,9 +24,9 @@ async def test_http_client_injection():
     transport = httpx.MockTransport(handler)
     http_client = httpx.AsyncClient(transport=transport)
     config = APIConfig(api_key="test", base_url="https://mock.api", mock_mode=False)
-    client = DeepSeekClient(config, http_client=http_client)
+    client = DeepSeekHTTPClient(config, http_client=http_client)
 
-    await client._make_request("test", {"foo": "bar"})
+    await client.post("test", {"foo": "bar"})
     await client.close()
 
     artifacts_dir = Path("artifacts")

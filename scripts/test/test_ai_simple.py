@@ -82,7 +82,8 @@ async def test_ai_components():
     
     try:
         # 1. 测试DeepSeek客户端
-        from src.api.deepseek_client import DeepSeekClient, APIConfig
+        from src.api.deepseek_client import DeepSeekClient
+        from src.api.deepseek_http_client import APIConfig
         api_config = APIConfig()
         logger.info(f"✅ API配置加载成功 (Model: {api_config.model})")
         

@@ -110,27 +110,12 @@ class GameManager:
 ### 4. DeepSeek API接口封装
 
 ```python
-import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential
+from src.api.deepseek_client import DeepSeekClient
+from src.api.deepseek_http_client import APIConfig, DeepSeekHTTPClient
 
-class DeepSeekClient:
-    def __init__(self, api_key: str):
-        self.api_key = api_key
-        self.client = httpx.AsyncClient()
-        
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential())
-    async def generate_text(self, prompt: str, context: Dict) -> str:
-        """调用DeepSeek生成文本"""
-        pass
-        
-    async def evaluate_rule(self, rule_draft: Dict) -> Dict:
-        """评估规则成本和破绽"""
-        pass
-        
-    async def generate_dialogue(self, participants: List[Dict], 
-                              event_context: Dict) -> List[str]:
-        """生成NPC对话"""
-        pass
+cfg = APIConfig(api_key="your_api_key")
+http = DeepSeekHTTPClient(cfg)
+client = DeepSeekClient(cfg, http)
 ```
 
 ### 5. 第一个可运行的Demo
