@@ -1,11 +1,13 @@
 """
 实现简单的自定义规则创建功能
 """
-from src.models.rule import Rule, TriggerCondition, RuleEffect, EffectType
 import uuid
+from typing import Dict, List, Optional
+
+from src.models.rule import EffectType, Rule, RuleEffect, TriggerCondition
 
 
-async def create_custom_rule_enhanced():
+async def create_custom_rule_enhanced() -> Optional[Rule]:
     """增强版自定义规则创建"""
     print("\n🔧 自定义规则创建向导")
     print("=" * 50)
@@ -20,44 +22,53 @@ async def create_custom_rule_enhanced():
     description = input("规则描述: ").strip()
 
     # 3. 触发条件
-    print("\n触发条件类型:")
-    print("1. 动作触发 (如：开灯、照镜子)")
-    print("2. 时间触发 (如：午夜、深夜)")
-    print("3. 地点触发 (如：进入某个房间)")
-    print("4. 物品触发 (如：使用某个物品)")
+    print("\n可选动作: move, search, look_mirror, open_door, turn_around, use_item")
+    action = input("触发动作: ").strip()
+    if not action:
+        print("❌ 动作不能为空")
+        return None
 
-    trigger_type = input("选择触发类型 (1-4): ").strip()
+    print("\n附加触发条件:")
+    print("1. 时间条件 (如：午夜、深夜)")
+    print("2. 地点条件 (如：进入某个房间)")
+    print("3. 物品条件 (如：使用某个物品)")
+    print("4. 无附加条件")
 
-    trigger = TriggerCondition()
+    trigger_type = input("选择附加条件 (1-4): ").strip()
+
+    time_range: Optional[Dict[str, str]] = None
+    locations: Optional[List[str]] = None
+    extra_conditions: List[str] = []
 
     if trigger_type == "1":
-        print("\n可选动作: move, search, look_mirror, open_door, turn_around, use_item")
-        action = input("触发动作: ").strip()
-        trigger.action = action
-
-    elif trigger_type == "2":
-        print("\n时间段: morning, afternoon, evening, night, midnight")
         time = input("触发时间: ").strip()
-        trigger.time_range = time
-
-    elif trigger_type == "3":
-        print("\n地点类型: bedroom, bathroom, kitchen, corridor, basement")
+        time_range = {"from": time, "to": time}
+    elif trigger_type == "2":
         location = input("触发地点: ").strip()
-        trigger.location_type = location
-
-    elif trigger_type == "4":
+        locations = [location]
+    elif trigger_type == "3":
         item = input("触发物品名称: ").strip()
-        trigger.item = item
-    else:
+        extra_conditions.append(f"item:{item}")
+    elif trigger_type != "4":
         print("❌ 无效选择")
         return None
 
     # 4. 触发概率
     try:
-        probability = float(input("\n触发概率 (0.0-1.0, 默认0.8): ").strip() or "0.8")
-        trigger.probability = max(0.0, min(1.0, probability))
+        probability = float(
+            input("\n触发概率 (0.0-1.0, 默认0.8): ").strip() or "0.8"
+        )
+        probability = max(0.0, min(1.0, probability))
     except ValueError:
-        trigger.probability = 0.8
+        probability = 0.8
+
+    trigger = TriggerCondition(
+        action=action,
+        time_range=time_range,
+        location=locations,
+        extra_conditions=extra_conditions,
+        probability=probability,
+    )
 
     # 5. 效果类型
     print("\n效果类型:")
@@ -69,35 +80,47 @@ async def create_custom_rule_enhanced():
 
     effect_type = input("选择效果 (1-5): ").strip()
 
-    effect = RuleEffect()
-
     if effect_type == "1":
-        effect.type = EffectType.INSTANT_DEATH
-        effect.death_description = input("死亡描述: ").strip() or "违反了规则，付出了代价"
-
+        death_description = (
+            input("死亡描述: ").strip() or "违反了规则，付出了代价"
+        )
+        effect = RuleEffect(
+            type=EffectType.INSTANT_DEATH,
+            params={"description": death_description},
+        )
     elif effect_type == "2":
-        effect.type = EffectType.FEAR_GAIN
         try:
             fear = int(input("恐惧增加量 (10-50): ").strip() or "20")
-            effect.fear_gain = max(10, min(50, fear))
+            fear = max(10, min(50, fear))
         except ValueError:
-            effect.fear_gain = 20
-
+            fear = 20
+        effect = RuleEffect(
+            type=EffectType.FEAR_GAIN,
+            params={"amount": fear},
+            fear_gain=fear,
+        )
     elif effect_type == "3":
-        effect.type = EffectType.SANITY_LOSS
         try:
             sanity = int(input("理智减少量 (10-50): ").strip() or "20")
-            effect.sanity_loss = max(10, min(50, sanity))
+            sanity = max(10, min(50, sanity))
         except ValueError:
-            effect.sanity_loss = 20
-
+            sanity = 20
+        effect = RuleEffect(
+            type=EffectType.SANITY_LOSS,
+            params={"amount": sanity},
+        )
     elif effect_type == "4":
-        effect.type = EffectType.TELEPORT
-        effect.teleport_location = input("传送目标地点: ").strip() or "basement"
-
+        target = input("传送目标地点: ").strip() or "basement"
+        effect = RuleEffect(
+            type=EffectType.TELEPORT,
+            params={"target_location": target},
+        )
     elif effect_type == "5":
-        effect.type = EffectType.ITEM_GAIN
-        effect.item_name = input("获得物品名称: ").strip() or "神秘钥匙"
+        item_name = input("获得物品名称: ").strip() or "神秘钥匙"
+        effect = RuleEffect(
+            type=EffectType.TRIGGER_EVENT,
+            params={"event_type": "item_gain", "item_name": item_name},
+        )
     else:
         print("❌ 无效选择")
         return None
@@ -125,10 +148,12 @@ async def create_custom_rule_enhanced():
 
     # 7. 冷却时间
     try:
-        cooldown = int(input("\n冷却回合数 (0-5, 默认0): ").strip() or "0")
-        cooldown = max(0, min(5, cooldown))
+        cooldown_turns = int(
+            input("\n冷却回合数 (0-5, 默认0): ").strip() or "0"
+        )
+        cooldown_turns = max(0, min(5, cooldown_turns))
     except ValueError:
-        cooldown = 0
+        cooldown_turns = 0
 
     # 8. 成本计算
     base_cost = 100
@@ -139,7 +164,7 @@ async def create_custom_rule_enhanced():
         EffectType.FEAR_GAIN: 50,
         EffectType.SANITY_LOSS: 50,
         EffectType.TELEPORT: 100,
-        EffectType.ITEM_GAIN: 80,
+        EffectType.TRIGGER_EVENT: 80,
     }
     base_cost += effect_costs.get(effect.type, 100)
 
@@ -153,7 +178,7 @@ async def create_custom_rule_enhanced():
     base_cost -= len(loopholes) * 50
 
     # 冷却减少成本
-    base_cost -= cooldown * 10
+    base_cost -= cooldown_turns * 10
 
     base_cost = max(50, base_cost)  # 最低50点
 
@@ -165,7 +190,7 @@ async def create_custom_rule_enhanced():
         trigger=trigger,
         effect=effect,
         loopholes=loopholes,
-        cooldown=cooldown,
+        cooldown_turns=cooldown_turns,
         base_cost=base_cost,
         level=1,
     )
